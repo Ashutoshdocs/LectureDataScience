@@ -1,0 +1,9 @@
+pyproject.toml
+src/BlazeCalc/__init__.py
+src/BlazeCalc/calculator.py
+src/BlazeCalc/operations.py
+src/blazecalc.egg-info/PKG-INFO
+src/blazecalc.egg-info/SOURCES.txt
+src/blazecalc.egg-info/dependency_links.txt
+src/blazecalc.egg-info/top_level.txt
+tests/test_blazecalc.py
