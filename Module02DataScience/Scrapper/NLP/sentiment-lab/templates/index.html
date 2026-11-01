@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentiment Analysis Lab</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --ink: #1d1d1b;
+    --muted: #6b6a65;
+    --line: #e4e1d8;
+    --accent: #c2410c;
+    --pos: #15803d;
+    --pos-bg: #dcfce7;
+    --neg: #b91c1c;
+    --neg-bg: #fee2e2;
+    --neu: #57534e;
+    --neu-bg: #eceae4;
+    --warn-bg: #fef3c7;
+    --warn: #92400e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171715;
+      --card: #22221f;
+      --ink: #f2f0ea;
+      --muted: #a19f97;
+      --line: #36352f;
+      --accent: #fb923c;
+      --pos: #4ade80;
+      --pos-bg: #14301d;
+      --neg: #f87171;
+      --neg-bg: #3a1716;
+      --neu: #c4c1b8;
+      --neu-bg: #2e2d29;
+      --warn-bg: #3a2c0c;
+      --warn: #fcd34d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  header .eyebrow {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  header h1 { margin: 4px 0 6px; font-size: 32px; letter-spacing: -.01em; }
+  header p { margin: 0 0 24px; color: var(--muted); }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 130px;
+    resize: vertical;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    font: inherit;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+  .spacer { flex: 1; }
+  .hint { color: var(--muted); font-size: 13px; }
+
+  .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .toggle button {
+    border: 0; background: none; color: var(--muted);
+    padding: 6px 14px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer;
+  }
+  .toggle button.on { background: var(--ink); color: var(--card); }
+
+  .btn {
+    border: 0; border-radius: 10px; padding: 10px 22px;
+    background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .btn.ghost { background: none; color: var(--muted); border: 1px solid var(--line); font-weight: 500; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chip {
+    border: 1px solid var(--line); background: none; color: var(--ink);
+    border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .error { margin-top: 12px; color: var(--neg); font-weight: 500; }
+
+  #summary { margin-top: 24px; }
+  .summary-bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--neu-bg); margin: 10px 0 8px; }
+  .summary-bar div { height: 100%; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; color: var(--muted); }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+  .result { margin-top: 16px; }
+  .text-view { font-size: 17px; line-height: 1.8; margin: 0 0 16px; word-wrap: break-word; }
+  .w-pos { background: var(--pos-bg); color: var(--pos); border-radius: 4px; padding: 1px 3px; }
+  .w-neg { background: var(--neg-bg); color: var(--neg); border-radius: 4px; padding: 1px 3px; }
+
+  .models { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .models { grid-template-columns: 1fr; } }
+  .model { border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+  .model h3 { margin: 0 0 2px; font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .label { font-size: 22px; font-weight: 700; }
+  .label.Positive { color: var(--pos); }
+  .label.Negative { color: var(--neg); }
+  .label.Neutral  { color: var(--neu); }
+  .metric { font-size: 13px; color: var(--muted); margin-top: 10px; display: flex; justify-content: space-between; }
+  .metric b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  .gauge { position: relative; height: 8px; border-radius: 4px; margin-top: 6px;
+           background: linear-gradient(90deg, var(--neg), var(--neu-bg) 50%, var(--pos)); }
+  .gauge .needle { position: absolute; top: -4px; width: 4px; height: 16px; border-radius: 2px;
+                   background: var(--ink); transform: translateX(-50%); transition: left .4s ease; }
+  .meter { height: 8px; border-radius: 4px; background: var(--neu-bg); margin-top: 6px; overflow: hidden; }
+  .meter div { height: 100%; background: var(--accent); transition: width .4s ease; }
+  .stack { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+
+  .badge { display: inline-block; margin-top: 12px; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge.ok { background: var(--pos-bg); color: var(--pos); }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Practical Lab 1</div>
+    <h1>Sentiment Analysis</h1>
+    <p>Type any text and compare two classic NLP models: <b>VADER</b> (NLTK) and <b>TextBlob</b>.</p>
+  </header>
+
+  <section class="card">
+    <textarea id="input" placeholder="e.g. The food was amazing but the service was painfully slow."></textarea>
+
+    <div class="row">
+      <div class="toggle" role="group" aria-label="Mode">
+        <button id="mode-single" class="on" type="button">Whole text</button>
+        <button id="mode-batch" type="button">One per line</button>
+      </div>
+      <span class="hint" id="char-count">0 characters</span>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="clear" type="button">Clear</button>
+      <button class="btn" id="analyze" type="button">Analyze</button>
+    </div>
+    <div class="hint" style="margin-top:8px">Tip: press <b>Ctrl + Enter</b> to analyze.</div>
+
+    <div class="chips" id="examples"></div>
+    <div class="error" id="error" hidden></div>
+  </section>
+
+  <section id="summary" hidden></section>
+  <section id="results"></section>
+
+  <footer>
+    Scores range from −1 (most negative) to +1 (most positive). Labels: ≥ 0.05 Positive, ≤ −0.05 Negative, otherwise Neutral.
+    Highlighted words are those found in the VADER lexicon.
+  </footer>
+</div>
+
+<script>
+  const EXAMPLES = [
+    "I absolutely love this phone, the camera is amazing!",
+    "This is the WORST customer service I have ever experienced!!!",
+    "Not bad at all, I'd actually recommend it to friends.",
+    "The movie was okay, nothing special.",
+    "Oh great, another Monday.",
+  ];
+  const COLORS = { Positive: "var(--pos)", Negative: "var(--neg)", Neutral: "var(--neu)" };
+
+  const $ = (id) => document.getElementById(id);
+  const input = $("input");
+  let batch = false;
+
+  const esc = (s) => s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Example chips
+  EXAMPLES.forEach((ex) => {
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.type = "button";
+    b.textContent = ex.length > 38 ? ex.slice(0, 36) + "…" : ex;
+    b.title = ex;
+    b.onclick = () => { setMode(false); input.value = ex; updateCount(); analyze(); };
+    $("examples").appendChild(b);
+  });
+
+  function setMode(isBatch) {
+    batch = isBatch;
+    $("mode-single").classList.toggle("on", !batch);
+    $("mode-batch").classList.toggle("on", batch);
+  }
+  $("mode-single").onclick = () => setMode(false);
+  $("mode-batch").onclick = () => {
+    setMode(true);
+    if (!input.value.trim()) input.value = EXAMPLES.join("\n");
+    updateCount();
+  };
+
+  function updateCount() { $("char-count").textContent = input.value.length + " characters"; }
+  input.addEventListener("input", updateCount);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) analyze();
+  });
+
+  $("clear").onclick = () => {
+    input.value = ""; updateCount();
+    $("results").innerHTML = ""; $("summary").hidden = true; $("error").hidden = true;
+    input.focus();
+  };
+  $("analyze").onclick = analyze;
+
+  async function analyze() {
+    const text = input.value.trim();
+    const err = $("error");
+    err.hidden = true;
+    if (!text) { err.textContent = "Please enter some text."; err.hidden = false; return; }
+
+    const btn = $("analyze");
+    btn.disabled = true; btn.textContent = "Analyzing…";
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, batch }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      render(data);
+    } catch (e) {
+      err.textContent = e.message.includes("fetch")
+        ? "Can't reach the server. Is `python app.py` still running?"
+        : e.message;
+      err.hidden = false;
+    } finally {
+      btn.disabled = false; btn.textContent = "Analyze";
+    }
+  }
+
+  function render({ results, summary }) {
+    // Summary (only useful for more than one line)
+    const sum = $("summary");
+    if (results.length > 1) {
+      const total = results.length;
+      const seg = (k) => `<div style="width:${summary[k] / total * 100}%;background:${COLORS[k]}"></div>`;
+      sum.innerHTML = `
+        <div class="card">
+          <b>Summary (VADER) — ${total} texts</b>
+          <div class="summary-bar">${seg("Positive")}${seg("Neutral")}${seg("Negative")}</div>
+          <div class="legend">
+            ${["Positive", "Neutral", "Negative"].map((k) =>
+              `<span><span class="dot" style="background:${COLORS[k]}"></span>${k}: <b>${summary[k]}</b></span>`).join("")}
+          </div>
+        </div>`;
+      sum.hidden = false;
+    } else {
+      sum.hidden = true;
+    }
+
+    $("results").innerHTML = results.map(card).join("");
+    $("results").firstElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function highlight(words) {
+    return words.map(({ t, s }) => {
+      if (s == null) return esc(t);
+      const cls = s > 0 ? "w-pos" : "w-neg";
+      return `<span class="${cls}" title="VADER word score: ${s > 0 ? "+" : ""}${s}">${esc(t)}</span>`;
+    }).join("");
+  }
+
+  const pct = (score) => ((score + 1) / 2) * 100;   // −1..+1 → 0..100%
+  const sign = (n) => (n > 0 ? "+" : "") + n.toFixed(3);
+
+  function card(r) {
+    const v = r.vader, tb = r.textblob;
+    return `
+      <article class="card result">
+        <p class="text-view">${highlight(r.words)}</p>
+        <div class="models">
+          <div class="model">
+            <h3>VADER</h3>
+            <div class="label ${v.label}">${v.label}</div>
+            <div class="metric"><span>Compound</span><b>${sign(v.compound)}</b></div>
+            <div class="gauge"><div class="needle" style="left:${pct(v.compound)}%"></div></div>
+            <div class="metric"><span>pos ${v.pos.toFixed(2)} · neu ${v.neu.toFixed(2)} · neg ${v.neg.toFixed(2)}</span></div>
+            <div class="stack">
+              <div style="width:${v.pos * 100}%;background:var(--pos)"></div>
+              <div style="width:${v.neu * 100}%;background:var(--neu-bg)"></div>
+              <div style="width:${v.neg * 100}%;background:var(--neg)"></div>
+            </div>
+          </div>
+          <div class="model">
+            <h3>TextBlob</h3>
+            <div class="label ${tb.label}">${tb.label}</div>
+            <div class="metric"><span>Polarity</span><b>${sign(tb.polarity)}</b></div>
+            <div class="gauge"><div class="needle" style="left:${pct(tb.polarity)}%"></div></div>
+            <div class="metric"><span>Subjectivity (0 = fact, 1 = opinion)</span><b>${tb.subjectivity.toFixed(2)}</b></div>
+            <div class="meter"><div style="width:${tb.subjectivity * 100}%"></div></div>
+          </div>
+        </div>
+        ${r.agree
+          ? `<span class="badge ok">✓ Both models agree</span>`
+          : `<span class="badge warn">⚠ The models disagree on this one</span>`}
+      </article>`;
+  }
+
+  input.focus();
+</script>
+</body>
+</html>
