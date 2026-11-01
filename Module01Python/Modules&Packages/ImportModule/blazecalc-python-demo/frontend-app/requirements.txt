@@ -1,0 +1,3 @@
+# Install the BlazeCalc module from the folder next door, in "editable" mode.
+# Editable (-e) means changes in ../BlazeCalc are picked up without reinstalling.
+-e ../BlazeCalc
