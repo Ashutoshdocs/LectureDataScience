@@ -1,0 +1,20 @@
+Python was created by Guido van Rossum.
+Python is easy to read and write.
+Files let a program remember data after it stops.
+Use open() to open a file.
+Always close a file after using it.
+The with statement closes files automatically.
+Mode r means read.
+Mode w means write and erases old content.
+Mode a means append to the end.
+Text files store characters.
+Binary files store raw bytes.
+CSV files store tables as text.
+JSON files store data like dictionaries.
+A newline character is written as \n.
+strip() removes spaces and newlines.
+split() breaks a line into words.
+Errors can happen if a file is missing.
+Use try and except to handle errors.
+Practice every day to get better.
+Python makes file handling simple.
