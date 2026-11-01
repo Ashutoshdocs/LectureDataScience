@@ -6,6 +6,16 @@ from applicant details, and walks through every step of a real ML workflow:
 
 > data → exploration → preprocessing → model comparison → tuning → evaluation → prediction
 
+It can be used two ways:
+- **Command line:** run each step's script and read the output (sections 5–6)
+- **Browser UI:** a Streamlit web app for predictions, reports and data exploration (section 6A)
+
+**Quick start (browser):**
+```bash
+pip install -r requirements.txt
+streamlit run app.py          # opens http://localhost:8501
+```
+
 ---
 
 ## 1. What is supervised learning?
@@ -32,6 +42,7 @@ new inputs it has never seen.
 ```
 supervised-learning-demo/
 ├── README.md                 ← you are here
+├── app.py                    ← browser UI (Streamlit)
 ├── requirements.txt          ← Python dependencies
 ├── run_all.sh                ← runs every step in order
 ├── data/
@@ -152,6 +163,34 @@ Writes `data/predictions.csv` with an approval probability and a label for each 
 
 ---
 
+## 6A. Browser UI (Streamlit)
+
+```bash
+streamlit run app.py
+```
+Your browser opens at **http://localhost:8501**. Press `Ctrl+C` in the terminal to stop.
+
+A trained model is already included. If it's missing, or you want to retrain after
+changing the code, click **🔄 Train / retrain model** in the sidebar. That runs Steps 1, 3 and 4
+for you.
+
+| Tab | What you can do |
+|---|---|
+| 🔮 **Predict** | Fill in an applicant form (age, income, credit score, loan amount…) and get **Approved / Rejected** with a probability. A slider lets you move the decision threshold. |
+| 📄 **Batch predict** | Download the sample CSV, upload your own CSV, view predictions for every row and download them. |
+| 📊 **Model report** | Test-set accuracy, precision, recall, F1 and ROC-AUC, plus the confusion matrix, ROC curve and feature importance charts. |
+| 🔍 **Data explorer** | Preview the training data, compare feature averages for approved vs rejected applicants, and see approval rate by category and missing values. |
+
+**Things to try in the UI:**
+- Start with the defaults, then raise the credit score from 600 to 780 and watch the probability jump.
+- Increase the loan amount while keeping income fixed and see where the decision flips.
+- Raise the threshold to 0.7 and notice that the model approves fewer applicants (more cautious, higher precision).
+
+> To open the app from another device on your network:
+> `streamlit run app.py --server.address 0.0.0.0`
+
+---
+
 ## 6. Results (from the included run)
 
 **Cross-validation (train set, ROC-AUC):**
@@ -244,3 +283,6 @@ majority class) — a model is only useful if it beats it clearly.
 | `FileNotFoundError: best_model.joblib` | Run `python src/train.py` before evaluate/predict |
 | `Input file is missing columns` | Your CSV must contain all feature columns listed in `config.py` |
 | Scripts can't find `config` | Run commands from the project root as shown (`python src/...`) |
+| `streamlit: command not found` | Use `python -m streamlit run app.py` |
+| UI says "No trained model found" | Click **Train / retrain model** in the sidebar |
+| Port 8501 already in use | `streamlit run app.py --server.port 8502` |
