@@ -1,0 +1,64 @@
+:root {
+  --bg: #0f1115;
+  --panel: #1a1d24;
+  --key: #262a33;
+  --accent: #ff6b2c;
+  --text: #f2f2f2;
+  --muted: #9aa0aa;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.app { width: 100%; max-width: 360px; }
+h1 { margin: 0 0 4px; }
+h1 span { font-size: 0.9rem; color: var(--muted); font-weight: 400; }
+.subtitle { color: var(--muted); font-size: 0.85rem; line-height: 1.4; }
+code { color: var(--accent); }
+
+.calculator {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+#display {
+  width: 100%;
+  font-size: 1.6rem;
+  padding: 12px;
+  text-align: right;
+  border: none;
+  border-radius: 10px;
+  background: #0b0d10;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+.keys button {
+  font-size: 1.2rem;
+  padding: 16px 0;
+  border: none;
+  border-radius: 10px;
+  background: var(--key);
+  color: var(--text);
+  cursor: pointer;
+}
+.keys button:hover { filter: brightness(1.2); }
+.keys button.op { color: var(--accent); }
+.keys button.equals { grid-column: span 4; background: var(--accent); color: #fff; }
+
+.error { color: #ff5c5c; min-height: 1.2em; }
+#history { padding-left: 18px; color: var(--muted); }
