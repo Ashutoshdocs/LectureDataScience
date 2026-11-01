@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spam Classifier Lab</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --ink: #1d1d1b;
+    --muted: #6b6a65;
+    --line: #e4e1d8;
+    --accent: #c2410c;
+    --soft: #eceae4;
+    --spam: #b91c1c;
+    --spam-bg: #fee2e2;
+    --spam-rgb: 220, 38, 38;
+    --ham: #15803d;
+    --ham-bg: #dcfce7;
+    --ham-rgb: 22, 163, 74;
+    --warn: #92400e;
+    --warn-bg: #fef3c7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171715;
+      --card: #22221f;
+      --ink: #f2f0ea;
+      --muted: #a19f97;
+      --line: #36352f;
+      --accent: #fb923c;
+      --soft: #2e2d29;
+      --spam: #f87171;
+      --spam-bg: #3a1716;
+      --spam-rgb: 248, 113, 113;
+      --ham: #4ade80;
+      --ham-bg: #14301d;
+      --ham-rgb: 74, 222, 128;
+      --warn: #fcd34d;
+      --warn-bg: #3a2c0c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 16px 64px; }
+  .stack > * + * { margin-top: 16px; }
+
+  header .eyebrow { color: var(--accent); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  header h1 { margin: 4px 0 6px; font-size: 32px; letter-spacing: -.01em; }
+  header p { margin: 0 0 24px; color: var(--muted); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  h2 { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 12px; }
+
+  textarea { width: 100%; min-height: 110px; resize: vertical; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+  .spacer { flex: 1; }
+  .hint { color: var(--muted); font-size: 13px; }
+
+  .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .toggle button { border: 0; background: none; color: var(--muted); padding: 6px 14px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer; }
+  .toggle button.on { background: var(--ink); color: var(--card); }
+  .btn { border: 0; border-radius: 10px; padding: 10px 22px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .btn.ghost { background: none; color: var(--muted); border: 1px solid var(--line); font-weight: 500; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
+  .chip { border: 1px solid var(--line); background: none; color: var(--ink); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip .d { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .error { margin-top: 12px; color: var(--spam); font-weight: 500; }
+
+  /* verdict */
+  .verdict { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 12px; }
+  .verdict.spam { background: var(--spam-bg); color: var(--spam); }
+  .verdict.ham { background: var(--ham-bg); color: var(--ham); }
+  .verdict .icon { font-size: 36px; line-height: 1; }
+  .verdict .big { font-size: 26px; font-weight: 700; line-height: 1.2; }
+  .verdict .sub { font-size: 14px; opacity: .9; }
+
+  .meter { position: relative; height: 10px; border-radius: 5px; margin: 18px 0 4px;
+           background: linear-gradient(90deg, rgba(var(--ham-rgb), .8), var(--soft) 50%, rgba(var(--spam-rgb), .8)); }
+  .meter .needle { position: absolute; top: -5px; width: 4px; height: 20px; border-radius: 2px; background: var(--ink); transform: translateX(-50%); transition: left .4s; }
+  .meter-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+
+  .msg { font-size: 18px; line-height: 1.9; margin: 18px 0 6px; word-wrap: break-word; }
+  .msg span.w { border-radius: 4px; padding: 1px 2px; }
+  .legend { font-size: 13px; color: var(--muted); }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin: 0 4px 0 10px; }
+
+  .models { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  @media (max-width: 600px) { .models { grid-template-columns: 1fr; } }
+  .model { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .model .name { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .model .lab { font-weight: 700; font-size: 18px; }
+  .lab.spam { color: var(--spam); } .lab.ham { color: var(--ham); }
+  .pbar { height: 8px; background: var(--soft); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .pbar div { height: 100%; border-radius: 4px; }
+
+  .words { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  @media (max-width: 600px) { .words { grid-template-columns: 1fr; } }
+  .words h3 { font-size: 13px; margin: 0 0 6px; font-weight: 600; }
+  .tag { display: inline-block; border-radius: 6px; padding: 2px 8px; margin: 0 4px 4px 0; font-size: 13px; }
+  .tag.s { background: var(--spam-bg); color: var(--spam); }
+  .tag.h { background: var(--ham-bg); color: var(--ham); }
+  .badge { display: inline-block; margin-top: 14px; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; background: var(--warn-bg); color: var(--warn); }
+
+  /* batch table */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding: 0 8px 8px; }
+  td { padding: 10px 8px; border-top: 1px solid var(--line); vertical-align: middle; }
+  td.v { white-space: nowrap; font-weight: 700; }
+  td.p { width: 120px; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .pill.spam { background: var(--spam-bg); color: var(--spam); } .pill.ham { background: var(--ham-bg); color: var(--ham); }
+  tr.clickable { cursor: pointer; } tr.clickable:hover td { background: var(--bg); }
+
+  .sumbar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin: 6px 0 14px; background: var(--soft); }
+
+  /* model performance */
+  details > summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 8px; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: "▸"; color: var(--muted); transition: transform .2s; }
+  details[open] > summary::before { transform: rotate(90deg); }
+  .metrics { margin-top: 16px; overflow-x: auto; }
+  .metrics td, .metrics th { text-align: right; font-variant-numeric: tabular-nums; }
+  .metrics td:first-child, .metrics th:first-child { text-align: left; }
+  .cms { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+  @media (max-width: 600px) { .cms { grid-template-columns: 1fr; } }
+  .cm { display: grid; grid-template-columns: auto 1fr 1fr; gap: 4px; font-size: 13px; text-align: center; }
+  .cm .h { color: var(--muted); font-size: 12px; padding: 4px; }
+  .cm .rl { text-align: right; padding-right: 6px; color: var(--muted); font-size: 12px; align-self: center; }
+  .cm .c { border-radius: 8px; padding: 10px 4px; font-weight: 700; font-size: 18px; }
+  .cm .c small { display: block; font-weight: 500; font-size: 11px; opacity: .8; }
+  .cm .ok { background: var(--ham-bg); color: var(--ham); } .cm .bad { background: var(--spam-bg); color: var(--spam); }
+  .mistakes { margin: 8px 0 0; padding-left: 18px; font-size: 14px; }
+  .mistakes li { margin-bottom: 4px; }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Practical Lab 4</div>
+    <h1>Spam Message Classifier</h1>
+    <p>Paste an SMS or message. Two machine-learning models, <b>Naive Bayes</b> and <b>Logistic Regression</b>, trained on labelled examples, decide whether it's spam.</p>
+  </header>
+
+  <div class="stack">
+    <section class="card">
+      <textarea id="input" placeholder="e.g. Congratulations! You have won Rs 10,000. Call 9876543210 to claim now!"></textarea>
+      <div class="row">
+        <div class="toggle" role="group" aria-label="Mode">
+          <button id="mode-single" class="on" type="button">One message</button>
+          <button id="mode-batch" type="button">One per line</button>
+        </div>
+        <span class="spacer"></span>
+        <button class="btn ghost" id="clear" type="button">Clear</button>
+        <button class="btn" id="go" type="button">Classify</button>
+      </div>
+      <div class="hint" style="margin-top:8px">Tip: press <b>Ctrl + Enter</b> to classify.</div>
+      <div class="chips" id="examples"></div>
+      <div class="error" id="error" hidden></div>
+    </section>
+
+    <div id="out" class="stack" hidden></div>
+
+    <section class="card">
+      <details id="perf">
+        <summary>Model performance <span class="hint" id="perf-sub" style="font-weight:400">loading…</span></summary>
+        <div id="perf-body"></div>
+      </details>
+    </section>
+  </div>
+
+  <footer>
+    Words are coloured by how strongly they push the Logistic Regression model towards spam (red) or not spam (green).
+    Links, phone numbers and money amounts are replaced by special tokens before training, so the model learns the pattern rather than the exact number.
+  </footer>
+</div>
+
+<script>
+  const EXAMPLES = [
+    ["spam", "Congratulations! You have won a Rs 50,000 cash prize. Call 9876543210 to claim now!"],
+    ["ham",  "Hey, are you coming to the lab tomorrow? Need your help with the code."],
+    ["spam", "URGENT: Your bank account will be blocked today. Update KYC at kyc-verify.example"],
+    ["ham",  "Mom says dinner is ready, come home soon."],
+    ["spam", "Earn Rs 3000 daily from home!!! WhatsApp now to join"],
+    ["ham",  "Your OTP is 551203. Do not share it with anyone."],
+    ["?",    "Click the link below to join the meeting: meet.google.com/abc-defg-hij"],
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const input = $("input");
+  let batch = false;
+  let NAMES = { nb: "Naive Bayes", lr: "Logistic Regression" };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pct = (p) => Math.round(p * 100) + "%";
+
+  // ---- inputs
+  EXAMPLES.forEach(([kind, ex]) => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.title = ex;
+    const color = kind === "spam" ? "var(--spam)" : kind === "ham" ? "var(--ham)" : "var(--warn)";
+    b.innerHTML = `<span class="d" style="background:${color}"></span>${esc(ex.length > 40 ? ex.slice(0, 38) + "…" : ex)}`;
+    b.onclick = () => { setMode(false); input.value = ex; run(); };
+    $("examples").appendChild(b);
+  });
+  $("examples").insertAdjacentHTML("afterbegin", `<span class="hint">Try:</span>`);
+
+  function setMode(isBatch) {
+    batch = isBatch;
+    $("mode-single").classList.toggle("on", !batch);
+    $("mode-batch").classList.toggle("on", batch);
+  }
+  $("mode-single").onclick = () => setMode(false);
+  $("mode-batch").onclick = () => {
+    setMode(true);
+    if (!input.value.trim() || !input.value.includes("\n")) input.value = EXAMPLES.map((e) => e[1]).join("\n");
+  };
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) run(); });
+  $("clear").onclick = () => { input.value = ""; $("out").hidden = true; $("error").hidden = true; input.focus(); };
+  $("go").onclick = run;
+
+  async function run() {
+    const err = $("error"); err.hidden = true;
+    const text = input.value.trim();
+    if (!text) { err.textContent = "Please paste a message."; err.hidden = false; return; }
+    const btn = $("go"); btn.disabled = true; btn.textContent = "Classifying…";
+    try {
+      const res = await fetch("/api/classify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, batch }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      data.results.length === 1 ? renderOne(data.results[0]) : renderMany(data.results);
+    } catch (e) {
+      err.textContent = e.message.includes("fetch") ? "Can't reach the server. Is `python app.py` still running?" : e.message;
+      err.hidden = false;
+    } finally { btn.disabled = false; btn.textContent = "Classify"; }
+  }
+
+  // ---- single result
+  function highlight(segments) {
+    const max = Math.max(0.0001, ...segments.map((s) => Math.abs(s.s || 0)));
+    return segments.map(({ t, s }) => {
+      if (!s) return esc(t);
+      const a = (0.15 + 0.6 * Math.abs(s) / max).toFixed(2);
+      const rgb = s > 0 ? "var(--spam-rgb)" : "var(--ham-rgb)";
+      return `<span class="w" style="background:rgba(${rgb},${a})" title="${s > 0 ? "spammy" : "safe"}: ${s > 0 ? "+" : ""}${s}">${esc(t)}</span>`;
+    }).join("");
+  }
+
+  function resultCard(r) {
+    const spam = r.label === "spam";
+    const models = Object.entries(r.models).map(([k, m]) => `
+      <div class="model">
+        <div class="name">${esc(NAMES[k])}</div>
+        <div class="lab ${m.label}">${m.label === "spam" ? "Spam" : "Not spam"} · ${pct(m.spam_probability)}</div>
+        <div class="pbar"><div style="width:${m.spam_probability * 100}%;background:${m.label === "spam" ? "var(--spam)" : "var(--ham)"}"></div></div>
+      </div>`).join("");
+    const tags = (list, cls) => list.length ? list.map(([w]) => `<span class="tag ${cls}">${esc(w)}</span>`).join("") : `<span class="hint">none</span>`;
+    return `
+      <section class="card">
+        <div class="verdict ${r.label}">
+          <div class="icon">${spam ? "🚫" : "✅"}</div>
+          <div><div class="big">${spam ? "Spam" : "Not spam"}</div>
+          <div class="sub">${pct(r.spam_probability)} spam probability (average of both models)</div></div>
+        </div>
+        <div class="meter"><div class="needle" style="left:${r.spam_probability * 100}%"></div></div>
+        <div class="meter-labels"><span>Safe</span><span>50%</span><span>Spam</span></div>
+
+        <p class="msg">${highlight(r.segments)}</p>
+        <div class="legend">Word colour:<span class="sw" style="background:rgba(var(--spam-rgb),.6)"></span>pushes towards spam<span class="sw" style="background:rgba(var(--ham-rgb),.6)"></span>pushes towards not spam</div>
+
+        <div class="models">${models}</div>
+        <div class="words">
+          <div><h3>Spammy features</h3>${tags(r.spam_words, "s")}</div>
+          <div><h3>Safe features</h3>${tags(r.ham_words, "h")}</div>
+        </div>
+        ${r.agree ? "" : `<span class="badge">⚠ The two models disagree on this message</span>`}
+      </section>`;
+  }
+
+  function renderOne(r) {
+    $("out").innerHTML = resultCard(r);
+    $("out").hidden = false;
+    $("out").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // ---- batch
+  function renderMany(results) {
+    const n = results.length, s = results.filter((r) => r.label === "spam").length;
+    $("out").innerHTML = `
+      <section class="card">
+        <h2>${n} messages · ${s} spam · ${n - s} not spam</h2>
+        <div class="sumbar"><div style="width:${s / n * 100}%;background:var(--spam)"></div><div style="width:${(n - s) / n * 100}%;background:var(--ham)"></div></div>
+        <table>
+          <thead><tr><th>Verdict</th><th>Message</th><th>Spam prob.</th></tr></thead>
+          <tbody>${results.map((r, i) => `
+            <tr class="clickable" data-i="${i}">
+              <td class="v"><span class="pill ${r.label}">${r.label === "spam" ? "SPAM" : "HAM"}</span>${r.agree ? "" : " ⚠"}</td>
+              <td>${esc(r.text)}</td>
+              <td class="p"><div class="pbar"><div style="width:${r.spam_probability * 100}%;background:${r.label === "spam" ? "var(--spam)" : "var(--ham)"}"></div></div>
+                <span class="hint">${pct(r.spam_probability)}</span></td>
+            </tr>`).join("")}</tbody>
+        </table>
+        <p class="hint" style="margin:12px 0 0">Click a row to see why. ⚠ = the two models disagree.</p>
+      </section>
+      <div id="detail"></div>`;
+    document.querySelectorAll("tr.clickable").forEach((tr) => tr.onclick = () => {
+      $("detail").innerHTML = resultCard(results[+tr.dataset.i]);
+      $("detail").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    $("out").hidden = false;
+    $("out").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // ---- model performance
+  async function loadModel() {
+    try {
+      const { report: r, names } = await (await fetch("/api/model")).json();
+      NAMES = names;
+      $("perf-sub").textContent = `— trained on ${r.total} messages (${r.source})`;
+      const row = (k, m) => `<tr><td>${esc(names[k])}</td><td>${pct(m.accuracy)}</td><td>${pct(m.precision)}</td><td>${pct(m.recall)}</td><td>${pct(m.f1)}</td><td>${pct(m.cv_accuracy)}</td></tr>`;
+      const cm = (k, m) => {
+        const c = m.confusion;
+        return `<div><h3 style="font-size:14px;margin:0 0 8px">${esc(names[k])}</h3>
+          <div class="cm">
+            <div></div><div class="h">predicted ham</div><div class="h">predicted spam</div>
+            <div class="rl">actual ham</div><div class="c ok">${c.tn}<small>correct</small></div><div class="c bad">${c.fp}<small>false alarm</small></div>
+            <div class="rl">actual spam</div><div class="c bad">${c.fn}<small>missed spam</small></div><div class="c ok">${c.tp}<small>caught</small></div>
+          </div>
+          ${m.mistakes.length ? `<div class="hint" style="margin-top:10px">Mistakes on the test set:</div><ul class="mistakes">${m.mistakes.map((x) => `<li><span class="pill ${x.actual}">${x.actual.toUpperCase()}</span> predicted ${x.predicted}: ${esc(x.message)}</li>`).join("")}</ul>` : ""}
+        </div>`;
+      };
+      $("perf-body").innerHTML = `
+        <p class="hint" style="margin:14px 0 0">${r.spam} spam and ${r.ham} ham messages. The models were trained on ${r.train_size} of them and tested on ${r.test_size} they had never seen.
+        5-fold CV repeats this five times with different splits and averages the accuracy.</p>
+        <div class="metrics"><table>
+          <thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>5-fold CV</th></tr></thead>
+          <tbody>${Object.entries(r.models).map(([k, m]) => row(k, m)).join("")}</tbody>
+        </table></div>
+        <p class="hint" style="margin:10px 0 0"><b>Precision</b>: of the messages flagged as spam, how many really were. <b>Recall</b>: of the real spam, how much was caught.</p>
+        <div class="cms">${Object.entries(r.models).map(([k, m]) => cm(k, m)).join("")}</div>`;
+    } catch { $("perf-sub").textContent = "— couldn't load"; }
+  }
+
+  loadModel();
+  input.focus();
+</script>
+</body>
+</html>
