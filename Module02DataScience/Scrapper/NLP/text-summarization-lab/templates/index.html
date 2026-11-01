@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text Summarization Lab</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --ink: #1d1d1b;
+    --muted: #6b6a65;
+    --line: #e4e1d8;
+    --accent: #c2410c;
+    --freq: #2563eb;
+    --freq-bg: #dbeafe;
+    --tr: #9333ea;
+    --tr-bg: #f3e8ff;
+    --both-bg: #fef3c7;
+    --both: #92400e;
+    --soft: #eceae4;
+    --err: #b91c1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171715;
+      --card: #22221f;
+      --ink: #f2f0ea;
+      --muted: #a19f97;
+      --line: #36352f;
+      --accent: #fb923c;
+      --freq: #60a5fa;
+      --freq-bg: #172a46;
+      --tr: #c084fc;
+      --tr-bg: #2e1846;
+      --both-bg: #3a2c0c;
+      --both: #fcd34d;
+      --soft: #2e2d29;
+      --err: #f87171;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  header .eyebrow {
+    color: var(--accent); font-size: 13px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+  header h1 { margin: 4px 0 6px; font-size: 32px; letter-spacing: -.01em; }
+  header p { margin: 0 0 24px; color: var(--muted); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  section + section { margin-top: 16px; }
+  #out { margin-top: 24px; }
+  h2 { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase;
+       letter-spacing: .06em; margin: 0 0 12px; }
+
+  textarea {
+    width: 100%; min-height: 200px; resize: vertical; padding: 14px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: var(--bg); color: var(--ink); font: inherit;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 12px; }
+  .spacer { flex: 1; }
+  .hint { color: var(--muted); font-size: 13px; }
+
+  .slider { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  .slider input { accent-color: var(--accent); width: 140px; }
+  .slider b { min-width: 1.5em; font-variant-numeric: tabular-nums; }
+
+  .btn {
+    border: 0; border-radius: 10px; padding: 10px 22px; background: var(--accent);
+    color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .btn.ghost { background: none; color: var(--muted); border: 1px solid var(--line); font-weight: 500; }
+  .btn.small { padding: 5px 12px; font-size: 13px; border-radius: 8px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
+  .chip {
+    border: 1px solid var(--line); background: none; color: var(--ink); border-radius: 999px;
+    padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .error { margin-top: 12px; color: var(--err); font-weight: 500; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 600px) { .stats { grid-template-columns: 1fr 1fr; } }
+  .stat .num { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat .lbl { font-size: 13px; color: var(--muted); }
+
+  .kw { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+  .kw span { background: var(--soft); border-radius: 6px; padding: 3px 9px; font-size: 13px; }
+
+  .methods { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .methods { grid-template-columns: 1fr; } }
+  .method { border-top: 4px solid var(--c); }
+  .method header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .method h3 { margin: 0; font-size: 18px; color: var(--c); }
+  .method .how { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .method .summary { margin: 0 0 12px; }
+  .method .meta { font-size: 13px; color: var(--muted); }
+  .method.freq { --c: var(--freq); }
+  .method.tr { --c: var(--tr); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .original { line-height: 1.9; margin: 0; }
+  .s { border-radius: 4px; padding: 1px 2px; }
+  .s.f { background: var(--freq-bg); }
+  .s.t { background: var(--tr-bg); }
+  .s.ft { background: var(--both-bg); }
+  .s sup { font-size: 10px; color: var(--muted); font-weight: 700; margin-right: 2px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase;
+       letter-spacing: .05em; padding: 0 8px 8px; }
+  td { padding: 8px; border-top: 1px solid var(--line); vertical-align: middle; }
+  td.n { color: var(--muted); width: 2em; font-variant-numeric: tabular-nums; }
+  td.txt { max-width: 0; width: 55%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td.bar { width: 20%; }
+  .bar-wrap { display: flex; align-items: center; gap: 6px; }
+  .bar-bg { flex: 1; height: 8px; border-radius: 4px; background: var(--soft); overflow: hidden; }
+  .bar-bg div { height: 100%; border-radius: 4px; }
+  .bar-wrap .pick { width: 14px; font-size: 12px; color: var(--c); font-weight: 700; }
+  @media (max-width: 600px) { td.txt { display: none; } th.txt { display: none; } td.bar { width: 45%; } }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Practical Lab 2</div>
+    <h1>Text Summarization</h1>
+    <p>Paste an article and compare two extractive NLP methods: <b>Word Frequency</b> and <b>TextRank</b>.</p>
+  </header>
+
+  <section class="card">
+    <textarea id="input" placeholder="Paste a news article, essay or notes here (at least two sentences)…"></textarea>
+    <div class="row">
+      <label class="slider">Summary length
+        <input type="range" id="n" min="1" max="10" value="3">
+        <b id="n-val">3</b> sentences
+      </label>
+      <span class="hint" id="count">0 words</span>
+      <span class="spacer"></span>
+      <button class="btn ghost" id="clear" type="button">Clear</button>
+      <button class="btn" id="go" type="button">Summarize</button>
+    </div>
+    <div class="chips">
+      <span class="hint">Try a sample:</span>
+      <button class="chip" type="button" data-sample="0">Solar energy</button>
+      <button class="chip" type="button" data-sample="1">Sleep and students</button>
+      <button class="chip" type="button" data-sample="2">History of the internet</button>
+    </div>
+    <div class="hint" style="margin-top:8px">Tip: press <b>Ctrl + Enter</b> to summarize.</div>
+    <div class="error" id="error" hidden></div>
+  </section>
+
+  <div id="out" hidden>
+    <section class="card">
+      <div class="stats" id="stats"></div>
+      <div class="kw" id="keywords"></div>
+    </section>
+
+    <section class="methods" id="methods"></section>
+
+    <section class="card">
+      <h2>Original text — which sentences were picked</h2>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--freq-bg)"></span>Word Frequency only</span>
+        <span><span class="sw" style="background:var(--tr-bg)"></span>TextRank only</span>
+        <span><span class="sw" style="background:var(--both-bg)"></span>Both methods</span>
+      </div>
+      <p class="original" id="original"></p>
+    </section>
+
+    <section class="card">
+      <h2>Sentence scores</h2>
+      <table>
+        <thead><tr><th>#</th><th class="txt">Sentence</th><th>Word Freq.</th><th>TextRank</th></tr></thead>
+        <tbody id="scores"></tbody>
+      </table>
+      <p class="hint" style="margin:12px 0 0">Bars are scaled so each method's top sentence is full width. ✓ = picked for the summary.</p>
+    </section>
+  </div>
+
+  <footer>
+    Both methods are <b>extractive</b>: they copy the most important sentences word for word and keep them in their original order.
+    Abstractive summarizers (like BART or GPT) write new sentences instead — see the README extension exercise.
+  </footer>
+</div>
+
+<script>
+  const SAMPLES = [
+    {{ sample|tojson }},
+    "Sleep plays a crucial role in how well students learn. During deep sleep, the brain moves new information from short-term memory into long-term memory. Students who sleep less than seven hours a night often struggle to concentrate in class. Many teenagers stay up late because of homework, part-time jobs, or time spent on their phones. The blue light from screens can delay the release of melatonin, the hormone that makes us feel sleepy. Researchers have found that students who get enough sleep score higher on tests than those who pull all-nighters. Some schools have started classes later in the morning to give students more time to rest. These schools report better attendance and fewer students falling asleep in class. Doctors recommend keeping a regular sleep schedule, even on weekends. Avoiding screens for an hour before bed is another simple way to improve sleep quality.",
+    "The internet began as a research project funded by the United States government in the late 1960s. The first network, called ARPANET, connected a handful of university computers so researchers could share information. In the 1970s, scientists developed TCP/IP, a common set of rules that allowed different networks to talk to each other. This protocol is still the foundation of the internet today. For many years, the internet was used mainly by universities and government agencies. Everything changed in 1991, when Tim Berners-Lee introduced the World Wide Web, which made it easy to link pages together and browse them. Web browsers soon made the internet accessible to ordinary people. By the end of the 1990s, millions of homes were connected, and online shopping and email had become common. The arrival of smartphones in the late 2000s put the internet in people's pockets. Today, more than half of the world's population uses the internet every day."
+  ];
+  const NAMES = { frequency: "Word Frequency", textrank: "TextRank" };
+  const HOW = {
+    frequency: "Counts how often each important word appears; sentences full of frequent words score highest.",
+    textrank: "Builds a graph of sentences linked by shared words, then ranks them like PageRank ranks web pages.",
+  };
+  const CLS = { frequency: "freq", textrank: "tr" };
+
+  const $ = (id) => document.getElementById(id);
+  const input = $("input");
+  const esc = (s) => s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const updateCount = () => {
+    const w = input.value.trim() ? input.value.trim().split(/\s+/).length : 0;
+    $("count").textContent = w + " words";
+  };
+  input.addEventListener("input", updateCount);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) run(); });
+
+  $("n").addEventListener("input", (e) => { $("n-val").textContent = e.target.value; });
+  $("n").addEventListener("change", () => { if (!$("out").hidden) run(); });
+
+  document.querySelectorAll("[data-sample]").forEach((b) => {
+    b.onclick = () => { input.value = SAMPLES[+b.dataset.sample]; updateCount(); run(); };
+  });
+  $("clear").onclick = () => {
+    input.value = ""; updateCount(); $("out").hidden = true; $("error").hidden = true; input.focus();
+  };
+  $("go").onclick = run;
+
+  async function run() {
+    const err = $("error");
+    err.hidden = true;
+    const text = input.value.trim();
+    if (!text) { err.textContent = "Please paste some text to summarise."; err.hidden = false; return; }
+
+    const btn = $("go");
+    btn.disabled = true; btn.textContent = "Summarizing…";
+    try {
+      const res = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, sentences: +$("n").value }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      render(data);
+    } catch (e) {
+      err.textContent = e.message.includes("fetch")
+        ? "Can't reach the server. Is `python app.py` still running?"
+        : e.message;
+      err.hidden = false;
+    } finally {
+      btn.disabled = false; btn.textContent = "Summarize";
+    }
+  }
+
+  function render(r) {
+    const m = r.methods;
+    const f = new Set(m.frequency.chosen), t = new Set(m.textrank.chosen);
+    const both = [...f].filter((i) => t.has(i)).length;
+
+    $("stats").innerHTML = [
+      [r.sentences.length, "sentences in original"],
+      [r.original_words, "words in original"],
+      [`${both} / ${f.size}`, "sentences both methods picked"],
+    ].map(([n, l]) => `<div class="stat"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join("");
+
+    $("keywords").innerHTML = `<span class="hint" style="background:none;padding:3px 0">Top keywords:</span>` +
+      r.keywords.map((k) => `<span>${esc(k)}</span>`).join("");
+
+    $("methods").innerHTML = Object.entries(m).map(([key, x]) => {
+      const pct = Math.max(0, 100 - Math.round((x.words / r.original_words) * 100));
+      return `
+        <article class="card method ${CLS[key]}">
+          <header><h3>${NAMES[key]}</h3></header>
+          <p class="how">${HOW[key]}</p>
+          <p class="summary">${esc(x.summary)}</p>
+          <div class="row" style="margin-top:0">
+            <span class="meta">${x.words} words · ${pct}% shorter · sentences ${x.chosen.map((i) => i + 1).join(", ")}</span>
+            <span class="spacer"></span>
+            <button class="btn ghost small" type="button" data-copy="${key}">Copy</button>
+          </div>
+        </article>`;
+    }).join("");
+    document.querySelectorAll("[data-copy]").forEach((b) => {
+      b.onclick = async () => {
+        try { await navigator.clipboard.writeText(m[b.dataset.copy].summary); b.textContent = "Copied ✓"; }
+        catch { b.textContent = "Copy failed"; }
+        setTimeout(() => (b.textContent = "Copy"), 1500);
+      };
+    });
+
+    $("original").innerHTML = r.sentences.map((s, i) => {
+      const cls = f.has(i) && t.has(i) ? "ft" : f.has(i) ? "f" : t.has(i) ? "t" : "";
+      return `<span class="s ${cls}"><sup>${i + 1}</sup>${esc(s)}</span>`;
+    }).join(" ");
+
+    const bar = (key, i) => {
+      const x = m[key], c = `var(--${CLS[key]})`;
+      return `<div class="bar-wrap" style="--c:${c}" title="score ${x.scores[i]}">
+        <div class="bar-bg"><div style="width:${x.relative[i] * 100}%;background:${c}"></div></div>
+        <span class="pick">${x.chosen.includes(i) ? "✓" : ""}</span></div>`;
+    };
+    $("scores").innerHTML = r.sentences.map((s, i) => `
+      <tr><td class="n">${i + 1}</td><td class="txt" title="${esc(s)}">${esc(s)}</td>
+      <td class="bar">${bar("frequency", i)}</td><td class="bar">${bar("textrank", i)}</td></tr>`).join("");
+
+    $("out").hidden = false;
+    $("stats").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  input.focus();
+</script>
+</body>
+</html>
