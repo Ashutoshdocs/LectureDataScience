@@ -22,7 +22,7 @@ A small NLP demo that shortens a long piece of text into its most important sent
 ## Project files
 
 ```
-text-summarization-lab/
+textSummarization/
 ├── app.py              # web app (Flask) — paste text in the browser
 ├── templates/
 │   └── index.html      # the web page
@@ -56,7 +56,7 @@ python3 --version     # macOS / Linux
 Put all the files in one folder (with `index.html` inside a `templates` subfolder), then open a terminal there:
 
 ```bash
-cd path/to/text-summarization-lab
+cd path/to/textSummarization
 ```
 
 ### 3. Create a virtual environment
