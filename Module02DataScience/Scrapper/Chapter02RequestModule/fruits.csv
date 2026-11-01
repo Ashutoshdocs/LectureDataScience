@@ -1,0 +1,9 @@
+id,name,category,origin,price,unit,rating,in_stock,badge,link
+1,Alphonso Mango,tropical,"Ratnagiri, India",450,dozen,4.9,True,Bestseller,/fruit/alphonso-mango
+2,Dragon Fruit,exotic,Vietnam,180,piece,4.5,True,New,/fruit/dragon-fruit
+3,Mahabaleshwar Strawberries,berry,"Maharashtra, India",220,box,4.7,True,,/fruit/strawberries
+4,Nagpur Orange,citrus,"Nagpur, India",120,kg,4.3,False,,/fruit/nagpur-orange
+5,Golden Pineapple,tropical,"Kerala, India",90,piece,4.4,True,,/fruit/golden-pineapple
+6,Wild Blueberries,berry,Chile,350,box,4.8,True,Limited,/fruit/wild-blueberries
+7,Kiwi,exotic,New Zealand,40,piece,4.2,False,,/fruit/kiwi
+8,Gondhoraj Lemon,citrus,"West Bengal, India",60,250g,4.6,True,,/fruit/gondhoraj-lemon
