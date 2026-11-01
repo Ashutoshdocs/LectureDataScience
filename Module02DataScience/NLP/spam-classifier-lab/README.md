@@ -29,7 +29,7 @@ Labelled messages ──► 1. Pre-processing ──► 2. TF-IDF features ─�
 ## Project files
 
 ```
-spam-classifier-lab/
+spamclassifier/
 ├── app.py               # web app (Flask) — classify messages in the browser
 ├── templates/
 │   └── index.html       # the web page
@@ -70,7 +70,7 @@ python3 --version     # macOS / Linux
 Put all the files in one folder (with `index.html` inside a `templates` subfolder), then open a terminal there:
 
 ```bash
-cd path/to/spam-classifier-lab
+cd path/to/spamclassifier
 ```
 
 ### 3. Create a virtual environment
