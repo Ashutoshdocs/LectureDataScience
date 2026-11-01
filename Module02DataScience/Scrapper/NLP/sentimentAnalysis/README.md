@@ -14,7 +14,7 @@ Labels use the standard thresholds: score ≥ 0.05 → Positive, ≤ -0.05 → N
 ## Project files
 
 ```
-sentiment-lab/
+sentimentAnalysis/
 ├── app.py              # web app (Flask) — type text in the browser
 ├── templates/
 │   └── index.html      # the web page
@@ -48,7 +48,8 @@ python3 --version     # macOS / Linux
 Put all the files in one folder (with `index.html` inside a `templates` subfolder), then open a terminal there:
 
 ```bash
-cd path/to/sentiment-lab
+cd path/to/sentimentAnalysis
+
 ```
 
 ### 3. Create a virtual environment
