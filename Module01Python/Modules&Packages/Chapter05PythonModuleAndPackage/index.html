@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Imports Demo</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --text:#e2e8f0; --muted:#94a3b8; --accent:#facc15; --ok:#4ade80; --code:#0b1220; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:28px 16px 8px; max-width:1100px; margin:auto; }
+  h1 { margin:0 0 6px; } h1 span { color:var(--accent); }
+  p.sub { color:var(--muted); margin:0; }
+  .bar { max-width:1100px; margin:16px auto; padding:0 16px; display:flex; gap:8px; flex-wrap:wrap; }
+  button { background:var(--card); color:var(--text); border:1px solid #334155; padding:6px 12px; border-radius:999px; cursor:pointer; }
+  button.active, button:hover { border-color:var(--accent); color:var(--accent); }
+  main { max-width:1100px; margin:auto; padding:0 16px 40px; display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); }
+  .card { background:var(--card); border-radius:12px; padding:14px; border:1px solid #334155; }
+  .tag { font-size:12px; color:var(--accent); text-transform:uppercase; letter-spacing:.05em; }
+  pre { background:var(--code); padding:10px; border-radius:8px; overflow-x:auto; font-size:13px; margin:8px 0; }
+  .res { color:var(--ok); font-family:ui-monospace,monospace; font-size:13px; word-break:break-all; }
+  .err { color:#f87171; padding:16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Python <span>import</span> &amp; <span>from</span> Demo</h1>
+  <p class="sub">Built-in modules, packages and our own <code>toolkit</code> package — results computed live by <code>app.py</code> <span id="py"></span></p>
+</header>
+
+<div class="bar" id="filters"></div>
+<div class="bar"><button id="reload">↻ Re-run (new random numbers)</button></div>
+<main id="grid"></main>
+
+<script>
+  const grid = document.getElementById("grid");
+  const filters = document.getElementById("filters");
+  let examples = [], active = "All";
+
+  function esc(s) { return String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+  function render() {
+    const list = active === "All" ? examples : examples.filter(e => e.style === active);
+    grid.innerHTML = list.map(e => `
+      <div class="card">
+        <div class="tag">${esc(e.style)}</div>
+        <pre>${esc(e.code)}</pre>
+        <div class="res">→ ${esc(e.result)}</div>
+      </div>`).join("");
+    const styles = ["All", ...new Set(examples.map(e => e.style))];
+    filters.innerHTML = styles.map(s =>
+      `<button class="${s === active ? "active" : ""}" data-s="${esc(s)}">${esc(s)}</button>`).join("");
+  }
+
+  filters.onclick = ev => { if (ev.target.dataset.s) { active = ev.target.dataset.s; render(); } };
+
+  async function load() {
+    try {
+      const r = await fetch("/api/demo");
+      const data = await r.json();
+      examples = data.examples;
+      document.getElementById("py").textContent = `(Python ${data.python})`;
+      render();
+    } catch (e) {
+      grid.innerHTML = `<div class="err">Could not reach the API. Start the server with <code>python app.py</code> and open http://localhost:8000</div>`;
+    }
+  }
+  document.getElementById("reload").onclick = load;
+  load();
+</script>
+</body>
+</html>
