@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Question Answering Lab</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --card: #ffffff;
+    --ink: #1d1d1b;
+    --muted: #6b6a65;
+    --line: #e4e1d8;
+    --accent: #c2410c;
+    --accent-bg: #ffedd5;
+    --soft: #eceae4;
+    --mark: #fde68a;
+    --high: #15803d;
+    --high-bg: #dcfce7;
+    --med: #92400e;
+    --med-bg: #fef3c7;
+    --low: #b91c1c;
+    --low-bg: #fee2e2;
+    --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171715;
+      --card: #22221f;
+      --ink: #f2f0ea;
+      --muted: #a19f97;
+      --line: #36352f;
+      --accent: #fb923c;
+      --accent-bg: #3b2212;
+      --soft: #2e2d29;
+      --mark: #78560f;
+      --high: #4ade80;
+      --high-bg: #14301d;
+      --med: #fcd34d;
+      --med-bg: #3a2c0c;
+      --low: #f87171;
+      --low-bg: #3a1716;
+      --link: #93c5fd;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--link); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  header .eyebrow { color: var(--accent); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  header h1 { margin: 4px 0 6px; font-size: 32px; letter-spacing: -.01em; }
+  header p { margin: 0 0 24px; color: var(--muted); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .stack > * + * { margin-top: 16px; }
+  h2 { font-size: 13px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 12px; }
+
+  .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; margin-bottom: 16px; }
+  .tabs button {
+    border: 0; background: none; color: var(--muted); padding: 7px 16px; border-radius: 999px;
+    font: inherit; font-size: 14px; cursor: pointer;
+  }
+  .tabs button.on { background: var(--ink); color: var(--card); }
+
+  .ask { display: flex; gap: 10px; }
+  .ask input {
+    flex: 1; min-width: 0; padding: 13px 16px; font: inherit; font-size: 17px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+  }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn {
+    border: 0; border-radius: 10px; padding: 0 24px; background: var(--accent); color: #fff;
+    font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .btn.ghost { background: none; color: var(--muted); border: 1px solid var(--line); font-weight: 500; padding: 5px 12px; font-size: 13px; border-radius: 8px; }
+
+  #context-box { margin-top: 14px; }
+  #context-box textarea {
+    width: 100%; min-height: 150px; resize: vertical; padding: 12px 14px; font: inherit; font-size: 15px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .spacer { flex: 1; }
+  .hint { color: var(--muted); font-size: 13px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
+  .chip { border: 1px solid var(--line); background: none; color: var(--ink); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .error { margin-top: 12px; color: var(--low); font-weight: 500; }
+
+  .answer-card { border-top: 4px solid var(--accent); }
+  .q-echo { color: var(--muted); font-size: 15px; margin: 0 0 4px; }
+  .short { font-size: 30px; font-weight: 700; line-height: 1.25; margin: 0 0 14px; letter-spacing: -.01em; }
+  .evidence { font-size: 17px; line-height: 1.7; margin: 0 0 14px; padding-left: 14px; border-left: 3px solid var(--line); }
+  .evidence mark { background: var(--mark); color: inherit; border-radius: 3px; padding: 0 2px; }
+  .evidence b { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+  .badge { padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+  .badge.High { background: var(--high-bg); color: var(--high); }
+  .badge.Medium { background: var(--med-bg); color: var(--med); }
+  .badge.Low, .badge.None { background: var(--low-bg); color: var(--low); }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 680px) { .steps { grid-template-columns: 1fr 1fr; } }
+  .step { background: var(--bg); border-radius: 10px; padding: 12px; font-size: 14px; }
+  .step .n { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
+  .step .v { font-weight: 600; margin-top: 2px; word-wrap: break-word; }
+  .step .d { color: var(--muted); font-size: 13px; }
+  .tag { display: inline-block; background: var(--soft); border-radius: 5px; padding: 1px 7px; margin: 2px 2px 0 0; font-weight: 500; font-size: 13px; }
+
+  .cands { list-style: none; margin: 0; padding: 0; }
+  .cands li { display: grid; grid-template-columns: 70px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 15px; }
+  .cands li:first-child { border-top: 0; padding-top: 0; }
+  .score { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bar { height: 6px; background: var(--soft); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+  .bar div { height: 100%; background: var(--accent); border-radius: 3px; }
+  .src { font-size: 13px; color: var(--muted); }
+  .used { color: var(--accent); font-weight: 600; margin-right: 8px; }
+
+  .empty { text-align: center; padding: 28px 20px; }
+  .empty .big { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+
+  .history { display: flex; flex-wrap: wrap; gap: 6px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 13px; }
+  .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent;
+             border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Practical Lab 3</div>
+    <h1>Question Answering</h1>
+    <p>Ask a question in plain English. The app finds relevant text, ranks every sentence with <b>TF-IDF</b>, and pulls out the answer.</p>
+  </header>
+
+  <div class="stack">
+    <section class="card">
+      <div class="tabs" role="group" aria-label="Answer source">
+        <button id="tab-wiki" class="on" type="button">🌐 Search Wikipedia</button>
+        <button id="tab-ctx" type="button">📄 My own text</button>
+      </div>
+
+      <form class="ask" id="form">
+        <input id="q" type="text" autocomplete="off" placeholder="e.g. Who invented the telephone?" maxlength="300">
+        <button class="btn" id="go" type="submit">Ask</button>
+      </form>
+
+      <div id="context-box" hidden>
+        <textarea id="ctx" placeholder="Paste a paragraph, notes or an article. The answer will come only from this text."></textarea>
+        <div class="row" style="margin-top:8px">
+          <span class="hint" id="ctx-count">0 words</span>
+          <span class="spacer"></span>
+          <button class="btn ghost" type="button" id="load-sample">Load sample (Taj Mahal)</button>
+          <button class="btn ghost" type="button" id="clear-ctx">Clear</button>
+        </div>
+      </div>
+
+      <div class="chips" id="examples"></div>
+      <div class="error" id="error" hidden></div>
+    </section>
+
+    <div id="out" class="stack" hidden></div>
+
+    <section class="card" id="history-card" hidden>
+      <h2>Recent questions</h2>
+      <div class="history" id="history"></div>
+    </section>
+  </div>
+
+  <footer>
+    This is a classic <b>retrieval-based</b> QA system: it can only return sentences that already exist in the source text.
+    Wikipedia mode needs an internet connection; “My own text” works offline.
+  </footer>
+</div>
+
+<script>
+  const SAMPLE_CONTEXT = {{ sample_context|tojson }};
+  const EXAMPLES = {
+    wikipedia: [
+      "Who invented the telephone?",
+      "When did India become independent?",
+      "Where is Mount Everest?",
+      "How tall is the Eiffel Tower?",
+      "Who wrote Romeo and Juliet?",
+      "What is photosynthesis?",
+    ],
+    context: [
+      "Who commissioned the Taj Mahal?",
+      "When was it designated a World Heritage Site?",
+      "How tall is the central dome?",
+      "How many artisans worked on it?",
+      "Why do the minarets lean outwards?",
+    ],
+  };
+  const TYPE_LABEL = { PERSON: "Person", DATE: "Date", PLACE: "Place", NUMBER: "Number", DESCRIPTION: "Description" };
+
+  const $ = (id) => document.getElementById(id);
+  let mode = "wikipedia";
+  const history = [];
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function setMode(m) {
+    mode = m;
+    $("tab-wiki").classList.toggle("on", m === "wikipedia");
+    $("tab-ctx").classList.toggle("on", m === "context");
+    $("context-box").hidden = m !== "context";
+    if (m === "context" && !$("ctx").value.trim()) { $("ctx").value = SAMPLE_CONTEXT; countCtx(); }
+    $("q").placeholder = m === "context" ? "e.g. Who commissioned the Taj Mahal?" : "e.g. Who invented the telephone?";
+    $("examples").innerHTML = `<span class="hint">Try:</span>` +
+      EXAMPLES[m].map((e) => `<button class="chip" type="button">${esc(e)}</button>`).join("");
+    $("examples").querySelectorAll(".chip").forEach((b) => b.onclick = () => { $("q").value = b.textContent; run(); });
+  }
+  $("tab-wiki").onclick = () => setMode("wikipedia");
+  $("tab-ctx").onclick = () => setMode("context");
+
+  const countCtx = () => {
+    const t = $("ctx").value.trim();
+    $("ctx-count").textContent = (t ? t.split(/\s+/).length : 0) + " words";
+  };
+  $("ctx").addEventListener("input", countCtx);
+  $("load-sample").onclick = () => { $("ctx").value = SAMPLE_CONTEXT; countCtx(); };
+  $("clear-ctx").onclick = () => { $("ctx").value = ""; countCtx(); $("ctx").focus(); };
+
+  $("form").addEventListener("submit", (e) => { e.preventDefault(); run(); });
+
+  async function run() {
+    const question = $("q").value.trim();
+    const err = $("error");
+    err.hidden = true;
+    if (!question) { err.textContent = "Please type a question."; err.hidden = false; return; }
+
+    const btn = $("go");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="loading"></span>${mode === "wikipedia" ? "Searching…" : "Thinking…"}`;
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, mode, context: $("ctx").value }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      render(data);
+      remember(question, mode);
+    } catch (e) {
+      err.textContent = e.message.includes("fetch")
+        ? "Can't reach the server. Is `python app.py` still running?"
+        : e.message;
+      err.hidden = false;
+    } finally {
+      btn.disabled = false; btn.textContent = "Ask";
+    }
+  }
+
+  // Highlight the short answer (yellow) and question keywords (underlined).
+  function highlight(sentence, short, keywords) {
+    let start = -1, end = -1;
+    if (short) {
+      start = sentence.indexOf(short);
+      if (start >= 0) end = start + short.length;
+    }
+    const kws = keywords.map((k) => k.toLowerCase()).filter((k) => k.length > 2);
+    const isKw = (w) => {
+      const lw = w.toLowerCase();
+      return kws.some((k) => lw === k || (k.length >= 4 && lw.startsWith(k.slice(0, Math.max(4, k.length - 2)))));
+    };
+    let html = "", i = 0;
+    for (const m of sentence.matchAll(/[A-Za-z0-9']+|[^A-Za-z0-9']+/g)) {
+      const tok = m[0], pos = m.index;
+      if (start >= 0 && pos === start) html += "<mark>";
+      html += /[A-Za-z0-9]/.test(tok) && isKw(tok) && !(pos >= start && pos < end) ? `<b>${esc(tok)}</b>` : esc(tok);
+      if (start >= 0 && pos + tok.length === end) html += "</mark>";
+      i = pos + tok.length;
+    }
+    return html;
+  }
+
+  function sourceLink(src) {
+    if (!src) return "";
+    return src.url ? `<a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)} ↗</a>` : esc(src.title);
+  }
+
+  function render(r) {
+    const out = $("out");
+    if (!r.answer) {
+      out.innerHTML = `
+        <section class="card empty">
+          <div class="big">No answer found</div>
+          <div class="hint">${r.mode === "wikipedia"
+            ? (r.sources.length ? "The articles found didn't contain a matching sentence." : "Wikipedia returned no articles for these keywords.")
+            : "None of the sentences in your text matched the question."}
+            Try rephrasing with different keywords.</div>
+        </section>` + analysis(r);
+      out.hidden = false;
+      return;
+    }
+
+    const top = r.top;
+    const maxScore = Math.max(...top.map((t) => t.score)) || 1;
+    out.innerHTML = `
+      <section class="card answer-card">
+        <p class="q-echo">${esc(r.question)}</p>
+        ${r.short_answer ? `<p class="short">${esc(r.short_answer)}</p>` : ""}
+        <p class="evidence">${highlight(r.answer, r.short_answer, r.keywords)}</p>
+        <div class="meta">
+          <span class="badge ${r.confidence}">${r.confidence} confidence</span>
+          <span>Source: ${sourceLink(r.answer_source)}</span>
+        </div>
+      </section>
+      ${analysis(r)}
+      <section class="card">
+        <h2>Top candidate sentences</h2>
+        <ol class="cands">
+          ${top.map((t) => `
+            <li>
+              <div><div class="score">${t.score.toFixed(3)}</div><div class="bar"><div style="width:${t.score / maxScore * 100}%"></div></div></div>
+              <div>${highlight(t.sentence, null, r.keywords)}
+                <div class="src">${t.chosen ? `<span class="used">✓ used as answer</span>` : ""}
+                ${r.mode === "wikipedia" ? sourceLink(t.source) : ""}</div></div>
+            </li>`).join("")}
+        </ol>
+        <p class="hint" style="margin:12px 0 0">Score = TF-IDF cosine similarity + small bonuses for containing the expected answer type and for appearing early in an article.
+          For who / when / where / how-many questions, the best sentence that actually contains that kind of answer is used, even if it isn't ranked first.</p>
+      </section>`;
+    out.hidden = false;
+    out.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function analysis(r) {
+    const retrieval = r.mode === "wikipedia"
+      ? `<div class="v">${r.sources.length} article${r.sources.length === 1 ? "" : "s"}</div>
+         <div class="d">searched “${esc(r.search_query)}”</div>
+         <div>${r.sources.map((s) => `<span class="tag"><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></span>`).join("")}</div>`
+      : `<div class="v">Your text</div><div class="d">offline, no internet used</div>`;
+    return `
+      <section class="card">
+        <h2>How it found the answer</h2>
+        <div class="steps">
+          <div class="step"><div class="n">1 · Question type</div><div class="v">${TYPE_LABEL[r.qtype]}</div><div class="d">expects ${esc(r.expects)}</div></div>
+          <div class="step"><div class="n">2 · Keywords</div><div>${r.keywords.map((k) => `<span class="tag">${esc(k)}</span>`).join("")}</div></div>
+          <div class="step"><div class="n">3 · Retrieval</div>${retrieval}</div>
+          <div class="step"><div class="n">4 · Ranking</div><div class="v">${r.sentences_searched} sentences</div><div class="d">scored with TF-IDF</div></div>
+        </div>
+      </section>`;
+  }
+
+  function remember(q, m) {
+    const i = history.findIndex((h) => h.q === q && h.m === m);
+    if (i >= 0) history.splice(i, 1);
+    history.unshift({ q, m });
+    history.length = Math.min(history.length, 8);
+    $("history").innerHTML = history.map((h, idx) =>
+      `<button class="chip" type="button" data-i="${idx}">${h.m === "wikipedia" ? "🌐" : "📄"} ${esc(h.q)}</button>`).join("");
+    $("history").querySelectorAll(".chip").forEach((b) => b.onclick = () => {
+      const h = history[+b.dataset.i];
+      if (h.m !== mode) setMode(h.m);
+      $("q").value = h.q; run();
+    });
+    $("history-card").hidden = false;
+  }
+
+  setMode("wikipedia");
+  $("q").focus();
+</script>
+</body>
+</html>
