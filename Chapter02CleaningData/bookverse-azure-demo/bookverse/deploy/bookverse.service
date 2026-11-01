@@ -1,0 +1,16 @@
+[Unit]
+Description=BookVerse recommendation app (gunicorn)
+After=network.target mysql.service
+Requires=mysql.service
+
+[Service]
+User=bookverse
+Group=bookverse
+WorkingDirectory=/opt/bookverse
+EnvironmentFile=/opt/bookverse/.env
+ExecStart=/opt/bookverse/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 --timeout 60 --access-logfile - app:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
