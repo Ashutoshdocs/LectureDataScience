@@ -1,66 +1,74 @@
-# 🇵🇦 Panama Tech Academy — Raw Data to Clean JSON (Demo)
+# 🇵🇦 Panama Tech Academy — Reading Files, Step by Step
 
-A hands-on Python demo: start with **messy, copy-pasted Instagram profile data**, clean it, organize it into **JSON**, and answer questions with it.
+Learn to **read and write files in Python** by turning messy raw data into clean JSON and answers, one small step at a time.
+**Every step reads a file, does one thing, and writes a new output file.**
+
 Pure Python, standard library only.
 
 ---
 
-## 📁 Files
+## 📁 Start With These Files
 
-| File | Purpose |
+| File | What it is |
 |---|---|
-| `raw_data.txt` | The messy starting data (25 profiles, copied by hand) |
-| `01_cleaning.ipynb` | Cleans the raw text → creates `cleaned_data.txt` |
-| `02_clean_json.ipynb` | Organizes the clean text → creates `clean_data.json` |
-| `03_answer_questions.ipynb` | Loads the JSON and answers the questions |
-| `cleaned_data.txt` | Output of notebook 01 |
-| `clean_data.json` | Output of notebook 02 |
+| `raw_data.txt` | Messy Instagram profile data (the only data file you need) |
+| `step0_reading_files.ipynb` … `step6_answers.ipynb` | One notebook per step |
+| `README.md` | This guide |
 
-```
-raw_data.txt ──01──▶ cleaned_data.txt ──02──▶ clean_data.json ──03──▶ answers
-```
+The `outputs/` folder is **created for you** when you run step 0. Every other file lands there.
 
 ---
 
-## 🧹 What's messy in `raw_data.txt`
+## 🔁 The Flow
 
-- Extra spaces and tabs at the start/end of lines
-- Random gaps: 1, 2, 3 blank lines, or lines containing only a space
-- Inconsistent words: `posts`, `Posts`, `POSTS`, `FOLLOWERS`
-- Instagram buttons copied by mistake: `Follow`, `Message`
-- Numbers in different formats: `2,300`, `18.6K`, `1.2M`
-- Duplicate profiles (copied twice)
-- A profile with no category or bio
+```
+raw_data.txt
+   │ step 0  read & write basics      ─▶ outputs/step0_report.txt
+   │ step 1  strip spaces & tabs      ─▶ outputs/step1_stripped.txt
+   │ step 2  remove Follow/Message    ─▶ outputs/step2_no_junk.txt
+   │ step 3  POSTS → posts            ─▶ outputs/step3_fixed_words.txt
+   │ step 4  group + remove dupes     ─▶ outputs/step4_cleaned.txt
+   │ step 5  convert to JSON          ─▶ outputs/step5_clean_data.json
+   │ step 6  answer questions         ─▶ outputs/step6_answers.txt
+```
+
+Each step reads the **previous step's output**, so run them **in order**.
 
 ---
 
-## 🚀 Steps to Generate Each Task
+## 🚀 Steps
 
 **Setup (once)**
 ```bash
 pip install notebook
-cd panama-tech-academy-demo
+cd panama-tech-academy-steps
 jupyter notebook
 ```
+Open each notebook and run all cells (**Kernel → Restart & Run All**).
 
-**Step 1 — Clean the data** → open `01_cleaning.ipynb` and run all cells
-1. Read `raw_data.txt`
-2. Strip spaces/tabs from every line
-3. Remove `Follow` / `Message` lines
-4. Lowercase count words (`POSTS` → `posts`), keeping `18.6K` as is
-5. Group lines into profiles using blank lines
-6. Remove duplicate usernames
-7. Save `cleaned_data.txt` with exactly one blank line between profiles
+### Step 0 — Reading & writing files
+`open()` and `close()` · `with open(...)` · `read()` · `readline()` · `readlines()` · looping over a file · write mode `"w"` vs append mode `"a"` · creating a folder with `os.makedirs`
+**Output:** `step0_report.txt` — 3,277 characters, 250 lines, 35 blank lines
 
-✅ Result: 27 blocks → **25 unique profiles**
+### Step 1 — Remove extra spaces & tabs
+`split("\n")` · `strip()` · list comprehension · `"\n".join()`
+**Output:** `step1_stripped.txt`
 
-**Step 2 — Create clean JSON** → open `02_clean_json.ipynb` and run all cells
-1. Read `cleaned_data.txt` and split into profiles
-2. Convert `2,300` / `18.6K` / `1.2M` into integers
-3. Turn each profile into a dictionary (missing category → `Unknown`)
-4. Save `clean_data.json`
+### Step 2 — Remove junk lines
+Filter out the `Follow` / `Message` button text that was copied by mistake (6 lines).
+**Output:** `step2_no_junk.txt`
 
-✅ Result: a list of 25 objects like this:
+### Step 3 — Fix count words
+`POSTS` / `Posts` → `posts` using `rsplit(" ", 1)` and `lower()`, without breaking `18.6K`.
+**Output:** `step3_fixed_words.txt`
+
+### Step 4 — Group into profiles & remove duplicates
+Blank line = new profile · track usernames with a `set` · 27 profiles → **25 unique**
+**Output:** `step4_cleaned.txt`
+
+### Step 5 — Organize into JSON
+Convert `2,300` / `18.6K` / `1.2M` to numbers · build a dictionary per profile · `json.dump`
+**Output:** `step5_clean_data.json`
 ```json
 {
     "username": "pty_dev_daily",
@@ -73,26 +81,25 @@ jupyter notebook
 }
 ```
 
-**Step 3 — Answer the questions** → open `03_answer_questions.ipynb` and run all cells
+### Step 6 — Answer the questions
+`json.load` · `max(..., key=...)` · counting with a dictionary
+**Output:** `step6_answers.txt`
 
 | Question | Answer |
 |---|---|
-| Who has the maximum posts? | **panama_tech_jobs** — 2,450 |
-| Who has the maximum followers? | **luis_fintech_pty** — 1,200,000 |
-| Who follows the maximum people? | **diego_builds** — 1,320 |
-| How many categories? | **17** (Community is the largest with 5) |
-
-> ⚠️ Run the notebooks **in order** (01 → 02 → 03). Each one uses the file made by the one before it.
+| Maximum posts | **panama_tech_jobs** — 2,450 |
+| Maximum followers | **luis_fintech_pty** — 1,200,000 |
+| Follows the most people | **diego_builds** — 1,320 |
+| Categories | **17** (Community is the largest with 5) |
 
 ---
 
-## 💡 Practice Tasks for Students
+## 💡 Practice
 
-1. Who has the **fewest** followers?
-2. Find every profile whose bio mentions **Python**.
-3. Calculate the **average** followers per category.
-4. List the top 5 profiles by followers.
-5. Add a new messy profile to `raw_data.txt` and re-run all three notebooks.
+1. In step 0, count how many lines contain an emoji 📍.
+2. If step 2 did not remove `Follow` / `Message`, what would step 5 store as that profile's name? (Hint: count the lines.)
+3. In step 6, also write the top 5 profiles by followers to the answers file.
+4. Delete the `outputs/` folder and re-run everything. Do you get the same files?
 
 ---
 
