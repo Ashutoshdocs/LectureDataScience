@@ -1,0 +1,6 @@
+applicant_id,age,annual_income,loan_amount,credit_score,years_employed,existing_debt,education,employment_type,approval_probability,prediction
+N001,34,85000,120000,760,8.0,5000,Master,Salaried,0.979,Approved
+N002,25,32000,250000,590,1.0,30000,High School,Contract,0.008,Rejected
+N003,45,60000,150000,680,6.0,15000,Bachelor,Self-Employed,0.518,Approved
+N004,52,120000,300000,720,20.0,10000,PhD,Salaried,0.949,Approved
+N005,29,45000,90000,640,3.5,22000,Bachelor,Contract,0.219,Rejected

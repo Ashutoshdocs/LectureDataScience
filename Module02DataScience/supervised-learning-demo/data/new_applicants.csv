@@ -1,0 +1,6 @@
+applicant_id,age,annual_income,loan_amount,credit_score,years_employed,existing_debt,education,employment_type
+N001,34,85000,120000,760,8.0,5000,Master,Salaried
+N002,25,32000,250000,590,1.0,30000,High School,Contract
+N003,45,60000,150000,680,6.0,15000,Bachelor,Self-Employed
+N004,52,120000,300000,720,20.0,10000,PhD,Salaried
+N005,29,45000,90000,640,3.5,22000,Bachelor,Contract
