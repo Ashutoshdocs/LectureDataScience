@@ -27,6 +27,7 @@ SAMPLE_TEXTS = [
     "This is the WORST customer service I have ever experienced!!!",
     "Not bad at all, I'd actually recommend it to friends.",
     "The meeting is scheduled for 3 PM tomorrow.",
+    "Road was very difficult to drive on.",
 ]
 
 
