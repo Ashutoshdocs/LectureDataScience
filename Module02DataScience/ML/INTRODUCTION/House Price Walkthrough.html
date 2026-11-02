@@ -1,0 +1,648 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>House Price Walkthrough</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: step rail on the left; each step = the exact lines of the script (original line numbers) → plain explanation → live experiment using the real numbers. */
+:root{
+  --paper:#F3F5F4; --surface:#FFFFFF; --sunk:#E7ECE9; --ink:#14201A; --muted:#55645B; --line:#D3DDD7;
+  --accent:#2E6B3F; --accent-ink:#FFFFFF; --accent-soft:#DCEDE1;
+  --test:#C8641E; --test-soft:#FBE6D5;
+  --mark:#FFE07A; --mark-ink:#14201A;
+  --pos:#1F8A4C; --neg:#C23A33; --neg-soft:#F8DEDC;
+  --c-kw:#2E6B3F; --c-str:#9A4F12; --c-num:#2A55B0; --c-com:#7A8780; --c-fn:#7A3B8F;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0F1512; --surface:#16201B; --sunk:#1C2822; --ink:#E4ECE7; --muted:#97A69D; --line:#28362F;
+  --accent:#7FC79A; --accent-ink:#0B2414; --accent-soft:#1A3626;
+  --test:#F0A060; --test-soft:#3D2716;
+  --mark:#5E4E10; --mark-ink:#FFF3C4;
+  --pos:#5CCB8A; --neg:#F0807A; --neg-soft:#3C1B1A;
+  --c-kw:#7FC79A; --c-str:#F0B27A; --c-num:#8FB0FF; --c-com:#7D8C84; --c-fn:#D7A2EA;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0F1512; --surface:#16201B; --sunk:#1C2822; --ink:#E4ECE7; --muted:#97A69D; --line:#28362F;
+  --accent:#7FC79A; --accent-ink:#0B2414; --accent-soft:#1A3626;
+  --test:#F0A060; --test-soft:#3D2716;
+  --mark:#5E4E10; --mark-ink:#FFF3C4;
+  --pos:#5CCB8A; --neg:#F0807A; --neg-soft:#3C1B1A;
+  --c-kw:#7FC79A; --c-str:#F0B27A; --c-num:#8FB0FF; --c-com:#7D8C84; --c-fn:#D7A2EA;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;padding-block:32px 80px}
+.rail{position:sticky;top:calc(24px + env(safe-area-inset-top, 0px));align-self:start;font-family:var(--display)}
+.rail .brand{font-weight:800;font-size:18px;line-height:1.2;margin-bottom:4px}
+.rail .file{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:18px;word-break:break-all}
+.rail a{display:flex;gap:10px;align-items:baseline;padding:5px 8px;margin-left:-8px;border-radius:6px;color:var(--ink);text-decoration:none;font-size:14.5px;font-weight:500}
+.rail a span{font-family:var(--mono);font-size:11px;color:var(--muted);width:44px;flex:none}
+.rail a:hover{background:var(--sunk)}
+.rail a.active{background:var(--accent-soft)}
+.rail a.active span{color:var(--accent)}
+.chipnav{display:none}
+
+main{min-width:0}
+section.step{padding-block:52px 20px;border-top:1px solid var(--line);scroll-margin-top:24px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;letter-spacing:-.015em;line-height:1.12}
+h1{font-size:clamp(36px,6vw,60px);font-weight:800;margin:8px 0 14px}
+h2{font-size:clamp(26px,3.6vw,36px);font-weight:700;margin:6px 0 14px}
+h3{font-size:19px;font-weight:700;margin:26px 0 8px}
+p{max-width:66ch;margin:0 0 14px}
+.lead{font-size:20px;color:var(--muted);max-width:60ch}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:4px}
+ul.plain,ol.plain{max-width:66ch;padding-left:1.2em;margin:0 0 14px}
+ul.plain li,ol.plain li{margin-bottom:6px}
+.analogy{border-left:3px solid var(--accent);padding:4px 0 4px 16px;margin:18px 0;max-width:64ch;font-style:italic;color:var(--muted)}
+.analogy b{font-style:normal;color:var(--ink)}
+.note{background:var(--mark);color:var(--mark-ink);border-radius:10px;padding:12px 16px;max-width:68ch;margin:16px 0;font-size:15.5px}
+
+/* code listing */
+.listing{background:var(--sunk);border:1px solid var(--line);border-radius:10px;margin:16px 0;overflow:hidden;min-width:0}
+.listing .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.listing .copy{font-family:var(--mono);font-size:11px;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 8px;cursor:pointer}
+.listing pre{margin:0;overflow-x:auto;padding:10px 0;font-family:var(--mono);font-size:13px;line-height:1.65;color:var(--ink)}
+.ln{display:block;padding:0 14px 0 0;white-space:pre}
+.ln i{display:inline-block;width:3.2em;text-align:right;padding-right:1em;color:var(--c-com);font-style:normal;user-select:none}
+a.ln{text-decoration:none;color:inherit}
+a.ln:hover{background:var(--accent-soft)}
+.t-kw{color:var(--c-kw);font-weight:600}.t-str{color:var(--c-str)}.t-num{color:var(--c-num)}.t-com{color:var(--c-com);font-style:italic}.t-fn{color:var(--c-fn)}
+.terminal{background:#111814;color:#D7E6DC;border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:13px;line-height:1.55;white-space:pre;overflow-x:auto;margin:12px 0}
+.terminal .p{color:#7FC79A}
+.terminal .hl{background:#3A4A12;color:#FFF3C4;border-radius:3px}
+
+/* line-by-line explanations */
+.explain{display:grid;gap:10px;margin:14px 0}
+.ex{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;align-items:start;padding:12px 0;border-top:1px dashed var(--line)}
+.ex:first-child{border-top:0}
+.ex code.big{display:block;background:var(--surface);border:1px solid var(--line);padding:8px 10px;border-radius:8px;font-size:12.5px;white-space:pre-wrap;word-break:break-word}
+.ex p{margin:0 0 6px;font-size:16px}
+
+/* demos */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;margin:22px 0;min-width:0}
+.demo-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.demo-tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:8px}
+.demo-tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--display);font-weight:600;font-size:14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.toggle{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-size:14px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:var(--paper);user-select:none}
+.toggle input{accent-color:var(--accent);margin:0}
+input[type=range]{accent-color:var(--accent);width:100%}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sl{display:grid;grid-template-columns:150px minmax(0,1fr) 70px;gap:12px;align-items:center;font-family:var(--display);font-size:14px}
+.sl output{font-family:var(--mono);font-size:13px;text-align:right}
+.out-label{font-family:var(--display);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:14px 0 6px}
+.result{font-family:var(--mono);font-size:13.5px;background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-word}
+.stat{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.big{font-family:var(--display);font-weight:800;font-size:34px;line-height:1.05;font-variant-numeric:tabular-nums}
+canvas.plot{width:100%;display:block;border-radius:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--display);font-size:13px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--line)}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{background:var(--sunk);font-weight:600;font-size:12px}
+tr:last-child td{border-bottom:0}
+th.x,td.x{background:color-mix(in srgb, var(--accent-soft) 70%, transparent)}
+th.y,td.y{background:color-mix(in srgb, var(--mark) 45%, transparent)}
+th.x{background:var(--accent-soft)}th.y{background:var(--mark);color:var(--mark-ink)}
+tr.test td{background:var(--test-soft)}
+tr.test td:first-child{box-shadow:inset 3px 0 0 var(--test)}
+td.idx{color:var(--muted);text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.card h5{font-family:var(--display);font-size:15px;margin:0 0 6px}
+.card p{font-size:14.5px;margin:0;color:var(--muted)}
+.card .val{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--accent);margin:4px 0 6px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;font-family:var(--display);font-size:13.5px;font-weight:600}
+.flow a,.flow span{background:var(--surface);border:1px solid var(--line);padding:8px 12px;border-radius:8px;color:var(--ink);text-decoration:none}
+.flow a:hover{border-color:var(--accent)}
+.flow em{font-style:normal;color:var(--muted)}
+
+.quiz{margin:18px 0;padding:18px 20px;background:var(--accent-soft);border-radius:12px}
+.quiz .q{font-family:var(--display);font-weight:700;font-size:16px;margin-bottom:10px}
+.quiz .opts{display:flex;flex-direction:column;gap:8px}
+.quiz button{text-align:left;font-family:var(--body);font-size:15px;background:var(--surface);border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:8px;cursor:pointer}
+.quiz button:hover:not(:disabled){border-color:var(--accent)}
+.quiz button.right{border-color:var(--pos);color:var(--pos);font-weight:600}
+.quiz button.wrong{border-color:var(--neg);background:var(--neg-soft);color:var(--neg)}
+.quiz .why{font-size:14.5px;margin-top:10px}
+footer{font-family:var(--display);font-size:14px;color:var(--muted);padding-top:36px;border-top:1px solid var(--line);margin-top:36px}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:0;padding-block:0 60px}
+  .rail{display:none}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--paper)}
+  .chipnav{display:flex;position:sticky;top:env(safe-area-inset-top, 0px);z-index:9;gap:6px;overflow-x:auto;padding:10px 16px 10px max(16px, env(safe-area-inset-left, 0px));background:var(--paper);border-bottom:1px solid var(--line);margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));scrollbar-width:none}
+  .chipnav a{flex:none;font-family:var(--display);font-size:13px;font-weight:600;text-decoration:none;color:var(--ink);padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+  .chipnav a.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  section.step{scroll-margin-top:60px}
+  .ex{grid-template-columns:minmax(0,1fr);gap:8px}
+}
+@media (max-width:520px){body{font-size:16px}.demo{padding:14px}.sl{grid-template-columns:100px minmax(0,1fr) 56px}}
+</style>
+
+<div class="shell">
+<nav class="rail" aria-label="Steps">
+  <div class="brand">House Price Walkthrough</div>
+  <div class="file">house_price_prediction.py</div>
+  <a href="#overview"><span>start</span>What this program does</a>
+  <a href="#imports"><span>1–12</span>Docstring &amp; imports</a>
+  <a href="#main"><span>15, 75</span>main() and __name__</a>
+  <a href="#s1"><span>16–32</span>1 · The dataset</a>
+  <a href="#s2"><span>34–36</span>2 · Features X, target y</a>
+  <a href="#s3"><span>38–41</span>3 · Train/test split</a>
+  <a href="#s4"><span>43–45</span>4 · Training</a>
+  <a href="#s5"><span>47–51</span>5 · Evaluation</a>
+  <a href="#s6"><span>53–63</span>6 · Predict a new house</a>
+  <a href="#s7"><span>65–72</span>7 · Coefficients</a>
+  <a href="#next"><span>end</span>Practice &amp; quiz</a>
+</nav>
+
+<main>
+<nav class="chipnav" aria-label="Steps">
+  <a href="#overview">Overview</a><a href="#imports">Imports</a><a href="#main">main()</a><a href="#s1">1 Dataset</a><a href="#s2">2 X &amp; y</a><a href="#s3">3 Split</a><a href="#s4">4 Train</a><a href="#s5">5 Evaluate</a><a href="#s6">6 Predict</a><a href="#s7">7 Coefficients</a><a href="#next">Practice</a>
+</nav>
+
+<!-- OVERVIEW -->
+<section class="step" id="overview" style="border-top:0;padding-top:24px">
+  <div class="eyebrow">Line-by-line guide · house_price_prediction.py</div>
+  <h1>House Price Walkthrough</h1>
+  <p class="lead">This page explains every line of a 76-line Python program that teaches a computer to estimate house prices. All numbers shown here are the real results of running the script.</p>
+  <h3>The idea in one paragraph</h3>
+  <p>We give the computer 16 example houses. For each one we know its <b>area</b>, <b>bedrooms</b>, <b>age</b> and the <b>price</b> it sold for. The computer studies 12 of them and works out a formula connecting the features to the price. We then check the formula on the 4 houses it didn't see, and finally use it to price a brand-new house.</p>
+  <div class="flow">
+    <a href="#s1">1 · Data</a><em>→</em><a href="#s2">2 · Inputs &amp; answer</a><em>→</em><a href="#s3">3 · Split</a><em>→</em><a href="#s4">4 · Train</a><em>→</em><a href="#s5">5 · Test</a><em>→</em><a href="#s6">6 · Predict</a><em>→</em><a href="#s7">7 · Explain</a>
+  </div>
+  <h3>How to run it</h3>
+  <p>Install the two libraries once, then run the file from a terminal in the same folder:</p>
+  <div class="terminal"><span class="p">$</span> pip install pandas scikit-learn
+<span class="p">$</span> python house_price_prediction.py</div>
+  <h3>What you'll see</h3>
+  <p>This is the exact output. Each block is explained in its step below.</p>
+  <div class="terminal" id="fullOut"></div>
+  <h3>The full script</h3>
+  <p>Click any line to jump to its explanation.</p>
+  <div class="listing"><div class="bar"><span>house_price_prediction.py · 76 lines</span><button class="copy" data-copy="all">Copy script</button></div><pre id="fullCode"></pre></div>
+</section>
+
+<!-- IMPORTS -->
+<section class="step" id="imports">
+  <div class="eyebrow">Lines 1–12</div>
+  <h2>The docstring and the imports</h2>
+  <div class="listing" data-lines="1-12"></div>
+  <div class="explain">
+    <div class="ex"><code class="big">""" ... """</code><div><p>Text in triple quotes at the top of a file is a <b>docstring</b>: a description for humans. Python ignores it when running. Good practice: say what the file does and how to run it.</p></div></div>
+    <div class="ex"><code class="big">import pandas as pd</code><div><p><b>pandas</b> is the standard library for working with tables of data (like Excel inside Python). <code>as pd</code> gives it a short nickname, so we write <code>pd.DataFrame</code> instead of <code>pandas.DataFrame</code>.</p></div></div>
+    <div class="ex"><code class="big">from sklearn.model_selection import train_test_split</code><div><p><b>scikit-learn</b> (imported as <code>sklearn</code>) is the most popular beginner ML library. <code>train_test_split</code> randomly divides data into a training part and a testing part (step 3).</p></div></div>
+    <div class="ex"><code class="big">from sklearn.linear_model import LinearRegression</code><div><p>The actual <b>model</b> we'll train: it learns a straight-line formula (step 4).</p></div></div>
+    <div class="ex"><code class="big">from sklearn.metrics import mean_absolute_error, r2_score</code><div><p>Two <b>scoring functions</b> that measure how good the predictions are (step 5).</p></div></div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<section class="step" id="main">
+  <div class="eyebrow">Lines 15 and 75–76</div>
+  <h2>main() and if __name__ == "__main__"</h2>
+  <div class="listing" data-lines="15-15"></div>
+  <div class="listing" data-lines="75-76"></div>
+  <p><code>def main():</code> creates a <b>function</b> named <code>main</code>. Everything indented under it (lines 16–72) is the function's body. Defining a function doesn't run it; it only stores the instructions.</p>
+  <p>The last two lines are what actually start the program. When you run <code>python house_price_prediction.py</code>, Python sets a hidden variable <code>__name__</code> to <code>"__main__"</code>, so the condition is true and <code>main()</code> runs. If another file <i>imports</i> this one (for example, to reuse its functions), <code>__name__</code> is the file's name instead, so <code>main()</code> does not run automatically.</p>
+  <div class="analogy"><b>Analogy:</b> <code>def main()</code> is writing down a recipe. <code>main()</code> on line 76 is actually cooking it. The <code>if</code> line says: "only cook if someone opened this recipe book directly, not if they're just borrowing a page."</div>
+</section>
+
+<!-- STEP 1 -->
+<section class="step" id="s1">
+  <div class="eyebrow">Step 1 · Lines 16–32</div>
+  <h2>The dataset</h2>
+  <div class="listing" data-lines="16-32"></div>
+  <div class="explain">
+    <div class="ex"><code class="big">data = { "area_sqft": [...], ... }</code><div><p>A Python <b>dictionary</b>: each <i>key</i> (like <code>"area_sqft"</code>) is a column name, and each <i>value</i> is a list of 16 numbers, one per house. All four lists must have the same length.</p></div></div>
+    <div class="ex"><code class="big">df = pd.DataFrame(data)</code><div><p>Turns the dictionary into a pandas <b>DataFrame</b>: a table with 16 rows and 4 columns. <code>df</code> is the conventional name. pandas also adds a row number (the <b>index</b>) from 0 to 15.</p></div></div>
+    <div class="ex"><code class="big">print(df.head())</code><div><p><code>.head()</code> returns just the first 5 rows: a quick peek to check the data loaded correctly. <code>\n</code> inside the earlier strings means "new line", which adds blank lines to the output.</p></div></div>
+  </div>
+  <div class="terminal" id="out1"></div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Explore · all 16 houses</div><div class="row"><button class="btn on" id="viewTable">Table</button><button class="btn" id="viewChart">Chart</button></div></div>
+    <div id="dataTableWrap" class="tablewrap"><table id="dataTable"></table></div>
+    <div id="dataChartWrap" hidden><canvas class="plot" id="dataChart" aria-label="Area vs price, labelled by bedrooms"></canvas><div class="legend"><span>Each dot's number = bedrooms. Darker dots = newer houses.</span></div></div>
+    <p class="stat" style="margin:10px 0 0">Bigger houses clearly cost more. Price rises almost in a straight line with area, which is why a linear model will work well here.</p>
+  </div>
+  <div class="note"><b>Remember:</b> the prices are made up for teaching. Real house prices depend on many more things (location above all). The script's last line says this too.</div>
+</section>
+
+<!-- STEP 2 -->
+<section class="step" id="s2">
+  <div class="eyebrow">Step 2 · Lines 34–36</div>
+  <h2>Separating features (X) from the target (y)</h2>
+  <div class="listing" data-lines="34-36"></div>
+  <p>A model needs to know which columns are the <b>clues</b> and which column is the <b>answer</b>.</p>
+  <ul class="plain">
+    <li><b>X</b> = the <b>features</b> (inputs): area, bedrooms, age. Written with a capital X because it's a table with several columns.</li>
+    <li><b>y</b> = the <b>target</b> (also called the label): the price we want to predict. Lower-case because it's a single column.</li>
+  </ul>
+  <div class="tablewrap"><table id="xyTable"></table></div>
+  <div class="explain" style="margin-top:14px">
+    <div class="ex"><code class="big">df[["area_sqft", "bedrooms", "age_years"]]</code><div><p><b>Double brackets</b>: the inner brackets are a Python list of column names; the outer brackets select those columns. The result is still a <b>table</b> (DataFrame), shape 16 × 3.</p></div></div>
+    <div class="ex"><code class="big">df["price_lakh"]</code><div><p><b>Single brackets</b> with one name give one column, called a <b>Series</b>, with 16 values.</p></div></div>
+  </div>
+  <div class="analogy"><b>Analogy:</b> a practice exam. X is the question paper, y is the answer key. The model reads both while studying.</div>
+</section>
+
+<!-- STEP 3 -->
+<section class="step" id="s3">
+  <div class="eyebrow">Step 3 · Lines 38–41</div>
+  <h2>Splitting into training and testing data</h2>
+  <div class="listing" data-lines="38-41"></div>
+  <p>If we tested the model on the same houses it learned from, it could look perfect just by memorising them. So we hide some houses and use them only for the final check.</p>
+  <div class="explain">
+    <div class="ex"><code class="big">X_train, X_test, y_train, y_test = ...</code><div><p>The function returns <b>four</b> pieces at once, and Python unpacks them into four variables, in this exact order.</p></div></div>
+    <div class="ex"><code class="big">test_size=0.25</code><div><p>Put 25% of the rows into the test set. 25% of 16 = <b>4 test houses</b>, leaving <b>12 for training</b>.</p></div></div>
+    <div class="ex"><code class="big">random_state=42</code><div><p>The rows are shuffled randomly before splitting. Fixing the random "seed" makes the shuffle the same every time you run the script, so you get the same results. 42 is just a popular choice; any number works.</p></div></div>
+  </div>
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">The actual split with random_state=42</div></div>
+    <div class="tablewrap"><table id="splitTable"></table></div>
+    <div class="legend"><span><i style="background:var(--surface)"></i>Training row (12) · the model studies these</span><span><i style="background:var(--test-soft);border-color:var(--test)"></i>Test row (4) · hidden until step 5</span></div>
+    <p class="stat" style="margin:10px 0 0">Test rows are 0, 1, 5 and 14. Change <code>random_state</code> to another number and a different 4 houses would be picked, giving slightly different results.</p>
+  </div>
+</section>
+
+<!-- STEP 4 -->
+<section class="step" id="s4">
+  <div class="eyebrow">Step 4 · Lines 43–45</div>
+  <h2>Training the model</h2>
+  <div class="listing" data-lines="43-45"></div>
+  <p>Two lines do all the learning:</p>
+  <ul class="plain">
+    <li><code>model = LinearRegression()</code> creates an empty, untrained model.</li>
+    <li><code>model.fit(X_train, y_train)</code> is where learning happens. "Fit" means: find the formula that fits the 12 training houses best.</li>
+  </ul>
+  <h3>What formula is it learning?</h3>
+  <p>Linear regression assumes the price is a weighted sum of the features:</p>
+  <div class="result" style="font-size:15px">price = intercept + (w₁ × area) + (w₂ × bedrooms) + (w₃ × age)</div>
+  <p style="margin-top:14px">The numbers <b>w₁, w₂, w₃</b> are called <b>coefficients</b> (weights) and the <b>intercept</b> is the starting value. Training chooses them so that the total squared error on the training houses is as small as possible. This method is called <b>ordinary least squares</b>.</p>
+  <div class="analogy"><b>Analogy:</b> adjusting four knobs on a radio until the static (the error) is as quiet as possible. <code>fit()</code> turns the knobs for you in a fraction of a second.</div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · retrain with different features</div></div>
+    <p class="stat" style="margin:0 0 10px">This page re-runs the same least-squares training in your browser on the same 12 training houses. With all three features on, it matches scikit-learn's result exactly.</p>
+    <div class="row" id="featToggles">
+      <label class="toggle"><input type="checkbox" id="fArea" checked> area_sqft</label>
+      <label class="toggle"><input type="checkbox" id="fBed" checked> bedrooms</label>
+      <label class="toggle"><input type="checkbox" id="fAge" checked> age_years</label>
+    </div>
+    <div class="out-label">Learned formula</div>
+    <div class="result" id="fitFormula" style="font-size:14.5px"></div>
+    <div class="grid" id="fitScores"></div>
+    <p class="stat" style="margin:0">Try turning off <b>area_sqft</b>: the test error jumps, because area carries most of the information. Using only bedrooms gives a much worse model. And a surprise: area alone scores a slightly lower test error (1.63) than all three features (1.85). More features don't always mean a better model, especially with only 12 training houses.</p>
+  </div>
+</section>
+
+<!-- STEP 5 -->
+<section class="step" id="s5">
+  <div class="eyebrow">Step 5 · Lines 47–51</div>
+  <h2>Evaluating on the test houses</h2>
+  <div class="listing" data-lines="47-51"></div>
+  <p><code>model.predict(X_test)</code> asks the trained model to estimate prices for the 4 hidden houses. We then compare those guesses with the real prices.</p>
+  <div class="terminal" id="out2"></div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">How the two scores are calculated</div></div>
+    <div class="tablewrap"><table id="evalTable"></table></div>
+    <div class="out-label">Mean Absolute Error (MAE)</div>
+    <div class="result" id="maeCalc"></div>
+    <p style="margin:10px 0 0;font-size:15.5px">MAE is the <b>average size of the mistake</b>, in the same unit as the price. 1.85 means the model is off by about ₹1.85 lakh per house on average. <b>Lower is better</b>; 0 would be perfect.</p>
+    <div class="out-label">R² score</div>
+    <div class="result" id="r2Calc"></div>
+    <p style="margin:10px 0 0;font-size:15.5px">R² compares the model with a lazy baseline that always guesses the average test price. 1.0 = perfect, 0 = no better than guessing the average, below 0 = worse than that. <b>0.99</b> means the model explains about 99% of the variation in these test prices.</p>
+    <div class="out-label">Every house: actual vs predicted</div>
+    <canvas class="plot" id="avpChart" aria-label="Actual vs predicted price"></canvas>
+    <div class="legend"><span><i style="background:var(--accent)"></i>Training house</span><span><i style="background:var(--test)"></i>Test house</span><span>Dots on the diagonal line = perfect prediction</span></div>
+  </div>
+  <h3>The f-string formatting</h3>
+  <p><code>f"... {value:.2f} lakh"</code> is an <b>f-string</b>: anything inside <code>{ }</code> is calculated and inserted into the text. <code>:.2f</code> means "show as a decimal number with 2 digits after the point", so 1.845542… prints as <code>1.85</code>.</p>
+  <div class="note"><b>Honest caveat about this score:</b> with only 4 test houses, a high R² is encouraging but not proof. Real projects test on hundreds or thousands of examples.</div>
+</section>
+
+<!-- STEP 6 -->
+<section class="step" id="s6">
+  <div class="eyebrow">Step 6 · Lines 53–63</div>
+  <h2>Predicting the price of a new house</h2>
+  <div class="listing" data-lines="53-63"></div>
+  <div class="explain">
+    <div class="ex"><code class="big">pd.DataFrame([{ "area_sqft": 1500, ... }])</code><div><p>The new house must look exactly like the training data: a table with the <b>same column names in the same order</b>. The <code>[ ]</code> makes a list containing one dictionary, which means one row.</p></div></div>
+    <div class="ex"><code class="big">model.predict(new_house)[0]</code><div><p><code>predict</code> always returns a list of answers, one per row, even if there's only one row. <code>[0]</code> takes the first (and only) answer out of that list.</p></div></div>
+    <div class="ex"><code class="big">new_house.to_string(index=False)</code><div><p>Prints the table without the row number on the left, so it looks cleaner.</p></div></div>
+  </div>
+  <div class="terminal" id="out3"></div>
+  <p>Using a trained model on new data like this is called <b>inference</b>. Notice there's no <code>fit</code> here: the model doesn't learn anything new, it just applies the formula.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · design your own house</div><button class="btn" id="resetHouse">Reset to 1500 / 3 / 5</button></div>
+    <div style="display:grid;gap:10px">
+      <div class="sl"><label for="hArea">area_sqft</label><input type="range" id="hArea" min="500" max="3000" step="50" value="1500"><output id="hAreaO"></output></div>
+      <div class="sl"><label for="hBed">bedrooms</label><input type="range" id="hBed" min="1" max="5" step="1" value="3"><output id="hBedO"></output></div>
+      <div class="sl"><label for="hAge">age_years</label><input type="range" id="hAge" min="0" max="30" step="1" value="5"><output id="hAgeO"></output></div>
+    </div>
+    <div class="row" style="margin-top:16px;align-items:baseline;gap:14px"><span class="out-label" style="margin:0">Predicted price</span><span class="big" id="hPrice"></span></div>
+    <div class="result" id="hCalc" style="margin-top:10px"></div>
+    <div class="stat" id="hWarn" style="margin-top:8px"></div>
+  </div>
+  <p><b>A detail worth spotting:</b> the "new" house in the script (1500 sq ft, 3 bedrooms, 5 years) is identical to row 8 of the dataset, which sold for 65 lakh and was in the training set. The model predicts 64.91, very close. A truly new house would be a fairer test.</p>
+</section>
+
+<!-- STEP 7 -->
+<section class="step" id="s7">
+  <div class="eyebrow">Step 7 · Lines 65–72</div>
+  <h2>Reading what the model learned</h2>
+  <div class="listing" data-lines="65-72"></div>
+  <div class="explain">
+    <div class="ex"><code class="big">zip(X.columns, model.coef_)</code><div><p><code>zip</code> pairs up two lists item by item: the first column name with the first coefficient, the second with the second, and so on. The <code>for</code> loop then prints each pair.</p></div></div>
+    <div class="ex"><code class="big">model.coef_  ·  model.intercept_</code><div><p>After <code>fit()</code>, scikit-learn stores the learned numbers in attributes ending with an underscore. <code>coef_</code> holds w₁, w₂, w₃; <code>intercept_</code> holds the starting value.</p></div></div>
+  </div>
+  <div class="terminal" id="out4"></div>
+  <h3>What each number means</h3>
+  <div class="grid">
+    <div class="card"><h5>area_sqft</h5><div class="val">+0.048</div><p>Each extra square foot adds about ₹0.048 lakh (₹4,823). So 100 extra sq ft ≈ +₹4.8 lakh, with bedrooms and age kept the same.</p></div>
+    <div class="card"><h5>age_years</h5><div class="val">−0.208</div><p>Each extra year of age lowers the price by about ₹0.21 lakh (₹20,775). Older houses are worth a bit less, as expected.</p></div>
+    <div class="card"><h5>bedrooms</h5><div class="val">−2.519</div><p>Surprising: more bedrooms <i>lowers</i> the price? See the explanation below.</p></div>
+    <div class="card"><h5>Intercept</h5><div class="val">1.161</div><p>The formula's starting point: the "price" of a house with 0 sq ft, 0 bedrooms, 0 years. It has no real-world meaning; it just positions the line.</p></div>
+  </div>
+  <h3>Why is the bedroom number negative?</h3>
+  <p>Each coefficient means "the effect of this feature <b>if all the others stay the same</b>". If you keep the area fixed at 1500 sq ft and add a bedroom, each room has to get smaller, which buyers may value less. That's one possible reading.</p>
+  <p>The bigger reason is statistical: in this dataset, bedrooms rise almost exactly with area (bigger houses have more bedrooms). When two features move together, the model can't cleanly separate their effects, so their individual coefficients become unreliable. This is called <b>multicollinearity</b>. With only 12 training rows, it's easy to happen. The predictions are still good; only the individual coefficients shouldn't be over-interpreted.</p>
+  <p>You can check this in the Step 4 demo: turn off <b>area_sqft</b> and the bedrooms coefficient becomes strongly positive.</p>
+</section>
+
+<!-- NEXT -->
+<section class="step" id="next">
+  <div class="eyebrow">Practice</div>
+  <h2>Try these changes yourself</h2>
+  <ol class="plain">
+    <li>Change the new house on lines 55–57 to <code>2100, 4, 3</code> and run again. Is the price between the 2000 and 2200 sq ft houses in the data?</li>
+    <li>Change <code>random_state=42</code> to <code>7</code>. Which numbers in the output change, and why?</li>
+    <li>Change <code>test_size=0.25</code> to <code>0.5</code>. The model now trains on only 8 houses. What happens to the MAE?</li>
+    <li>Remove <code>"bedrooms"</code> from line 35 (and from the new house). Does the model get worse?</li>
+    <li>Add a fifth column, for example <code>"parking": [0, 0, 1, ...]</code> with 16 values, and include it in X.</li>
+    <li>Print all the test predictions next to the real prices: <code>print(pd.DataFrame({"actual": y_test, "predicted": test_predictions.round(1)}))</code></li>
+  </ol>
+  <h3>Check your understanding</h3>
+  <div class="quiz" data-q="0"></div>
+  <div class="quiz" data-q="1"></div>
+  <div class="quiz" data-q="2"></div>
+  <div class="quiz" data-q="3"></div>
+  <div class="quiz" data-q="4"></div>
+</section>
+
+<footer>House Price Walkthrough · every number on this page comes from running house_price_prediction.py with pandas and scikit-learn.</footer>
+</main>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- the script, verbatim ---------- */
+const SRC=`"""
+House Price Prediction - Beginner ML Demo
+Run: python house_price_prediction.py
+
+This demo uses a small sample dataset, trains a Linear Regression model,
+evaluates it, and predicts the price for a new house.
+"""
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, r2_score
+
+
+def main():
+    # 1. Sample dataset (area in square feet, bedrooms, age in years)
+    data = {
+        "area_sqft": [650, 800, 900, 1000, 1100, 1200, 1300, 1400,
+                      1500, 1600, 1700, 1800, 1900, 2000, 2200, 2400],
+        "bedrooms":  [1, 2, 2, 2, 2, 3, 3, 3,
+                      3, 3, 3, 3, 4, 4, 4, 4],
+        "age_years": [20, 15, 12, 10, 8, 10, 7, 6,
+                      5, 8, 4, 3, 6, 4, 2, 1],
+        # Illustrative prices in lakh rupees (₹ lakh)
+        "price_lakh": [28, 35, 39, 43, 47, 50, 56, 60,
+                       65, 67, 73, 78, 79, 88, 98, 110],
+    }
+    df = pd.DataFrame(data)
+
+    print("\\n=== HOUSE PRICE PREDICTION ===")
+    print("\\n1. Sample data:")
+    print(df.head())
+
+    # 2. Separate input features (X) and target (y)
+    X = df[["area_sqft", "bedrooms", "age_years"]]
+    y = df["price_lakh"]
+
+    # 3. Split data: keep some rows aside to test the model
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.25, random_state=42
+    )
+
+    # 4. Train the machine-learning model
+    model = LinearRegression()
+    model.fit(X_train, y_train)
+
+    # 5. Evaluate model predictions on test data
+    test_predictions = model.predict(X_test)
+    print("\\n2. Model evaluation:")
+    print(f"Mean Absolute Error: {mean_absolute_error(y_test, test_predictions):.2f} lakh")
+    print(f"R² score: {r2_score(y_test, test_predictions):.2f}")
+
+    # 6. Predict the price of a new house
+    new_house = pd.DataFrame([{
+        "area_sqft": 1500,
+        "bedrooms": 3,
+        "age_years": 5,
+    }])
+    predicted_price = model.predict(new_house)[0]
+
+    print("\\n3. New house details:")
+    print(new_house.to_string(index=False))
+    print(f"\\nPredicted house price: ₹{predicted_price:.2f} lakh")
+
+    # 7. Explain the learned relationship
+    print("\\n4. Model coefficients:")
+    for feature, coefficient in zip(X.columns, model.coef_):
+        print(f"{feature}: {coefficient:.3f}")
+    print(f"Intercept: {model.intercept_:.3f}")
+
+    print("\\nDemo complete.")
+    print("Note: This is a teaching dataset, not a real property valuation model.")
+
+
+if __name__ == "__main__":
+    main()`;
+const LINES=SRC.split("\n");
+const KW=new Set("import from as def if for in return None True False and or not".split(" "));
+const FN=new Set("print zip main".split(" "));
+function hlLine(line,n){if(n<=7)return `<span class="t-str">${esc(line)}</span>`;
+  const re=/(#.*$)|(f?"(?:[^"\\]|\\.)*")|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)|(\s+)|(.)/g;let out="",m;
+  while((m=re.exec(line))){if(m[1])out+=`<span class="t-com">${esc(m[1])}</span>`;else if(m[2])out+=`<span class="t-str">${esc(m[2])}</span>`;else if(m[3])out+=`<span class="t-num">${m[3]}</span>`;
+    else if(m[4])out+=KW.has(m[4])?`<span class="t-kw">${m[4]}</span>`:FN.has(m[4])?`<span class="t-fn">${m[4]}</span>`:esc(m[4]);else out+=esc(m[0]);}
+  return out;}
+const STEPMAP=[[1,12,"imports"],[15,15,"main"],[16,32,"s1"],[34,36,"s2"],[38,41,"s3"],[43,45,"s4"],[47,51,"s5"],[53,63,"s6"],[65,72,"s7"],[75,76,"main"]];
+const stepFor=n=>{const s=STEPMAP.find(([a,b])=>n>=a&&n<=b);return s?s[2]:null;};
+$("fullCode").innerHTML=LINES.map((l,i)=>{const n=i+1,s=stepFor(n);return s?`<a class="ln" href="#${s}"><i>${n}</i>${hlLine(l,n)||" "}</a>`:`<span class="ln"><i>${n}</i>${hlLine(l,n)||" "}</span>`;}).join("");
+document.querySelectorAll(".listing[data-lines]").forEach(el=>{const[a,b]=el.dataset.lines.split("-").map(Number);
+  el.innerHTML=`<div class="bar"><span>lines ${a}${b!==a?"–"+b:""}</span><button class="copy">Copy</button></div><pre>${LINES.slice(a-1,b).map((l,i)=>`<span class="ln"><i>${a+i}</i>${hlLine(l,a+i)||" "}</span>`).join("")}</pre>`;
+  el._text=LINES.slice(a-1,b).join("\n");});
+document.addEventListener("click",e=>{const b=e.target.closest(".copy");if(!b)return;const lst=b.closest(".listing");const txt=b.dataset.copy==="all"?SRC:lst._text;
+  const sel=()=>{const r=document.createRange();r.selectNodeContents(lst.querySelector("pre"));const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Press Ctrl+C";};
+  try{navigator.clipboard.writeText(txt).then(()=>{b.textContent="Copied";setTimeout(()=>b.textContent=b.dataset.copy==="all"?"Copy script":"Copy",1400);},sel);}catch(_){sel();}});
+
+/* ---------- real output ---------- */
+const OUT={o1:`
+=== HOUSE PRICE PREDICTION ===
+
+1. Sample data:
+   area_sqft  bedrooms  age_years  price_lakh
+0        650         1         20          28
+1        800         2         15          35
+2        900         2         12          39
+3       1000         2         10          43
+4       1100         2          8          47`,
+o2:`
+2. Model evaluation:
+Mean Absolute Error: 1.85 lakh
+R² score: 0.99`,
+o3:`
+3. New house details:
+ area_sqft  bedrooms  age_years
+      1500         3          5
+
+Predicted house price: ₹64.91 lakh`,
+o4:`
+4. Model coefficients:
+area_sqft: 0.048
+bedrooms: -2.519
+age_years: -0.208
+Intercept: 1.161
+
+Demo complete.
+Note: This is a teaching dataset, not a real property valuation model.`};
+$("out1").textContent=OUT.o1.trimStart();$("out2").textContent=OUT.o2.trimStart();$("out3").textContent=OUT.o3.trimStart();$("out4").textContent=OUT.o4.trimStart();
+$("fullOut").textContent=OUT.o1+"\n"+OUT.o2+"\n"+OUT.o3+"\n"+OUT.o4;
+
+/* ---------- data ---------- */
+const AREA=[650,800,900,1000,1100,1200,1300,1400,1500,1600,1700,1800,1900,2000,2200,2400];
+const BED=[1,2,2,2,2,3,3,3,3,3,3,3,4,4,4,4];
+const AGE=[20,15,12,10,8,10,7,6,5,8,4,3,6,4,2,1];
+const PRICE=[28,35,39,43,47,50,56,60,65,67,73,78,79,88,98,110];
+const TRAIN=[13,11,8,9,2,15,4,7,10,12,3,6], TEST=[0,1,5,14];
+const COLS=[["area_sqft",AREA],["bedrooms",BED],["age_years",AGE]];
+
+$("dataTable").innerHTML=`<thead><tr><th style="text-align:center">index</th><th>area_sqft</th><th>bedrooms</th><th>age_years</th><th>price_lakh</th></tr></thead><tbody>${AREA.map((_,i)=>`<tr><td class="idx">${i}</td><td>${AREA[i]}</td><td>${BED[i]}</td><td>${AGE[i]}</td><td>${PRICE[i]}</td></tr>`).join("")}</tbody>`;
+$("xyTable").innerHTML=`<thead><tr><th style="text-align:center">index</th><th class="x">area_sqft</th><th class="x">bedrooms</th><th class="x">age_years</th><th class="y">price_lakh</th></tr><tr><th></th><th class="x" colspan="3" style="text-align:center">X · features · shape (16, 3)</th><th class="y">y · target · (16,)</th></tr></thead><tbody>${AREA.slice(0,6).map((_,i)=>`<tr><td class="idx">${i}</td><td class="x">${AREA[i]}</td><td class="x">${BED[i]}</td><td class="x">${AGE[i]}</td><td class="y">${PRICE[i]}</td></tr>`).join("")}<tr><td class="idx">…</td><td class="x">…</td><td class="x">…</td><td class="x">…</td><td class="y">…</td></tr></tbody>`;
+$("splitTable").innerHTML=`<thead><tr><th style="text-align:center">index</th><th>area_sqft</th><th>bedrooms</th><th>age_years</th><th>price_lakh</th><th style="text-align:left">goes to</th></tr></thead><tbody>${AREA.map((_,i)=>{const t=TEST.includes(i);return `<tr class="${t?"test":""}"><td class="idx">${i}</td><td>${AREA[i]}</td><td>${BED[i]}</td><td>${AGE[i]}</td><td>${PRICE[i]}</td><td style="text-align:left;font-weight:600;color:${t?"var(--test)":"var(--accent)"}">${t?"test":"train"}</td></tr>`;}).join("")}</tbody>`;
+
+/* ---------- least squares ---------- */
+function solve(A,b){const n=A.length;const M=A.map((r,i)=>[...r,b[i]]);
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;[M[c],M[p]]=[M[p],M[c]];
+    for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/M[c][c];for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}
+  return M.map((r,i)=>r[n]/r[i]);}
+function fit(feats){const rows=TRAIN.map(i=>[1,...feats.map(f=>f[1][i])]);const y=TRAIN.map(i=>PRICE[i]);const k=rows[0].length;
+  const XtX=Array.from({length:k},(_,a)=>Array.from({length:k},(_,b)=>rows.reduce((s,r)=>s+r[a]*r[b],0)));
+  const Xty=Array.from({length:k},(_,a)=>rows.reduce((s,r,i)=>s+r[a]*y[i],0));
+  const beta=solve(XtX,Xty);return{beta,predict:i=>beta[0]+feats.reduce((s,f,j)=>s+beta[j+1]*f[1][i],0)};}
+const mae=(idx,p)=>idx.reduce((s,i)=>s+Math.abs(PRICE[i]-p(i)),0)/idx.length;
+const r2=(idx,p)=>{const m=idx.reduce((s,i)=>s+PRICE[i],0)/idx.length;const ssr=idx.reduce((s,i)=>s+(PRICE[i]-p(i))**2,0),sst=idx.reduce((s,i)=>s+(PRICE[i]-m)**2,0);return 1-ssr/sst;};
+const FULL=fit(COLS);const B=FULL.beta;
+
+function renderFit(){const on=[["fArea",COLS[0]],["fBed",COLS[1]],["fAge",COLS[2]]].filter(([id])=>$(id).checked).map(x=>x[1]);
+  if(!on.length){$("fitFormula").textContent="Turn on at least one feature. With no features, the model can only guess one fixed price for every house.";$("fitScores").innerHTML="";return;}
+  const m=fit(on);const b=m.beta;
+  $("fitFormula").textContent=`price = ${b[0].toFixed(3)}`+on.map((f,j)=>` ${b[j+1]<0?"−":"+"} ${Math.abs(b[j+1]).toFixed(3)} × ${f[0]}`).join("");
+  const tm=mae(TEST,m.predict),tr=r2(TEST,m.predict),trm=mae(TRAIN,m.predict);
+  $("fitScores").innerHTML=`<div class="card"><h5>Test MAE</h5><div class="val">${tm.toFixed(2)}</div><p>lakh, average error on the 4 hidden houses</p></div>
+   <div class="card"><h5>Test R²</h5><div class="val">${tr.toFixed(2)}</div><p>1.0 would be perfect</p></div>
+   <div class="card"><h5>Training MAE</h5><div class="val">${trm.toFixed(2)}</div><p>lakh, error on the 12 houses it studied</p></div>`;}
+["fArea","fBed","fAge"].forEach(id=>$(id).addEventListener("change",renderFit));renderFit();
+
+/* ---------- step 5 tables ---------- */
+const P=FULL.predict;
+$("evalTable").innerHTML=`<thead><tr><th style="text-align:center">index</th><th>area</th><th>bed</th><th>age</th><th>actual price</th><th>predicted</th><th>error</th><th>|error|</th></tr></thead><tbody>${TEST.map(i=>{const p=P(i),e=PRICE[i]-p;return `<tr class="test"><td class="idx">${i}</td><td>${AREA[i]}</td><td>${BED[i]}</td><td>${AGE[i]}</td><td>${PRICE[i]}</td><td>${p.toFixed(2)}</td><td>${e>=0?"+":""}${e.toFixed(2)}</td><td>${Math.abs(e).toFixed(2)}</td></tr>`}).join("")}</tbody>`;
+const abs=TEST.map(i=>Math.abs(PRICE[i]-P(i)));
+$("maeCalc").textContent=`MAE = (${abs.map(a=>a.toFixed(2)).join(" + ")}) ÷ 4\n    = ${abs.reduce((a,b)=>a+b,0).toFixed(2)} ÷ 4\n    = ${mae(TEST,P).toFixed(4)}  →  printed as 1.85`;
+const mean=TEST.reduce((s,i)=>s+PRICE[i],0)/4;const ssr=TEST.reduce((s,i)=>s+(PRICE[i]-P(i))**2,0),sst=TEST.reduce((s,i)=>s+(PRICE[i]-mean)**2,0);
+$("r2Calc").textContent=`Average test price = (28 + 35 + 50 + 98) ÷ 4 = ${mean.toFixed(2)}\nModel's squared errors   = ${ssr.toFixed(2)}\nAlways-guess-average errors = ${sst.toFixed(2)}\nR² = 1 − ${ssr.toFixed(2)} ÷ ${sst.toFixed(2)} = ${(1-ssr/sst).toFixed(4)}  →  printed as 0.99`;
+
+/* ---------- charts ---------- */
+function canvasSetup(c,ratio,maxH){const w=c.clientWidth||600;const h=Math.min(maxH,Math.round(w*ratio));const d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;c.style.height=h+"px";const ctx=c.getContext("2d");ctx.setTransform(d,0,0,d,0,0);return{ctx,w,h};}
+function frame(ctx,w,h,Pd,xl,yl,xt,yt,X,Y){ctx.fillStyle=css("--paper");ctx.fillRect(0,0,w,h);ctx.strokeStyle=css("--line");ctx.fillStyle=css("--muted");ctx.font="11px "+css("--mono");ctx.lineWidth=1;
+  xt.forEach(v=>{ctx.beginPath();ctx.moveTo(X(v),Pd.t);ctx.lineTo(X(v),h-Pd.b);ctx.stroke();ctx.textAlign="center";ctx.fillText(v,X(v),h-Pd.b+14);});
+  yt.forEach(v=>{ctx.beginPath();ctx.moveTo(Pd.l,Y(v));ctx.lineTo(w-Pd.r,Y(v));ctx.stroke();ctx.textAlign="right";ctx.fillText(v,Pd.l-6,Y(v)+4);});
+  ctx.textAlign="center";ctx.fillText(xl,(Pd.l+w-Pd.r)/2,h-4);ctx.save();ctx.translate(12,(Pd.t+h-Pd.b)/2);ctx.rotate(-Math.PI/2);ctx.fillText(yl,0,0);ctx.restore();}
+function drawData(){const c=$("dataChart");if(c.closest("[hidden]"))return;const{ctx,w,h}=canvasSetup(c,.6,360);const Pd={l:46,r:14,t:12,b:34};
+  const X=v=>Pd.l+(v-500)/2000*(w-Pd.l-Pd.r),Y=v=>h-Pd.b-v/120*(h-Pd.t-Pd.b);
+  frame(ctx,w,h,Pd,"area_sqft","price_lakh",[500,1000,1500,2000,2500],[0,40,80,120],X,Y);
+  AREA.forEach((a,i)=>{const t=1-AGE[i]/20;ctx.globalAlpha=.35+.65*t;ctx.fillStyle=css("--accent");ctx.beginPath();ctx.arc(X(a),Y(PRICE[i]),10,0,7);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle=css("--accent-ink");ctx.font="bold 11px "+css("--mono");ctx.textAlign="center";ctx.fillText(BED[i],X(a),Y(PRICE[i])+4);});}
+function drawAvp(){const c=$("avpChart");const{ctx,w,h}=canvasSetup(c,.62,340);const Pd={l:46,r:14,t:12,b:34};
+  const X=v=>Pd.l+(v-20)/100*(w-Pd.l-Pd.r),Y=v=>h-Pd.b-(v-20)/100*(h-Pd.t-Pd.b);
+  frame(ctx,w,h,Pd,"actual price (lakh)","predicted price (lakh)",[20,40,60,80,100,120],[20,40,60,80,100,120],X,Y);
+  ctx.strokeStyle=css("--muted");ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(X(20),Y(20));ctx.lineTo(X(120),Y(120));ctx.stroke();ctx.setLineDash([]);
+  AREA.forEach((_,i)=>{const t=TEST.includes(i);ctx.fillStyle=css(t?"--test":"--accent");ctx.beginPath();if(t)ctx.rect(X(PRICE[i])-6,Y(P(i))-6,12,12);else ctx.arc(X(PRICE[i]),Y(P(i)),5,0,7);ctx.fill();
+    if(t){ctx.fillStyle=css("--ink");ctx.font="11px "+css("--mono");ctx.textAlign="left";ctx.fillText("#"+i,X(PRICE[i])+9,Y(P(i))+4);}});}
+$("viewTable").onclick=()=>{$("dataTableWrap").hidden=false;$("dataChartWrap").hidden=true;$("viewTable").classList.add("on");$("viewChart").classList.remove("on");};
+$("viewChart").onclick=()=>{$("dataTableWrap").hidden=true;$("dataChartWrap").hidden=false;$("viewChart").classList.add("on");$("viewTable").classList.remove("on");drawData();};
+function redraw(){drawData();drawAvp();}
+drawAvp();
+if(window.matchMedia)matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redraw);
+new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(redraw,120);});
+
+/* ---------- step 6 ---------- */
+function house(){const a=+$("hArea").value,b=+$("hBed").value,g=+$("hAge").value;$("hAreaO").textContent=a;$("hBedO").textContent=b;$("hAgeO").textContent=g;
+  const p=B[0]+B[1]*a+B[2]*b+B[3]*g;$("hPrice").textContent=`₹ ${p.toFixed(2)} lakh`;
+  $("hCalc").textContent=`price = ${B[0].toFixed(3)}\n      + ${B[1].toFixed(5)} × ${a}   (area)      = ${(B[1]*a>=0?"+":"")}${(B[1]*a).toFixed(2)}\n      − ${Math.abs(B[2]).toFixed(3)} × ${b}      (bedrooms)  = ${(B[2]*b).toFixed(2)}\n      − ${Math.abs(B[3]).toFixed(3)} × ${g}     (age)       = ${(B[3]*g).toFixed(2)}\n      = ${p.toFixed(2)} lakh`;
+  const warn=[];if(a<650||a>2400)warn.push("area is outside the 650–2400 sq ft the model saw");if(g>20)warn.push("age is older than any house in the data");if(b===5)warn.push("no 5-bedroom houses were in the data");
+  if(b===1&&a>1200)warn.push("a 1-bedroom house this large never appeared in the data");
+  $("hWarn").textContent=warn.length?"⚠ Less reliable: "+warn.join("; ")+". Models are only trustworthy close to the data they learned from.":"Inside the range of the training data, so the prediction is reasonable.";}
+["hArea","hBed","hAge"].forEach(id=>$(id).addEventListener("input",house));
+$("resetHouse").onclick=()=>{$("hArea").value=1500;$("hBed").value=3;$("hAge").value=5;house();};house();
+
+/* ---------- quiz ---------- */
+const QZ=[["In this script, which variable holds the answers the model learns to predict?",["X","y","df.head()","new_house"],1,"y = df[\"price_lakh\"] is the target. X holds the features."],
+ ["How many houses does the model actually train on?",["16","12","4","5"],1,"test_size=0.25 holds back 4 of 16 houses, leaving 12 for training."],
+ ["Which line is where the model learns?",["model = LinearRegression()","model.fit(X_train, y_train)","model.predict(X_test)","print(df.head())"],1,"fit() finds the coefficients. Creating the model doesn't learn anything, and predict() only uses what was learned."],
+ ["The MAE is 1.85. What does that mean?",["The model is 1.85% accurate","Predictions are off by about ₹1.85 lakh on average","1.85 houses were wrong","The model needs 1.85 more features"],1,"MAE is the average absolute error, in the same unit as the price (lakh)."],
+ ["Why does the script use random_state=42?",["42 makes the model more accurate","So the random split is the same every time you run it","It sets the number of test rows","It's required by pandas"],1,"A fixed seed makes results repeatable. Any number would work."]];
+document.querySelectorAll(".quiz").forEach(el=>{const[q,opts,ans,why]=QZ[+el.dataset.q];let done=false;
+  el.innerHTML=`<div class="q">${esc(q)}</div><div class="opts">${opts.map((o,k)=>`<button data-k="${k}">${esc(o)}</button>`).join("")}</div><div class="why" hidden></div>`;
+  el.addEventListener("click",e=>{const b=e.target.closest("button[data-k]");if(!b||done)return;done=true;const k=+b.dataset.k;
+    el.querySelectorAll("button").forEach((x,xi)=>{x.disabled=true;if(xi===ans)x.classList.add("right");else if(xi===k)x.classList.add("wrong");});
+    const w=el.querySelector(".why");w.hidden=false;w.innerHTML=`<b>${k===ans?"Correct.":"Not quite."}</b> ${esc(why)}`;});});
+
+/* ---------- nav ---------- */
+const links=[...document.querySelectorAll(".rail a, .chipnav a")];
+if("IntersectionObserver" in window){const io=new IntersectionObserver(ents=>{ents.forEach(en=>{if(en.isIntersecting){const id=en.target.id;links.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+id));
+  const chip=document.querySelector(`.chipnav a[href="#${id}"]`);if(chip&&getComputedStyle(chip.parentElement).display!=="none")chip.parentElement.scrollTo({left:chip.offsetLeft-20,behavior:"smooth"});}});},{rootMargin:"-30% 0px -60% 0px"});
+  document.querySelectorAll("section.step").forEach(s=>io.observe(s));}
+})();
+</script>
+
+</body></html>
