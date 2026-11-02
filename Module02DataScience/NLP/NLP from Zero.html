@@ -1,0 +1,935 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>NLP from Zero</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky syllabus rail on the left, one long lesson column; every concept = explain → example → live demo → code → check. */
+:root{
+  --paper:#F3F5F7; --surface:#FFFFFF; --sunk:#E9EDF1; --ink:#14202C; --muted:#56636F; --line:#D5DCE3;
+  --accent:#0B7A69; --accent-ink:#FFFFFF; --accent-soft:#D7EFEA;
+  --mark:#FFE07A; --mark-ink:#14202C;
+  --pos:#1F8A4C; --pos-soft:#DAF1E3; --neg:#C23A33; --neg-soft:#F8DEDC; --warn:#A8670A;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E141A; --surface:#151D25; --sunk:#1B252F; --ink:#E5EBF0; --muted:#97A4B0; --line:#26323E;
+  --accent:#3DC4AA; --accent-ink:#06231E; --accent-soft:#143A35;
+  --mark:#5E4E10; --mark-ink:#FFF3C4;
+  --pos:#5CCB8A; --pos-soft:#15362A; --neg:#F0807A; --neg-soft:#3C1B1A; --warn:#E3A84A;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E141A; --surface:#151D25; --sunk:#1B252F; --ink:#E5EBF0; --muted:#97A4B0; --line:#26323E;
+  --accent:#3DC4AA; --accent-ink:#06231E; --accent-soft:#143A35;
+  --mark:#5E4E10; --mark-ink:#FFF3C4;
+  --pos:#5CCB8A; --pos-soft:#15362A; --neg:#F0807A; --neg-soft:#3C1B1A; --warn:#E3A84A;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:48px;padding-block:32px 80px}
+
+/* rail */
+.rail{position:sticky;top:calc(24px + env(safe-area-inset-top, 0px));align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-family:var(--display)}
+.rail .brand{font-weight:800;font-size:20px;letter-spacing:-.01em;margin-bottom:4px}
+.rail .score{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:20px}
+.rail h4{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:18px 0 6px;font-weight:700}
+.rail a{display:flex;gap:10px;align-items:baseline;padding:5px 8px;margin-left:-8px;border-radius:6px;color:var(--ink);text-decoration:none;font-size:14.5px;font-weight:500}
+.rail a span{font-family:var(--mono);font-size:11px;color:var(--muted);width:18px;flex:none}
+.rail a:hover{background:var(--sunk)}
+.rail a.active{background:var(--accent-soft);color:var(--ink)}
+.rail a.active span{color:var(--accent)}
+.rail a.done::after{content:"✓";margin-left:auto;color:var(--accent);font-size:12px}
+.chipnav{display:none}
+
+main{min-width:0}
+section.lesson{padding-block:56px 24px;border-top:1px solid var(--line);scroll-margin-top:24px}
+section.lesson:first-of-type{border-top:0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;letter-spacing:-.015em;line-height:1.12}
+h1{font-size:clamp(40px,7vw,68px);font-weight:800;margin:8px 0 14px}
+h2{font-size:clamp(28px,4vw,38px);font-weight:700;margin:6px 0 14px}
+h3{font-size:19px;font-weight:700;margin:28px 0 8px}
+p{max-width:66ch;margin:0 0 14px}
+.lead{font-size:20px;color:var(--muted);max-width:60ch}
+.mark{background:var(--mark);color:var(--mark-ink);padding:0 .2em;border-radius:3px}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:4px}
+ul.plain{max-width:66ch;padding-left:1.1em;margin:0 0 14px}
+ul.plain li{margin-bottom:6px}
+
+.analogy{border-left:3px solid var(--accent);padding:4px 0 4px 16px;margin:18px 0;max-width:64ch;font-style:italic;color:var(--muted)}
+.analogy b{font-style:normal;color:var(--ink)}
+
+/* demo panel */
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;margin:22px 0;min-width:0}
+.demo-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.demo-tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:8px}
+.demo-tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+label.fl{font-family:var(--display);font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px}
+textarea,input[type=text],select{width:100%;font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;line-height:1.5}
+textarea{resize:vertical;min-height:64px}
+textarea:focus,input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--display);font-weight:600;font-size:14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.toggle{display:inline-flex;align-items:center;gap:7px;font-family:var(--display);font-size:14px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;cursor:pointer;background:var(--paper);user-select:none}
+.toggle input{accent-color:var(--accent);margin:0}
+.out{margin-top:14px;min-width:0}
+.out-label{font-family:var(--display);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:14px 0 6px}
+.result{font-family:var(--mono);font-size:14px;background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-word}
+.stat{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+
+/* tokens */
+.toks{display:flex;flex-wrap:wrap;gap:6px}
+.tok{font-family:var(--mono);font-size:13.5px;padding:3px 8px;border-radius:6px;background:var(--sunk);border:1px solid var(--line);white-space:pre}
+.tok.k{background:var(--mark);color:var(--mark-ink);border-color:transparent}
+.tok.stop{opacity:.5;text-decoration:line-through}
+.tok.sub{border-style:dashed}
+.tok.pos{background:var(--pos-soft);color:var(--pos);border-color:transparent;font-weight:600}
+.tok.neg{background:var(--neg-soft);color:var(--neg);border-color:transparent;font-weight:600}
+.tok small{font-size:10px;opacity:.8;margin-left:4px}
+
+/* hero pipeline */
+.hero{padding-block:24px 40px}
+.pipe{display:grid;gap:0;margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pipe .stage{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding:14px 18px;border-top:1px solid var(--line);align-items:start}
+.pipe .stage:first-child{border-top:0}
+.pipe .stage .nm{font-family:var(--display);font-weight:700;font-size:14px}
+.pipe .stage .nm a{color:var(--accent);text-decoration:none;font-family:var(--mono);font-size:11px;font-weight:400;display:block}
+.pipe input{font-size:15px}
+
+/* tables */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{background:var(--sunk);font-weight:600;font-size:12px}
+td.l,th.l{text-align:left}
+tr:last-child td{border-bottom:0}
+td.z{color:var(--muted);opacity:.55}
+td.cell{cursor:pointer}
+td.cell:hover{outline:2px solid var(--accent);outline-offset:-2px}
+td.sel{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* code */
+.code{position:relative;margin:18px 0;min-width:0}
+.code pre{margin:0;overflow-x:auto;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:16px;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--ink)}
+.code .cap{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.code .copy{font-family:var(--mono);font-size:11px;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 8px;cursor:pointer}
+.c-com{color:var(--muted);font-style:italic}
+.c-str{color:var(--pos)}
+.c-kw{color:var(--accent);font-weight:600}
+
+/* quiz */
+.quiz{margin:24px 0 8px;padding:18px 20px;background:var(--accent-soft);border-radius:12px}
+.quiz .q{font-family:var(--display);font-weight:700;font-size:16px;margin-bottom:10px}
+.quiz .opts{display:flex;flex-direction:column;gap:8px}
+.quiz button{text-align:left;font-family:var(--body);font-size:15px;background:var(--surface);border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:8px;cursor:pointer}
+.quiz button:hover:not(:disabled){border-color:var(--accent)}
+.quiz button.right{border-color:var(--pos);background:var(--pos-soft);color:var(--pos);font-weight:600}
+.quiz button.wrong{border-color:var(--neg);background:var(--neg-soft);color:var(--neg)}
+.quiz .why{font-size:14.5px;margin-top:10px;color:var(--ink)}
+
+/* cards grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.card h5{font-family:var(--display);font-size:15px;margin:0 0 6px}
+.card p{font-size:14.5px;margin:0;color:var(--muted)}
+.card .io{font-family:var(--mono);font-size:12.5px;margin-top:8px;color:var(--ink)}
+.card .io div{margin-top:3px}
+.card .io b{color:var(--accent);font-weight:600}
+button.card{text-align:left;cursor:pointer;font:inherit;color:inherit}
+button.card:hover,button.card.on{border-color:var(--accent)}
+button.card.on{background:var(--accent-soft)}
+
+/* meter */
+.meter{position:relative;height:12px;border-radius:999px;background:linear-gradient(90deg,var(--neg),var(--line) 50%,var(--pos));margin:10px 0 4px}
+.meter i{position:absolute;top:-5px;width:4px;height:22px;background:var(--ink);border-radius:2px;transform:translateX(-50%);transition:left .3s}
+.bar{height:10px;border-radius:999px;background:var(--sunk);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.bar.spam i{background:var(--neg)}
+
+/* embeddings */
+.emb svg{width:100%;height:auto;display:block}
+.emb text{font-family:var(--mono);font-size:12px;fill:var(--ink);cursor:pointer}
+.emb circle{cursor:pointer}
+
+/* attention */
+.attn{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.attn button{font-family:var(--mono);font-size:14px;padding:6px 10px;border-radius:6px;border:1px solid var(--line);cursor:pointer;color:var(--ink);position:relative}
+.attn button.src{outline:2px solid var(--ink);outline-offset:1px}
+.attn button small{display:block;font-size:10px;color:var(--muted)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;font-family:var(--display);font-size:13.5px;font-weight:600}
+.flow span{background:var(--surface);border:1px solid var(--line);padding:8px 12px;border-radius:8px}
+.flow em{font-style:normal;color:var(--muted)}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+
+footer{font-family:var(--display);font-size:14px;color:var(--muted);padding-top:40px;border-top:1px solid var(--line);margin-top:40px}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:0;padding-block:0 60px}
+  .rail{display:none}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--paper)}
+  .chipnav{display:flex;position:sticky;top:env(safe-area-inset-top, 0px);z-index:9;gap:6px;overflow-x:auto;padding:10px 0;background:var(--paper);border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:16px;scrollbar-width:none}
+  .chipnav a{flex:none;font-family:var(--display);font-size:13px;font-weight:600;text-decoration:none;color:var(--ink);padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+  .chipnav a.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  section.lesson{scroll-margin-top:60px}
+  .pipe .stage{grid-template-columns:minmax(0,1fr);gap:6px}
+}
+@media (max-width:520px){body{font-size:16px}.demo{padding:14px}}
+</style>
+
+<div class="shell">
+<nav class="rail" aria-label="Topics">
+  <div class="brand">NLP from Zero</div>
+  <div class="score" id="scoreline">Quiz score 0 / 12</div>
+  <h4>Foundations</h4>
+  <a href="#what"><span>01</span>What is NLP?</a>
+  <a href="#preprocess"><span>02</span>Text preprocessing</a>
+  <a href="#tokenize"><span>03</span>Tokenization</a>
+  <a href="#stopwords"><span>04</span>Stopwords</a>
+  <a href="#stemming"><span>05</span>Stemming &amp; Lemmatization</a>
+  <h4>Turning text into numbers</h4>
+  <a href="#bow"><span>06</span>Bag of Words</a>
+  <a href="#tfidf"><span>07</span>TF-IDF</a>
+  <a href="#embeddings"><span>08</span>Word Embeddings</a>
+  <h4>Applications</h4>
+  <a href="#sentiment"><span>09</span>Sentiment Analysis</a>
+  <a href="#classify"><span>10</span>Text Classification</a>
+  <h4>Modern NLP</h4>
+  <a href="#transformers"><span>11</span>Transformers</a>
+  <a href="#huggingface"><span>12</span>Hugging Face</a>
+</nav>
+
+<main>
+<nav class="chipnav" aria-label="Topics">
+  <a href="#what">What is NLP</a><a href="#preprocess">Preprocessing</a><a href="#tokenize">Tokenization</a><a href="#stopwords">Stopwords</a><a href="#stemming">Stem &amp; Lemma</a><a href="#bow">Bag of Words</a><a href="#tfidf">TF-IDF</a><a href="#embeddings">Embeddings</a><a href="#sentiment">Sentiment</a><a href="#classify">Classification</a><a href="#transformers">Transformers</a><a href="#huggingface">Hugging Face</a>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="eyebrow">A hands-on course · 12 lessons</div>
+  <h1>NLP from Zero</h1>
+  <p class="lead">Computers only understand numbers. Natural Language Processing is the craft of turning messy human sentences into something a machine can count, compare and learn from. Type a sentence below and watch it travel through the pipeline you are about to learn.</p>
+  <div class="pipe">
+    <div class="stage"><div class="nm">Your sentence</div><div><input type="text" id="heroIn" value="The kids were not enjoying the boring movies, but the songs were amazing!" aria-label="Sentence to analyse"></div></div>
+    <div class="stage"><div class="nm">1 · Tokens<a href="#tokenize">lesson 03</a></div><div class="toks" id="heroTok"></div></div>
+    <div class="stage"><div class="nm">2 · No stopwords<a href="#stopwords">lesson 04</a></div><div class="toks" id="heroStop"></div></div>
+    <div class="stage"><div class="nm">3 · Lemmas<a href="#stemming">lesson 05</a></div><div class="toks" id="heroLem"></div></div>
+    <div class="stage"><div class="nm">4 · Sentiment<a href="#sentiment">lesson 09</a></div><div id="heroSent"></div></div>
+  </div>
+</header>
+
+<!-- 01 WHAT IS NLP -->
+<section class="lesson" id="what">
+  <div class="eyebrow">Lesson 01 · Foundations</div>
+  <h2>What is NLP?</h2>
+  <p><b>Natural Language Processing (NLP)</b> is a branch of Artificial Intelligence that helps computers read, understand and produce human language, the kind we speak and write every day ("natural" language, as opposed to programming languages).</p>
+  <p>You already use NLP many times a day: your phone's autocorrect, Gmail sorting spam, Google Translate, voice assistants and chatbots like ChatGPT or Claude.</p>
+  <div class="analogy"><b>Why is it hard?</b> Language is ambiguous. "I saw her duck" could mean you saw her pet bird, or you saw her bend down. "That movie was <i>sick</i>" is praise, not illness. Humans use context effortlessly; computers need to be taught.</div>
+
+  <h3>The common NLP tasks</h3>
+  <p>Click a task to see what goes in and what comes out.</p>
+  <div class="grid" id="taskGrid"></div>
+  <div class="demo" id="taskDetail"></div>
+
+  <h3>The big picture: how an NLP project flows</h3>
+  <div class="flow"><span>Raw text</span><em>→</em><span>Clean it</span><em>→</em><span>Split into tokens</span><em>→</em><span>Turn into numbers</span><em>→</em><span>Model learns</span><em>→</em><span>Prediction</span></div>
+  <p>The next lessons follow exactly this order. Lessons 2–5 clean and split text, lessons 6–8 turn words into numbers, lessons 9–10 build real applications, and lessons 11–12 cover the modern deep-learning approach.</p>
+  <div class="quiz" data-q="0"></div>
+</section>
+
+<!-- 02 PREPROCESSING -->
+<section class="lesson" id="preprocess">
+  <div class="eyebrow">Lesson 02 · Foundations</div>
+  <h2>Text preprocessing</h2>
+  <p>Real-world text is messy: CAPITAL letters, emojis, links, HTML tags, typos, extra spaces. <b>Preprocessing</b> means cleaning text so that the same idea always looks the same to the computer.</p>
+  <div class="analogy"><b>Analogy:</b> washing and chopping vegetables before cooking. To a computer, "Movie", "movie" and "MOVIE!!!" are three different strings. After lowercasing and removing punctuation they become one word.</div>
+  <h3>Common cleaning steps</h3>
+  <ul class="plain">
+    <li><b>Lowercasing</b>: "Apple" → "apple"</li>
+    <li><b>Removing HTML tags &amp; URLs</b>: <code>&lt;b&gt;NOW&lt;/b&gt;</code> → "NOW"</li>
+    <li><b>Expanding contractions</b>: "can't" → "can not"</li>
+    <li><b>Removing punctuation, numbers, emojis</b> (only if they don't matter for your task)</li>
+    <li><b>Fixing whitespace</b>: collapsing many spaces into one</li>
+  </ul>
+  <p><b>Careful:</b> not every step suits every task. For sentiment analysis, "!!!" and 😍 carry emotion, so you might keep them. Preprocessing is a set of choices, not a fixed recipe.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · toggle each step</div></div>
+    <label class="fl" for="ppIn">Messy input text</label>
+    <textarea id="ppIn" rows="3">  OMG!!! I can't believe it 😍 Check https://shop.example.com <b>NOW</b>   — 50% OFF on 3 items!!  </textarea>
+    <div class="row" style="margin-top:12px" id="ppOpts"></div>
+    <div class="out-label">Clean output</div>
+    <div class="result" id="ppOut"></div>
+    <div class="stat" id="ppStat" style="margin-top:6px"></div>
+  </div>
+  <div class="code"><div class="cap">Python <button class="copy">Copy</button></div><pre><span class="c-kw">import</span> re
+
+text = <span class="c-str">"  OMG!!! I can't believe it 😍 Check https://shop.example.com &lt;b&gt;NOW&lt;/b&gt;"</span>
+text = text.lower()                                  <span class="c-com"># lowercase</span>
+text = re.sub(<span class="c-str">r"&lt;[^&gt;]+&gt;"</span>, <span class="c-str">""</span>, text)                    <span class="c-com"># strip HTML tags</span>
+text = re.sub(<span class="c-str">r"https?://\S+"</span>, <span class="c-str">""</span>, text)              <span class="c-com"># strip URLs</span>
+text = text.replace(<span class="c-str">"can't"</span>, <span class="c-str">"can not"</span>)             <span class="c-com"># expand contraction</span>
+text = re.sub(<span class="c-str">r"[^a-z\s]"</span>, <span class="c-str">""</span>, text)                 <span class="c-com"># keep only letters</span>
+text = re.sub(<span class="c-str">r"\s+"</span>, <span class="c-str">" "</span>, text).strip()             <span class="c-com"># fix spaces</span>
+print(text)   <span class="c-com"># omg i can not believe it check now</span></pre></div>
+  <div class="quiz" data-q="1"></div>
+</section>
+
+<!-- 03 TOKENIZATION -->
+<section class="lesson" id="tokenize">
+  <div class="eyebrow">Lesson 03 · Foundations</div>
+  <h2>Tokenization</h2>
+  <p><b>Tokenization</b> splits text into smaller pieces called <span class="mark">tokens</span>. A token is the basic unit the model works with. It can be a word, a character, a sentence, or a piece of a word.</p>
+  <div class="analogy"><b>Analogy:</b> breaking a LEGO model back into bricks so you can count, sort and rebuild them.</div>
+  <div class="grid">
+    <div class="card"><h5>Word tokens</h5><p>Split on spaces &amp; punctuation.</p><div class="io">"I love NLP!" → [I] [love] [NLP] [!]</div></div>
+    <div class="card"><h5>Character tokens</h5><p>Every letter is a token. Tiny vocabulary, very long sequences.</p><div class="io">"cat" → [c] [a] [t]</div></div>
+    <div class="card"><h5>Sentence tokens</h5><p>Split a paragraph into sentences.</p><div class="io">"Hi. Bye." → [Hi.] [Bye.]</div></div>
+    <div class="card"><h5>Subword tokens</h5><p>Used by modern models (BERT, GPT). Rare words break into known pieces.</p><div class="io">"unhappiness" → [un] [##happi] [##ness]</div></div>
+  </div>
+  <p>Why subwords? A word tokenizer has never seen "unhappiness" if it wasn't in training data, so it becomes <code>[UNK]</code> (unknown). Subword tokenizers can still build it from familiar parts. The <code>##</code> means "this piece continues the previous word".</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · switch tokenizer</div><div class="tabs" id="tokModes"></div></div>
+    <label class="fl" for="tokIn">Text</label>
+    <textarea id="tokIn" rows="2">Tokenization is unbelievably useful. Transformers don't read words, they read tokens!</textarea>
+    <div class="out-label">Tokens</div>
+    <div class="toks" id="tokOut"></div>
+    <div class="stat" id="tokStat" style="margin-top:8px"></div>
+  </div>
+  <div class="code"><div class="cap">Python · NLTK <button class="copy">Copy</button></div><pre><span class="c-kw">import</span> nltk
+nltk.download(<span class="c-str">"punkt"</span>)
+<span class="c-kw">from</span> nltk.tokenize <span class="c-kw">import</span> word_tokenize, sent_tokenize
+
+text = <span class="c-str">"I love NLP. It's fun!"</span>
+print(word_tokenize(text))  <span class="c-com"># ['I', 'love', 'NLP', '.', 'It', "'s", 'fun', '!']</span>
+print(sent_tokenize(text))  <span class="c-com"># ['I love NLP.', "It's fun!"]</span></pre></div>
+  <div class="quiz" data-q="2"></div>
+</section>
+
+<!-- 04 STOPWORDS -->
+<section class="lesson" id="stopwords">
+  <div class="eyebrow">Lesson 04 · Foundations</div>
+  <h2>Stopwords</h2>
+  <p><b>Stopwords</b> are very common words like <i>the, is, a, in, and, of</i>. They appear in almost every sentence, so they usually tell us little about what a text is <i>about</i>. Removing them makes data smaller and lets important words stand out.</p>
+  <div class="analogy"><b>Analogy:</b> a telegram. People paid per word, so "I am arriving at the station at 5" became "ARRIVING STATION 5". The meaning survives.</div>
+  <p><b>Warning:</b> NLTK's English list includes <code>not</code>, <code>no</code> and <code>nor</code>. Remove them and "not good" becomes "good", which flips the meaning. For sentiment analysis, keep negations.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · stopwords are crossed out</div>
+      <label class="toggle"><input type="checkbox" id="keepNeg"> Keep negations (not, no, never)</label></div>
+    <label class="fl" for="swIn">Text</label>
+    <textarea id="swIn" rows="2">The movie was not good and the story of the film is very boring in the end.</textarea>
+    <div class="out-label">Highlighted</div>
+    <div class="toks" id="swOut"></div>
+    <div class="out-label">After removal</div>
+    <div class="result" id="swClean"></div>
+    <div class="stat" id="swStat" style="margin-top:6px"></div>
+  </div>
+  <div class="code"><div class="cap">Python · NLTK <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> nltk.corpus <span class="c-kw">import</span> stopwords
+nltk.download(<span class="c-str">"stopwords"</span>)
+stop = set(stopwords.words(<span class="c-str">"english"</span>))     <span class="c-com"># 179 words</span>
+
+tokens = word_tokenize(<span class="c-str">"the movie was not good"</span>)
+print([t <span class="c-kw">for</span> t <span class="c-kw">in</span> tokens <span class="c-kw">if</span> t <span class="c-kw">not in</span> stop])   <span class="c-com"># ['movie', 'good']  ← meaning lost!</span></pre></div>
+  <div class="quiz" data-q="3"></div>
+</section>
+
+<!-- 05 STEMMING -->
+<section class="lesson" id="stemming">
+  <div class="eyebrow">Lesson 05 · Foundations</div>
+  <h2>Stemming and Lemmatization</h2>
+  <p>"run", "runs", "running" and "ran" all describe the same action. Both techniques reduce words to a base form so the computer treats them as one.</p>
+  <div class="grid">
+    <div class="card"><h5>Stemming · fast &amp; crude</h5><p>Chops off word endings with fixed rules (like the Porter stemmer). The result may not be a real word.</p><div class="io"><div>studies → <b>studi</b></div><div>happiness → <b>happi</b></div><div>ran → <b>ran</b> (rule can't see it)</div></div></div>
+    <div class="card"><h5>Lemmatization · slower &amp; smart</h5><p>Uses a dictionary and grammar to find the true base word, called the <i>lemma</i>.</p><div class="io"><div>studies → <b>study</b></div><div>better → <b>good</b></div><div>ran → <b>run</b></div></div></div>
+  </div>
+  <div class="analogy"><b>Analogy:</b> stemming is cutting a branch with an axe at a fixed spot. Lemmatization is a gardener who knows the plant and finds its real root.</div>
+  <p><b>When to use which?</b> Stemming for search engines and quick experiments with lots of data. Lemmatization when you need readable, accurate words (chatbots, analysis reports). Real lemmatizers also need the part of speech: "meeting" is a noun in "the meeting" but the verb "meet" in "I am meeting her".</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · compare side by side</div></div>
+    <label class="fl" for="stIn">Words (separated by spaces)</label>
+    <input type="text" id="stIn" value="running runs ran studies studied happiness better caring mice was quickly played houses children organization">
+    <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th class="l">Original</th><th class="l">Stem (Porter-style)</th><th class="l">Lemma</th></tr></thead><tbody id="stOut"></tbody></table></div>
+    <div class="stat" style="margin-top:8px">Rows marked ✱ show where the stemmer produced a non-word or missed an irregular form.</div>
+  </div>
+  <div class="code"><div class="cap">Python · NLTK <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> nltk.stem <span class="c-kw">import</span> PorterStemmer, WordNetLemmatizer
+nltk.download(<span class="c-str">"wordnet"</span>)
+ps, wnl = PorterStemmer(), WordNetLemmatizer()
+
+print(ps.stem(<span class="c-str">"studies"</span>))              <span class="c-com"># studi</span>
+print(wnl.lemmatize(<span class="c-str">"studies"</span>))        <span class="c-com"># study</span>
+print(wnl.lemmatize(<span class="c-str">"better"</span>, pos=<span class="c-str">"a"</span>)) <span class="c-com"># good   (a = adjective)</span>
+print(wnl.lemmatize(<span class="c-str">"ran"</span>, pos=<span class="c-str">"v"</span>))    <span class="c-com"># run    (v = verb)</span></pre></div>
+  <div class="quiz" data-q="4"></div>
+</section>
+
+<!-- 06 BOW -->
+<section class="lesson" id="bow">
+  <div class="eyebrow">Lesson 06 · Turning text into numbers</div>
+  <h2>Bag of Words</h2>
+  <p>Machine-learning models need numbers. <b>Bag of Words (BoW)</b> is the simplest way to get them:</p>
+  <ul class="plain">
+    <li>Collect every unique word across all documents. This list is the <b>vocabulary</b>.</li>
+    <li>For each document, count how many times each vocabulary word appears.</li>
+    <li>Each document becomes a row of numbers called a <b>vector</b>.</li>
+  </ul>
+  <div class="analogy"><b>Analogy:</b> tip all the words of a sentence into a bag and shake it. You know <i>which</i> words are inside and <i>how many</i>, but the order is lost. That is why "dog bites man" and "man bites dog" get the identical vector.</div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · edit the documents</div>
+      <label class="toggle"><input type="checkbox" id="bowStop" checked> Remove stopwords</label></div>
+    <div style="display:grid;gap:8px">
+      <input type="text" id="d1" value="I love this movie, the story is great" aria-label="Document 1">
+      <input type="text" id="d2" value="I hate this movie, the acting is bad" aria-label="Document 2">
+      <input type="text" id="d3" value="The story and the acting are great" aria-label="Document 3">
+    </div>
+    <div class="out-label">Document-term matrix (word counts)</div>
+    <div class="tablewrap"><table id="bowTable"></table></div>
+    <div class="stat" id="bowStat" style="margin-top:8px"></div>
+  </div>
+  <p><b>Limitations:</b> word order is lost, the vectors become huge with large vocabularies (mostly zeros, called "sparse"), and common words dominate the counts. TF-IDF fixes that last problem.</p>
+  <div class="code"><div class="cap">Python · scikit-learn <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> sklearn.feature_extraction.text <span class="c-kw">import</span> CountVectorizer
+
+docs = [<span class="c-str">"I love this movie"</span>, <span class="c-str">"I hate this movie"</span>]
+cv = CountVectorizer()
+X = cv.fit_transform(docs)
+print(cv.get_feature_names_out())  <span class="c-com"># ['hate' 'love' 'movie' 'this']</span>
+print(X.toarray())                 <span class="c-com"># [[0 1 1 1]
+                                   #  [1 0 1 1]]</span></pre></div>
+  <div class="quiz" data-q="5"></div>
+</section>
+
+<!-- 07 TFIDF -->
+<section class="lesson" id="tfidf">
+  <div class="eyebrow">Lesson 07 · Turning text into numbers</div>
+  <h2>TF-IDF</h2>
+  <p><b>TF-IDF</b> stands for <i>Term Frequency × Inverse Document Frequency</i>. It gives a word a high score when it is frequent in <b>this</b> document but rare in <b>other</b> documents. Such words describe the document best.</p>
+  <div class="grid">
+    <div class="card"><h5>TF · Term Frequency</h5><p>How often the word appears in this document.</p><div class="io">TF = count of word ÷ total words in doc</div></div>
+    <div class="card"><h5>IDF · Inverse Document Frequency</h5><p>How rare the word is across all documents.</p><div class="io">IDF = ln( N ÷ docs containing word )</div></div>
+    <div class="card"><h5>TF-IDF</h5><p>Multiply them. Words in every document get IDF = ln(1) = 0.</p><div class="io">score = TF × IDF</div></div>
+  </div>
+  <div class="analogy"><b>Analogy:</b> in a pile of cricket match reports, "the" and "match" appear everywhere, so they say nothing. "Hat-trick" appears in only one report, so it tells you what was special about <i>that</i> match.</div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · click any cell to see the math</div></div>
+    <p class="stat" style="margin:0 0 8px">Uses the same three documents as the Bag of Words demo above (edit them there). Stopwords are removed.</p>
+    <div class="tablewrap"><table id="tfTable"></table></div>
+    <div class="result" id="tfExplain" style="margin-top:12px"></div>
+  </div>
+  <p>Notice that words appearing in all three documents score 0, and words unique to one document score highest. scikit-learn uses a slightly smoothed formula, <code>ln((1+N)/(1+df)) + 1</code>, so its numbers differ, but the idea is the same.</p>
+  <div class="code"><div class="cap">Python · scikit-learn <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> sklearn.feature_extraction.text <span class="c-kw">import</span> TfidfVectorizer
+
+tfidf = TfidfVectorizer(stop_words=<span class="c-str">"english"</span>)
+X = tfidf.fit_transform(docs)
+<span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+print(pd.DataFrame(X.toarray(), columns=tfidf.get_feature_names_out()).round(2))</pre></div>
+  <div class="quiz" data-q="6"></div>
+</section>
+
+<!-- 08 EMBEDDINGS -->
+<section class="lesson" id="embeddings">
+  <div class="eyebrow">Lesson 08 · Turning text into numbers</div>
+  <h2>Word Embeddings</h2>
+  <p>BoW and TF-IDF treat every word as unrelated: "happy" and "joyful" are as different as "happy" and "banana". <b>Word embeddings</b> fix this by giving each word a list of numbers (a dense vector, often 100–300 numbers) learned from huge amounts of text, so that <span class="mark">words with similar meanings sit close together</span>.</p>
+  <div class="analogy"><b>The key idea:</b> "You shall know a word by the company it keeps." Words used in similar sentences ("I drank hot ___") get similar vectors: coffee, tea, chai.</div>
+  <p>Famous embedding models: <b>Word2Vec</b> (Google, 2013), <b>GloVe</b> (Stanford, 2014) and <b>FastText</b> (Facebook, 2016). The most famous result is that you can do arithmetic with meaning: <code>king − man + woman ≈ queen</code>.</p>
+
+  <div class="demo emb">
+    <div class="demo-head"><div class="demo-tag">Try it · click a word to find its neighbours</div></div>
+    <p class="stat" style="margin:0 0 6px">A simplified 2-D map. Real embeddings have hundreds of dimensions; this is a hand-made illustration of the same idea.</p>
+    <svg viewBox="0 0 620 420" id="embSvg" role="img" aria-label="2-D map of word vectors"></svg>
+    <div class="result" id="embInfo" style="margin-top:8px">Click any word on the map.</div>
+    <div class="out-label">Word arithmetic</div>
+    <div class="row">
+      <select id="anA" style="width:auto" aria-label="Word A"></select><b>−</b>
+      <select id="anB" style="width:auto" aria-label="Word B"></select><b>+</b>
+      <select id="anC" style="width:auto" aria-label="Word C"></select><b>≈</b>
+      <span class="tok k" id="anOut" style="font-size:15px">?</span>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" data-an="king,man,woman">king − man + woman</button>
+      <button class="btn" data-an="paris,france,japan">paris − france + japan</button>
+      <button class="btn" data-an="puppy,dog,cat">puppy − dog + cat</button>
+    </div>
+  </div>
+  <div class="code"><div class="cap">Python · gensim <button class="copy">Copy</button></div><pre><span class="c-kw">import</span> gensim.downloader <span class="c-kw">as</span> api
+wv = api.load(<span class="c-str">"glove-wiki-gigaword-100"</span>)     <span class="c-com"># pretrained 100-dim vectors</span>
+
+print(wv[<span class="c-str">"king"</span>][:5])                       <span class="c-com"># first 5 of 100 numbers</span>
+print(wv.most_similar(<span class="c-str">"coffee"</span>, topn=3))   <span class="c-com"># tea, drinks, beer ...</span>
+print(wv.most_similar(positive=[<span class="c-str">"king"</span>, <span class="c-str">"woman"</span>], negative=[<span class="c-str">"man"</span>], topn=1))
+<span class="c-com"># [('queen', 0.77)]</span></pre></div>
+  <p><b>Limitation:</b> each word gets exactly one vector. "Bank" in "river bank" and "bank account" is the same vector. Transformers (Lesson 11) solve this with <i>contextual</i> embeddings.</p>
+  <div class="quiz" data-q="7"></div>
+</section>
+
+<!-- 09 SENTIMENT -->
+<section class="lesson" id="sentiment">
+  <div class="eyebrow">Lesson 09 · Applications</div>
+  <h2>Sentiment Analysis</h2>
+  <p><b>Sentiment analysis</b> decides whether a piece of text expresses a <span style="color:var(--pos);font-weight:600">positive</span>, <span style="color:var(--neg);font-weight:600">negative</span> or neutral opinion. Companies use it to read thousands of product reviews, tweets and support tickets automatically.</p>
+  <h3>Two approaches</h3>
+  <div class="grid">
+    <div class="card"><h5>Lexicon-based (rules)</h5><p>A dictionary gives each word a score (love = +3, awful = −3). Add up the scores, handling "not" and "very". Example tool: VADER. No training needed.</p></div>
+    <div class="card"><h5>Machine learning</h5><p>Train a model on thousands of labeled reviews. It learns patterns itself, including context and sarcasm (sometimes). This is Lesson 10 and 11.</p></div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · a lexicon-based analyzer</div></div>
+    <label class="fl" for="saIn">Write a review</label>
+    <textarea id="saIn" rows="2">The food was not bad, the staff were really friendly but the service was very slow.</textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" data-sa="I absolutely love this phone, the camera is amazing!">Positive</button>
+      <button class="btn" data-sa="Worst purchase ever. Terrible battery and awful support.">Negative</button>
+      <button class="btn" data-sa="The movie was not good at all.">Negation</button>
+      <button class="btn" data-sa="Oh great, my flight got cancelled again. Just wonderful.">Sarcasm</button>
+    </div>
+    <div class="out-label">Word scores</div>
+    <div class="toks" id="saToks"></div>
+    <div class="meter" aria-hidden="true"><i id="saNeedle" style="left:50%"></i></div>
+    <div class="row" style="justify-content:space-between"><span class="stat">Negative</span><span class="stat">Neutral</span><span class="stat">Positive</span></div>
+    <div class="result" id="saOut" style="margin-top:10px"></div>
+  </div>
+  <p>Try the <b>Sarcasm</b> example: the rule-based system says "positive" because it sees "great" and "wonderful". This is exactly why modern systems use machine learning and transformers that read the whole context.</p>
+  <div class="code"><div class="cap">Python · VADER (NLTK) <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> nltk.sentiment <span class="c-kw">import</span> SentimentIntensityAnalyzer
+nltk.download(<span class="c-str">"vader_lexicon"</span>)
+sia = SentimentIntensityAnalyzer()
+print(sia.polarity_scores(<span class="c-str">"The food was not bad!"</span>))
+<span class="c-com"># {'neg': 0.0, 'neu': 0.5, 'pos': 0.5, 'compound': 0.43}  → positive</span></pre></div>
+  <div class="quiz" data-q="8"></div>
+</section>
+
+<!-- 10 CLASSIFICATION -->
+<section class="lesson" id="classify">
+  <div class="eyebrow">Lesson 10 · Applications</div>
+  <h2>Text Classification</h2>
+  <p><b>Text classification</b> assigns a label (a category) to a piece of text. Sentiment analysis is one type. Others: spam vs. not spam, news topic (sports / politics / tech), language detection, support-ticket routing.</p>
+  <p>The usual recipe combines everything so far:</p>
+  <div class="flow"><span>Labeled examples</span><em>→</em><span>Preprocess + tokenize</span><em>→</em><span>BoW / TF-IDF vectors</span><em>→</em><span>Train classifier</span><em>→</em><span>Predict new text</span></div>
+  <p>A classic beginner model is <b>Naive Bayes</b>. During training it counts how often each word appears in spam and in normal messages. For a new message it asks: "given these words, which label is more probable?" It is called <i>naive</i> because it assumes each word is independent of the others, which isn't true, yet it works surprisingly well.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · a real Naive Bayes spam filter, trained in your browser</div></div>
+    <label class="fl" for="nbIn">Type a message</label>
+    <input type="text" id="nbIn" value="Congratulations! Click now to claim your free cash prize">
+    <div class="row" style="margin-top:8px">
+      <button class="btn" data-nb="Can we move the meeting to tomorrow?">Normal</button>
+      <button class="btn" data-nb="Win a free iPhone today, limited offer">Spam</button>
+      <button class="btn" data-nb="Thanks for the free lunch today">Tricky</button>
+    </div>
+    <div class="out-label">Prediction</div>
+    <div id="nbOut"></div>
+    <div class="out-label">Why? Words that pushed the decision</div>
+    <div class="toks" id="nbWhy"></div>
+    <details style="margin-top:14px"><summary class="stat" style="cursor:pointer">Show the 16 training messages</summary><div class="tablewrap"><table id="nbTrain"></table></div></details>
+  </div>
+  <p>Real projects use thousands of examples and evaluate on data the model hasn't seen, measuring <b>accuracy</b>, <b>precision</b> and <b>recall</b>. Other common classifiers: Logistic Regression, SVM, and today, fine-tuned transformers.</p>
+  <div class="code"><div class="cap">Python · scikit-learn <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> sklearn.pipeline <span class="c-kw">import</span> make_pipeline
+<span class="c-kw">from</span> sklearn.feature_extraction.text <span class="c-kw">import</span> TfidfVectorizer
+<span class="c-kw">from</span> sklearn.naive_bayes <span class="c-kw">import</span> MultinomialNB
+
+texts  = [<span class="c-str">"win a free iphone now"</span>, <span class="c-str">"are we meeting for lunch"</span>, ...]
+labels = [<span class="c-str">"spam"</span>, <span class="c-str">"ham"</span>, ...]
+
+model = make_pipeline(TfidfVectorizer(), MultinomialNB())
+model.fit(texts, labels)
+print(model.predict([<span class="c-str">"claim your free prize"</span>]))   <span class="c-com"># ['spam']</span></pre></div>
+  <div class="quiz" data-q="9"></div>
+</section>
+
+<!-- 11 TRANSFORMERS -->
+<section class="lesson" id="transformers">
+  <div class="eyebrow">Lesson 11 · Modern NLP</div>
+  <h2>Introduction to Transformers</h2>
+  <p>The <b>Transformer</b> is a neural-network design introduced in the 2017 paper <i>"Attention Is All You Need"</i>. It powers almost all modern NLP: BERT, GPT, Claude, T5, and Google Translate.</p>
+  <p>Older models (RNNs, LSTMs) read a sentence one word at a time, left to right, and tended to forget the start of long sentences. Transformers look at <b>all words at once</b> and use a mechanism called <span class="mark">self-attention</span> to decide which other words matter for understanding each word.</p>
+  <div class="analogy"><b>Analogy:</b> reading "The animal didn't cross the street because <b>it</b> was too tired". To know what "it" means, you glance back at "animal". Self-attention lets every word glance at every other word and decide how much to pay attention to it.</div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · click a word to see its attention</div>
+      <div class="tabs"><button class="btn on" id="attTired">"…too tired"</button><button class="btn" id="attWide">"…too wide"</button></div></div>
+    <div class="attn" id="attRow"></div>
+    <div class="result" id="attInfo" style="margin-top:12px"></div>
+    <p class="stat" style="margin:8px 0 0">Illustrative weights. Change the last word from "tired" to "wide" and watch what "it" attends to: a tired thing is the animal, a wide thing is the street.</p>
+  </div>
+
+  <h3>Inside a Transformer, step by step</h3>
+  <div class="flow"><span>Text</span><em>→</em><span>Subword tokens</span><em>→</em><span>Token embeddings + position info</span><em>→</em><span>Self-attention + feed-forward layers (× 12 or more)</span><em>→</em><span>Contextual vectors</span><em>→</em><span>Task output</span></div>
+  <ul class="plain">
+    <li><b>Positional encoding:</b> because all words are processed together, the model adds a signal telling it each word's position.</li>
+    <li><b>Multi-head attention:</b> several attention "heads" run in parallel; one may track grammar, another meaning, another references like "it".</li>
+    <li><b>Contextual embeddings:</b> unlike Word2Vec, "bank" gets a different vector in "river bank" and "bank loan".</li>
+    <li><b>Pre-training + fine-tuning:</b> first learn language from billions of sentences, then adapt to your small task with a few thousand examples.</li>
+  </ul>
+  <h3>Three families</h3>
+  <div class="grid">
+    <div class="card"><h5>Encoder-only · BERT</h5><p>Reads the whole sentence in both directions. Trained by filling in blanks ("The [MASK] barked" → dog). Best for understanding: classification, NER, search.</p></div>
+    <div class="card"><h5>Decoder-only · GPT</h5><p>Reads left to right and predicts the next token. Best for generating text: chatbots, writing, code.</p></div>
+    <div class="card"><h5>Encoder–decoder · T5, BART</h5><p>Encoder reads the input, decoder writes the output. Best for transforming text: translation, summarization.</p></div>
+  </div>
+  <div class="quiz" data-q="10"></div>
+</section>
+
+<!-- 12 HUGGING FACE -->
+<section class="lesson" id="huggingface">
+  <div class="eyebrow">Lesson 12 · Modern NLP</div>
+  <h2>The Hugging Face ecosystem</h2>
+  <p>Training a transformer from scratch costs huge amounts of money and data. <b>Hugging Face</b> is a company and open community that lets you download and use thousands of already-trained models in a few lines of Python. It is often called "the GitHub of machine learning".</p>
+  <div class="grid">
+    <div class="card"><h5>Hub</h5><p>huggingface.co: a website hosting hundreds of thousands of free models and datasets you can search and download.</p></div>
+    <div class="card"><h5>transformers</h5><p>The Python library to load and run models. Its <code>pipeline()</code> does a whole task in one line.</p></div>
+    <div class="card"><h5>tokenizers</h5><p>Fast subword tokenizers matching each model, exactly the Lesson 3 idea.</p></div>
+    <div class="card"><h5>datasets</h5><p>Load ready-made datasets (IMDB reviews, news, Q&amp;A) with one command.</p></div>
+    <div class="card"><h5>Trainer / fine-tuning</h5><p>Adapt a pre-trained model to your own labeled data.</p></div>
+    <div class="card"><h5>Spaces</h5><p>Host small web demos of your model (built with Gradio or Streamlit) for free.</p></div>
+  </div>
+  <p>Install it with <code>pip install transformers datasets torch</code>.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Explore · pick a pipeline task</div></div>
+    <div class="tabs" id="hfTabs"></div>
+    <p id="hfDesc" style="margin:4px 0 8px"></p>
+    <div class="code" style="margin:0"><div class="cap">Python <button class="copy">Copy</button></div><pre id="hfCode"></pre></div>
+    <div class="out-label">Example output</div>
+    <div class="result" id="hfOut"></div>
+    <p class="stat" style="margin:8px 0 0">Outputs are representative examples; exact scores depend on the model version.</p>
+  </div>
+
+  <h3>The full workflow: fine-tune your own classifier</h3>
+  <div class="code"><div class="cap">Python · transformers + datasets <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> datasets <span class="c-kw">import</span> load_dataset
+<span class="c-kw">from</span> transformers <span class="c-kw">import</span> (AutoTokenizer, AutoModelForSequenceClassification,
+                          TrainingArguments, Trainer)
+
+data = load_dataset(<span class="c-str">"imdb"</span>)                              <span class="c-com"># 1. labeled movie reviews</span>
+name = <span class="c-str">"distilbert-base-uncased"</span>
+tok  = AutoTokenizer.from_pretrained(name)                  <span class="c-com"># 2. matching tokenizer</span>
+data = data.map(<span class="c-kw">lambda</span> b: tok(b[<span class="c-str">"text"</span>], truncation=<span class="c-kw">True</span>, padding=<span class="c-str">"max_length"</span>), batched=<span class="c-kw">True</span>)
+
+model = AutoModelForSequenceClassification.from_pretrained(name, num_labels=2)  <span class="c-com"># 3. pre-trained model</span>
+args  = TrainingArguments(output_dir=<span class="c-str">"out"</span>, num_train_epochs=1, per_device_train_batch_size=16)
+
+trainer = Trainer(model=model, args=args,
+                  train_dataset=data[<span class="c-str">"train"</span>].shuffle(seed=42).select(range(2000)),
+                  eval_dataset=data[<span class="c-str">"test"</span>].select(range(500)))
+trainer.train()                                             <span class="c-com"># 4. fine-tune</span>
+trainer.save_model(<span class="c-str">"my-sentiment-model"</span>)                  <span class="c-com"># 5. save &amp; share on the Hub</span></pre></div>
+  <div class="quiz" data-q="11"></div>
+
+  <h3>Where to go next</h3>
+  <ul class="plain">
+    <li>Hugging Face's free <b>LLM / NLP Course</b> at huggingface.co/learn</li>
+    <li>Practice on Kaggle datasets: IMDB reviews, SMS Spam Collection, Twitter sentiment</li>
+    <li>Build a small project end to end: scrape reviews → clean → classify → show results in a Gradio Space</li>
+  </ul>
+</section>
+
+<footer>NLP from Zero · 12 lessons, each with an explanation, a worked example, a live demo, Python code and a quick check.</footer>
+</main>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- shared NLP helpers ---------- */
+const STOP=new Set("i me my myself we our ours ourselves you your yours yourself yourselves he him his himself she her hers herself it its itself they them their theirs themselves what which who whom this that these those am is are was were be been being have has had having do does did doing a an the and but if or because as until while of at by for with about against between into through during before after above below to from up down in out on off over under again further then once here there when where why how all any both each few more most other some such no nor not only own same so than too very s t can will just don should now".split(" "));
+const NEG=new Set(["not","no","nor","never"]);
+const wordTokens=t=>t.match(/[A-Za-z]+(?:'[A-Za-z]+)?|\d+(?:\.\d+)?|[^\sA-Za-z\d]/gu)||[];
+const isWord=t=>/^[A-Za-z]/.test(t);
+
+const IRREG={was:"be",were:"be",is:"be",am:"be",are:"be",been:"be",being:"be",better:"good",best:"good",worse:"bad",worst:"bad",ran:"run",went:"go",gone:"go",mice:"mouse",children:"child",feet:"foot",geese:"goose",men:"man",women:"woman",teeth:"tooth",people:"person",ate:"eat",eaten:"eat",has:"have",had:"have",did:"do",does:"do",bigger:"big",biggest:"big",happier:"happy",happiest:"happy",kids:"kid",caring:"care",saw:"see",seen:"see",took:"take",made:"make",wrote:"write",written:"write",bought:"buy",thought:"think",felt:"feel",got:"get"};
+const EWORDS=new Set("make take write care love hope use dance move live smile like hate come give have save share change close create drive ride bake serve believe arrive decide prepare type code rate bore excite amaze confuse".split(" "));
+function lemma(w){const l=w.toLowerCase();if(IRREG[l])return IRREG[l];if(l.length<=3)return l;
+  if(l.endsWith("ies")&&l.length>4)return l.slice(0,-3)+"y";
+  if(/(sses|xes|ches|shes|zes)$/.test(l))return l.slice(0,-2);
+  if(/(ss|us|is)$/.test(l))return l;
+  for(const suf of["ing","ed"]){if(l.endsWith(suf)){let s=l.slice(0,-suf.length);if(s.length>=2&&/[aeiouy]/.test(s)){
+    if(suf==="ed"&&s.endsWith("i"))return s.slice(0,-1)+"y";
+    if(/([^aeioulsz])\1$/.test(s))return s.slice(0,-1);
+    if(EWORDS.has(s+"e"))return s+"e";return s;}}}
+  if(l.endsWith("s")&&!l.endsWith("ss"))return l.slice(0,-1);
+  return l;}
+function stem(w){w=w.toLowerCase();if(w.length<=3)return w;
+  for(const[a,b]of[["sses","ss"],["ies","i"],["ss","ss"],["s",""]]){if(w.endsWith(a)){w=w.slice(0,-a.length)+b;break;}}
+  for(const suf of["ing","ed"]){if(w.endsWith(suf)){const s=w.slice(0,-suf.length);if(s.length>=2&&/[aeiouy]/.test(s)){w=s;
+    if(/([^aeiouylsz])\1$/.test(w))w=w.slice(0,-1);else if(/^[^aeiou]*[aeiou][^aeiouwxy]$/.test(w))w+="e";}break;}}
+  if(/[^aeiou]y$/.test(w)&&w.length>2)w=w.slice(0,-1)+"i";
+  for(const[a,b]of[["ational","ate"],["tional","tion"],["ization","ize"],["fulness","ful"],["iveness","ive"],["ousness","ous"],["ousli","ous"],["abli","able"],["entli","ent"],["li",""]]){if(w.endsWith(a)&&w.length-a.length>=3){w=w.slice(0,-a.length)+b;break;}}
+  for(const a of["ness","ment","ful","able","ible"]){if(w.endsWith(a)&&w.length-a.length>=3){w=w.slice(0,-a.length);break;}}
+  return w;}
+
+/* sentiment lexicon */
+const LEX={love:3,loved:3,great:3,excellent:3,amazing:3,awesome:3,fantastic:3,wonderful:3,best:3,perfect:3,brilliant:3,good:2,happy:2,nice:2,fun:2,enjoy:2,beautiful:2,friendly:2,delicious:2,helpful:2,recommend:2,like:1,fine:1,okay:0.5,decent:1,fast:1,
+  hate:-3,terrible:-3,awful:-3,worst:-3,horrible:-3,disgusting:-3,bad:-2,boring:-2,sad:-2,poor:-2,disappointing:-2,waste:-2,annoying:-2,ugly:-2,rude:-2,broken:-2,slow:-1,cancel:-1,cancelled:-1,problem:-1,expensive:-1,bore:-2};
+const INTENS={very:1.5,really:1.5,extremely:2,so:1.3,absolutely:1.6,super:1.5,too:1.2};
+function sentiment(text){const toks=wordTokens(text);let total=0;const out=[];
+  for(let i=0;i<toks.length;i++){const t=toks[i],l=t.toLowerCase();const lm=lemma(l);let base=LEX[l]!==undefined?LEX[l]:LEX[lm];
+    if(base===undefined||!isWord(t)){out.push({t,s:null});continue;}
+    let s=base,note=[];
+    for(let j=Math.max(0,i-3);j<i;j++){const p=toks[j].toLowerCase();if(NEG.has(p)||p.endsWith("n't")){s=-s*0.8;note.push("negated");break;}}
+    if(i>0&&INTENS[toks[i-1].toLowerCase()]){s*=INTENS[toks[i-1].toLowerCase()];note.push("boosted");}
+    total+=s;out.push({t,s,note});}
+  return{toks:out,total};}
+function sentLabel(x){return x>1?"Positive":x<-1?"Negative":x>0.25?"Slightly positive":x<-0.25?"Slightly negative":"Neutral / mixed";}
+
+/* ---------- HERO ---------- */
+function hero(){const txt=$("heroIn").value;const toks=wordTokens(txt);
+  $("heroTok").innerHTML=toks.map(t=>`<span class="tok">${esc(t)}</span>`).join("")||'<span class="stat">Type something</span>';
+  const kept=toks.filter(t=>isWord(t)&&!STOP.has(t.toLowerCase()));
+  $("heroStop").innerHTML=kept.map(t=>`<span class="tok">${esc(t.toLowerCase())}</span>`).join("")||'<span class="stat">Everything was a stopword</span>';
+  $("heroLem").innerHTML=kept.map(t=>{const l=lemma(t);return `<span class="tok ${l!==t.toLowerCase()?"k":""}">${esc(l)}</span>`}).join("");
+  const s=sentiment(txt);const parts=s.toks.filter(x=>x.s!==null);
+  $("heroSent").innerHTML=`<div class="toks">${parts.map(p=>`<span class="tok ${p.s>0?"pos":"neg"}">${esc(p.t)}<small>${p.s>0?"+":""}${p.s.toFixed(1)}</small></span>`).join("")}</div><div style="margin-top:8px;font-family:var(--display);font-weight:700">${sentLabel(s.total)} <span class="stat">(score ${s.total>0?"+":""}${s.total.toFixed(1)})</span></div>`;}
+$("heroIn").addEventListener("input",hero);hero();
+
+/* ---------- 01 tasks ---------- */
+const TASKS=[
+ {n:"Sentiment analysis",d:"Is the opinion positive or negative?",i:"The delivery was super quick, love it!",o:"POSITIVE (98%)",u:"Product reviews, brand monitoring on social media"},
+ {n:"Machine translation",d:"Convert text from one language to another.",i:"How are you?",o:"Hindi: आप कैसे हैं?",u:"Google Translate, multilingual support"},
+ {n:"Named Entity Recognition",d:"Find names of people, places, organizations, dates.",i:"Sundar Pichai visited Mumbai in March.",o:"[Sundar Pichai → PERSON] [Mumbai → PLACE] [March → DATE]",u:"Extracting data from news, resumes, invoices"},
+ {n:"Text classification",d:"Put text into a category.",i:"You won a free lottery! Click now",o:"SPAM",u:"Email filters, routing support tickets"},
+ {n:"Summarization",d:"Shorten a long text while keeping the key points.",i:"(a 900-word article about a cricket match)",o:"India beat Australia by 6 wickets; Kohli scored an unbeaten 89.",u:"News digests, meeting notes"},
+ {n:"Question answering",d:"Find the answer to a question inside a text.",i:"Context: 'The Taj Mahal is in Agra.' Q: Where is the Taj Mahal?",o:"Agra",u:"Search engines, customer-service bots"},
+ {n:"Text generation",d:"Write new text that continues a prompt.",i:"Once upon a time, in a small village,",o:"…there lived a curious girl who collected forgotten words.",u:"Chatbots, writing assistants, code completion"},
+ {n:"Speech to text",d:"Turn spoken audio into written words (often paired with NLP).",i:"🎤 audio: 'set an alarm for six'",o:"\"set an alarm for six\" → intent: SET_ALARM, time: 06:00",u:"Voice assistants like Alexa and Siri"}];
+let taskSel=0;
+function renderTasks(){$("taskGrid").innerHTML=TASKS.map((t,i)=>`<button class="card ${i===taskSel?"on":""}" data-t="${i}"><h5>${esc(t.n)}</h5><p>${esc(t.d)}</p></button>`).join("");
+  const t=TASKS[taskSel];$("taskDetail").innerHTML=`<div class="demo-tag">${esc(t.n)} · example</div><div class="out-label">Input</div><div class="result">${esc(t.i)}</div><div class="out-label">Output</div><div class="result">${esc(t.o)}</div><p class="stat" style="margin:10px 0 0">Used in: ${esc(t.u)}</p>`;}
+$("taskGrid").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(b){taskSel=+b.dataset.t;renderTasks();}});renderTasks();
+
+/* ---------- 02 preprocessing ---------- */
+const PP=[
+ ["html","Remove HTML",t=>t.replace(/<[^>]+>/g," ")],
+ ["url","Remove URLs",t=>t.replace(/https?:\/\/\S+|www\.\S+/g," ")],
+ ["lower","Lowercase",t=>t.toLowerCase()],
+ ["contr","Expand contractions",t=>t.replace(/\bcan't\b/gi,"can not").replace(/\bwon't\b/gi,"will not").replace(/n't\b/gi," not").replace(/'re\b/gi," are").replace(/'m\b/gi," am").replace(/'ll\b/gi," will").replace(/'ve\b/gi," have").replace(/'d\b/gi," would")],
+ ["emoji","Remove emojis",t=>t.replace(/\p{Extended_Pictographic}/gu," ")],
+ ["num","Remove numbers",t=>t.replace(/\d+/g," ")],
+ ["punct","Remove punctuation",t=>t.replace(/[^\p{L}\p{N}\s\p{Extended_Pictographic}]/gu," ")],
+ ["space","Fix extra spaces",t=>t.replace(/\s+/g," ").trim()]];
+$("ppOpts").innerHTML=PP.map(([k,n])=>`<label class="toggle"><input type="checkbox" id="pp_${k}" checked> ${n}</label>`).join("");
+function pp(){let t=$("ppIn").value;const before=t;let n=0;for(const[k,,f]of PP){if($("pp_"+k).checked){t=f(t);n++;}}
+  $("ppOut").textContent=t||"(empty)";$("ppStat").textContent=`${n} steps applied · ${before.length} → ${t.length} characters`;}
+$("ppIn").addEventListener("input",pp);$("ppOpts").addEventListener("change",pp);pp();
+
+/* ---------- 03 tokenization ---------- */
+const ROOTS="token iz ize un believ happ happi play run walk talk cat dog house big quick learn language natural process transform transformer embed word model read teach understand machine comput friend kind help care use data sentiment classif stop stem lemma hug face great love hate bad good movie fast slow work stud study read token use ful".split(" ");
+const SUFF="ing ed s es er ers est ly ness ment able ably ize ization ation tion ful less ity al ive ably".split(" ");
+const PIECES=new Set([...ROOTS,...SUFF]);
+const WHOLE=new Set([...STOP,"read","words","word","tokens","token","love","fun","nlp","is","useful","they","dont"]);
+function subword(w){const l=w.toLowerCase();if(!isWord(w)||WHOLE.has(l))return[l];const out=[];let i=0;
+  while(i<l.length){let found=null;for(let j=l.length;j>i;j--){const p=l.slice(i,j);if(PIECES.has(p)||j===i+1){found=p;break;}}
+    out.push(i===0?found:"##"+found);i+=found.length;}
+  return out;}
+let tokMode="word";const MODES=[["word","Word"],["char","Character"],["sent","Sentence"],["sub","Subword"]];
+$("tokModes").innerHTML=MODES.map(([k,n])=>`<button class="btn ${k===tokMode?"on":""}" data-m="${k}">${n}</button>`).join("");
+$("tokModes").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b)return;tokMode=b.dataset.m;[...$("tokModes").children].forEach(c=>c.classList.toggle("on",c===b));tok();});
+function tok(){const t=$("tokIn").value;let toks=[];let cls="";
+  if(tokMode==="word")toks=wordTokens(t);
+  else if(tokMode==="char")toks=[...t].map(c=>c===" "?"␣":c);
+  else if(tokMode==="sent")toks=(t.match(/[^.!?]+[.!?]*/g)||[]).map(s=>s.trim()).filter(Boolean);
+  else{wordTokens(t).forEach(w=>toks.push(...subword(w)));cls="sub";}
+  $("tokOut").innerHTML=toks.map(x=>`<span class="tok ${cls&&x.startsWith("##")?"sub k":""}">${esc(x)}</span>`).join("");
+  const uniq=new Set(toks).size;$("tokStat").textContent=`${toks.length} tokens · ${uniq} unique`+(tokMode==="sub"?" · highlighted pieces continue the previous word":"")+(tokMode==="char"?" · ␣ = space":"");}
+$("tokIn").addEventListener("input",tok);tok();
+
+/* ---------- 04 stopwords ---------- */
+function sw(){const keep=$("keepNeg").checked;const toks=wordTokens($("swIn").value);let removed=0;
+  const isStop=t=>{const l=t.toLowerCase();if(!isWord(t))return true;if(keep&&(NEG.has(l)||l.endsWith("n't")))return false;return STOP.has(l);};
+  $("swOut").innerHTML=toks.map(t=>{const s=isStop(t);if(s)removed++;return `<span class="tok ${s?"stop":"k"}">${esc(t)}</span>`}).join("");
+  const kept=toks.filter(t=>!isStop(t)).map(t=>t.toLowerCase());
+  $("swClean").textContent=kept.join(" ")||"(nothing left)";
+  $("swStat").textContent=`${toks.length} tokens → ${kept.length} kept (${removed} removed, incl. punctuation)`+(!keep&&toks.some(t=>NEG.has(t.toLowerCase()))?" · ⚠ 'not' was removed: the meaning flipped!":"");}
+$("swIn").addEventListener("input",sw);$("keepNeg").addEventListener("change",sw);sw();
+
+/* ---------- 05 stemming ---------- */
+function st(){const ws=$("stIn").value.split(/\s+/).filter(Boolean);
+  $("stOut").innerHTML=ws.map(w=>{const s=stem(w),l=lemma(w);const flag=s!==l;return `<tr><td class="l">${esc(w)}</td><td class="l" style="${flag?"color:var(--warn);font-weight:600":""}">${esc(s)}${flag?" ✱":""}</td><td class="l" style="color:var(--pos);font-weight:600">${esc(l)}</td></tr>`}).join("");}
+$("stIn").addEventListener("input",st);st();
+
+/* ---------- 06 BoW + 07 TF-IDF ---------- */
+let tfSel=null;
+function docTokens(text,dropStop){return wordTokens(text).filter(isWord).map(t=>t.toLowerCase()).filter(t=>!dropStop||!STOP.has(t));}
+function bow(){const drop=$("bowStop").checked;const docs=["d1","d2","d3"].map(id=>docTokens($(id).value,drop));
+  const vocab=[...new Set(docs.flat())].sort();
+  let h=`<thead><tr><th class="l">Doc</th>${vocab.map(v=>`<th>${esc(v)}</th>`).join("")}</tr></thead><tbody>`;
+  docs.forEach((d,i)=>{h+=`<tr><td class="l"><b>D${i+1}</b></td>${vocab.map(v=>{const c=d.filter(x=>x===v).length;return `<td class="${c?"":"z"}">${c}</td>`}).join("")}</tr>`;});
+  $("bowTable").innerHTML=h+"</tbody>";
+  const zeros=docs.reduce((a,d)=>a+vocab.filter(v=>!d.includes(v)).length,0);
+  $("bowStat").textContent=`Vocabulary size: ${vocab.length} words · each document is now a vector of ${vocab.length} numbers · ${Math.round(zeros/(vocab.length*3||1)*100)}% of cells are zero`;
+  tfidf();}
+function tfidf(){const docs=["d1","d2","d3"].map(id=>docTokens($(id).value,true));const N=docs.length;
+  const vocab=[...new Set(docs.flat())].sort();
+  const df=Object.fromEntries(vocab.map(v=>[v,docs.filter(d=>d.includes(v)).length]));
+  const M=docs.map(d=>vocab.map(v=>{const c=d.filter(x=>x===v).length;const tf=d.length?c/d.length:0;const idf=Math.log(N/df[v]);return{c,tf,idf,s:tf*idf,len:d.length,v};}));
+  let h=`<thead><tr><th class="l">Doc</th>${vocab.map(v=>`<th>${esc(v)}</th>`).join("")}</tr><tr><th class="l">IDF</th>${vocab.map(v=>`<th style="font-weight:400">${Math.log(N/df[v]).toFixed(2)}</th>`).join("")}</tr></thead><tbody>`;
+  M.forEach((row,i)=>{const mx=Math.max(...row.map(r=>r.s));h+=`<tr><td class="l"><b>D${i+1}</b></td>${row.map((r,j)=>{const isMax=r.s>0&&r.s===mx;return `<td class="cell ${r.s?"":"z"} ${tfSel&&tfSel[0]===i&&tfSel[1]===j?"sel":""}" data-i="${i}" data-j="${j}" style="${isMax?"background:var(--mark);color:var(--mark-ink);font-weight:600":""}">${r.s.toFixed(3)}</td>`}).join("")}</tr>`;});
+  $("tfTable").innerHTML=h+"</tbody>";$("tfTable")._M=M;
+  if(!tfSel||!M[tfSel[0]]||!M[tfSel[0]][tfSel[1]]){const j=vocab.indexOf("love");tfSel=[0,j>=0?j:0];}
+  explainTf();}
+function explainTf(){const M=$("tfTable")._M;if(!M||!M[0]||!M[0].length){$("tfExplain").textContent="Add some words to the documents.";return;}
+  const r=M[tfSel[0]][tfSel[1]];const df=Math.round(3/Math.exp(r.idf));
+  $("tfExplain").textContent=`Word "${r.v}" in D${tfSel[0]+1}\n\nTF  = ${r.c} occurrence(s) ÷ ${r.len} words = ${r.tf.toFixed(3)}\nIDF = ln(3 docs ÷ ${df} doc(s) containing "${r.v}") = ${r.idf.toFixed(3)}\nTF-IDF = ${r.tf.toFixed(3)} × ${r.idf.toFixed(3)} = ${r.s.toFixed(3)}\n\n`+
+   (r.c===0?`"${r.v}" doesn't appear in D${tfSel[0]+1}, so its score is 0.`:r.idf===0?`"${r.v}" appears in every document, so it can't tell them apart → 0.`:df===1?`"${r.v}" appears only in this document, so it's a strong clue to what D${tfSel[0]+1} is about.`:`"${r.v}" appears in ${df} of 3 documents, so it gets a medium weight.`)+"\nHighlighted cells = most important word in each document.";
+  document.querySelectorAll("#tfTable td.cell").forEach(td=>td.classList.toggle("sel",+td.dataset.i===tfSel[0]&&+td.dataset.j===tfSel[1]));}
+$("tfTable").addEventListener("click",e=>{const td=e.target.closest("td.cell");if(td){tfSel=[+td.dataset.i,+td.dataset.j];explainTf();}});
+["d1","d2","d3"].forEach(id=>$(id).addEventListener("input",bow));$("bowStop").addEventListener("change",bow);bow();
+
+/* ---------- 08 embeddings ---------- */
+const EMB={man:[30,55],woman:[30,75],boy:[20,52],girl:[20,72],king:[55,58],queen:[55,78],prince:[46,50],princess:[46,70],
+  dog:[12,22],puppy:[19,12],cat:[30,26],kitten:[37,16],
+  apple:[66,22],banana:[76,14],mango:[72,30],orange:[82,26],
+  france:[80,62],paris:[87,50],japan:[70,66],tokyo:[77,54]};
+const GROUP={man:0,woman:0,boy:0,girl:0,king:1,queen:1,prince:1,princess:1,dog:2,puppy:2,cat:2,kitten:2,apple:3,banana:3,mango:3,orange:3,france:4,paris:4,japan:4,tokyo:4};
+const GNAME=["people","royalty","animals","fruits","places"];
+const X=v=>30+v*5.6, Y=v=>395-v*4.4;
+let embSel=null,analog=null;
+function dist(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1]);}
+function nearest(vec,exclude,k){return Object.keys(EMB).filter(w=>!exclude.includes(w)).sort((a,b)=>dist(EMB[a],vec)-dist(EMB[b],vec)).slice(0,k);}
+function drawEmb(){const ink="var(--ink)";let s=`<rect x="0" y="0" width="620" height="420" fill="var(--paper)" rx="8"/>`;
+  for(let g=0;g<=100;g+=20){s+=`<line x1="${X(g)}" y1="${Y(0)}" x2="${X(g)}" y2="${Y(85)}" stroke="var(--line)" stroke-width="1"/><line x1="${X(0)}" y1="${Y(g>85?85:g)}" x2="${X(100)}" y2="${Y(g>85?85:g)}" stroke="var(--line)" stroke-width="1"/>`;}
+  if(embSel){nearest(EMB[embSel],[embSel],3).forEach(w=>{s+=`<line x1="${X(EMB[embSel][0])}" y1="${Y(EMB[embSel][1])}" x2="${X(EMB[w][0])}" y2="${Y(EMB[w][1])}" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3"/>`;});}
+  if(analog){const[a,b,c,r]=analog;s+=`<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--warn)"/></marker></defs>`;
+    s+=`<line x1="${X(EMB[b][0])}" y1="${Y(EMB[b][1])}" x2="${X(EMB[a][0])}" y2="${Y(EMB[a][1])}" stroke="var(--warn)" stroke-width="2" marker-end="url(#ah)"/>`;
+    const tv=[EMB[c][0]+EMB[a][0]-EMB[b][0],EMB[c][1]+EMB[a][1]-EMB[b][1]];
+    s+=`<line x1="${X(EMB[c][0])}" y1="${Y(EMB[c][1])}" x2="${X(tv[0])}" y2="${Y(tv[1])}" stroke="var(--warn)" stroke-width="2" marker-end="url(#ah)"/>`;}
+  for(const[w,[x,y]]of Object.entries(EMB)){const on=w===embSel||(analog&&analog.includes(w));const near=embSel&&nearest(EMB[embSel],[embSel],3).includes(w);
+    s+=`<g data-w="${w}"><circle cx="${X(x)}" cy="${Y(y)}" r="${on?7:5}" fill="${on?"var(--accent)":near?"var(--accent)":"var(--muted)"}" opacity="${on||near||!embSel?1:.55}"/><text x="${X(x)+9}" y="${Y(y)+4}" style="font-weight:${on?700:400}">${w}</text></g>`;}
+  $("embSvg").innerHTML=s;}
+$("embSvg").addEventListener("click",e=>{const g=e.target.closest("[data-w]");if(!g)return;embSel=g.dataset.w;analog=null;
+  const nn=nearest(EMB[embSel],[embSel],3);const v=EMB[embSel];
+  $("embInfo").textContent=`"${embSel}" → vector [${(v[0]/100).toFixed(2)}, ${(v[1]/100).toFixed(2)}]   (group: ${GNAME[GROUP[embSel]]})\nClosest words: ${nn.map(w=>`${w} (distance ${(dist(v,EMB[w])/100).toFixed(2)})`).join(", ")}\nThe model was never told these are related; it learned it from how the words are used.`;drawEmb();});
+const words=Object.keys(EMB);["anA","anB","anC"].forEach(id=>$(id).innerHTML=words.map(w=>`<option>${w}</option>`).join(""));
+function runAnalogy(){const a=$("anA").value,b=$("anB").value,c=$("anC").value;const t=[EMB[a][0]-EMB[b][0]+EMB[c][0],EMB[a][1]-EMB[b][1]+EMB[c][1]];
+  const r=nearest(t,[a,b,c],1)[0];$("anOut").textContent=r;analog=[a,b,c,r];embSel=null;
+  $("embInfo").textContent=`${a} − ${b} = the "direction" from ${b} to ${a} (orange arrow).\nAdd that same direction to ${c} and the nearest word is "${r}".`;drawEmb();}
+["anA","anB","anC"].forEach(id=>$(id).addEventListener("change",runAnalogy));
+document.querySelectorAll("[data-an]").forEach(b=>b.addEventListener("click",()=>{const[a,bb,c]=b.dataset.an.split(",");$("anA").value=a;$("anB").value=bb;$("anC").value=c;runAnalogy();}));
+$("anA").value="king";$("anB").value="man";$("anC").value="woman";runAnalogy();
+
+/* ---------- 09 sentiment ---------- */
+function sa(){const r=sentiment($("saIn").value);
+  $("saToks").innerHTML=r.toks.map(x=>x.s===null?`<span class="tok">${esc(x.t)}</span>`:`<span class="tok ${x.s>0?"pos":"neg"}">${esc(x.t)}<small>${x.s>0?"+":""}${x.s.toFixed(1)}${x.note.length?" "+x.note.join(","):""}</small></span>`).join("");
+  const norm=Math.max(-1,Math.min(1,r.total/6));$("saNeedle").style.left=(50+norm*50)+"%";
+  const scored=r.toks.filter(x=>x.s!==null);
+  $("saOut").textContent=`Total score: ${r.total>0?"+":""}${r.total.toFixed(2)} → ${sentLabel(r.total)}\n${scored.length} opinion words found. Rules: "not / n't / never" within 3 words flips the score; "very / really / so" boosts it.`;}
+$("saIn").addEventListener("input",sa);document.querySelectorAll("[data-sa]").forEach(b=>b.addEventListener("click",()=>{$("saIn").value=b.dataset.sa;sa();}));sa();
+
+/* ---------- 10 Naive Bayes ---------- */
+const TRAIN=[["win a free iphone now","spam"],["claim your free prize money today","spam"],["urgent you won cash click the link","spam"],["limited offer buy now get 50 percent off","spam"],["free entry win cash prize","spam"],["congratulations you have won a free gift card","spam"],["click here to claim your reward now","spam"],["cheap loans apply now instant approval","spam"],
+ ["are we still meeting for lunch today","ham"],["can you send me the report by tomorrow","ham"],["happy birthday hope you have a great day","ham"],["let me know when you get home","ham"],["the meeting is moved to 3pm","ham"],["thanks for the help with the project","ham"],["see you at the gym tonight","ham"],["please review the attached notes before class","ham"]];
+const nbTok=t=>(t.toLowerCase().match(/[a-z]+/g)||[]);
+const cnt={spam:{},ham:{}},tot={spam:0,ham:0},docs={spam:0,ham:0},V=new Set();
+TRAIN.forEach(([t,l])=>{docs[l]++;nbTok(t).forEach(w=>{cnt[l][w]=(cnt[l][w]||0)+1;tot[l]++;V.add(w);});});
+const pw=(w,l)=>((cnt[l][w]||0)+1)/(tot[l]+V.size);
+$("nbTrain").innerHTML=`<thead><tr><th class="l">Message</th><th>Label</th></tr></thead><tbody>${TRAIN.map(([t,l])=>`<tr><td class="l">${esc(t)}</td><td style="color:${l==="spam"?"var(--neg)":"var(--pos)"};font-weight:600">${l==="spam"?"spam":"normal"}</td></tr>`).join("")}</tbody>`;
+function nb(){const ws=nbTok($("nbIn").value);let ls=Math.log(docs.spam/TRAIN.length),lh=Math.log(docs.ham/TRAIN.length);const contrib=[];
+  ws.forEach(w=>{const a=Math.log(pw(w,"spam")),b=Math.log(pw(w,"ham"));ls+=a;lh+=b;if(V.has(w))contrib.push([w,a-b]);});
+  const m=Math.max(ls,lh);const ps=Math.exp(ls-m)/(Math.exp(ls-m)+Math.exp(lh-m));const isSpam=ps>=0.5;
+  $("nbOut").innerHTML=`<div style="font-family:var(--display);font-weight:800;font-size:22px;color:${isSpam?"var(--neg)":"var(--pos)"}">${isSpam?"SPAM":"NOT SPAM"}</div>
+   <div class="row" style="margin-top:6px"><span class="stat" style="width:80px">spam</span><div class="bar spam" style="flex:1"><i style="width:${(ps*100).toFixed(1)}%"></i></div><span class="stat" style="width:52px;text-align:right">${(ps*100).toFixed(1)}%</span></div>
+   <div class="row" style="margin-top:4px"><span class="stat" style="width:80px">normal</span><div class="bar" style="flex:1"><i style="width:${((1-ps)*100).toFixed(1)}%"></i></div><span class="stat" style="width:52px;text-align:right">${((1-ps)*100).toFixed(1)}%</span></div>`;
+  const uniq=[...new Map(contrib.map(c=>[c[0],c])).values()].sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
+  $("nbWhy").innerHTML=uniq.length?uniq.map(([w,s])=>`<span class="tok ${s>0?"neg":"pos"}">${esc(w)}<small>${s>0?"→ spam ×":"→ normal ×"}${Math.exp(Math.abs(s)).toFixed(1)}</small></span>`).join(""):'<span class="stat">None of these words appeared in training, so the model falls back to its prior (50/50).</span>';}
+$("nbIn").addEventListener("input",nb);document.querySelectorAll("[data-nb]").forEach(b=>b.addEventListener("click",()=>{$("nbIn").value=b.dataset.nb;nb();}));nb();
+
+/* ---------- 11 attention ---------- */
+const ATT_T=["The","animal","didn't","cross","the","street","because","it","was","too","tired"];
+let attEnd="tired",attSrc=7;
+function attWeights(i){const n=ATT_T.length;let w=Array.from({length:n},(_,j)=>j===i?3:Math.abs(j-i)===1?1.5:0.4);
+  const set=o=>{for(const k in o)w[k]=o[k];};
+  if(i===7)set(attEnd==="tired"?{1:9,5:1.5,10:2,7:2}:{5:9,1:1.5,10:2,7:2});
+  if(i===10)set(attEnd==="tired"?{1:5,7:4,9:2}:{5:5,7:4,9:2});
+  if(i===3)set({1:4,5:4,2:2.5});if(i===5)set({3:4,4:2});if(i===2)set({3:4,1:2});if(i===1)set({0:2.5,3:2,7:1.5});
+  const s=w.reduce((a,b)=>a+b,0);return w.map(x=>x/s);}
+function att(){const toks=ATT_T.slice(0,-1).concat(attEnd);const w=attWeights(attSrc);const mx=Math.max(...w);
+  $("attRow").innerHTML=toks.map((t,j)=>`<button data-j="${j}" class="${j===attSrc?"src":""}" style="background:color-mix(in srgb, var(--accent) ${Math.round(w[j]/mx*85)}%, var(--surface));color:${w[j]/mx>.55?"var(--accent-ink)":"var(--ink)"}">${esc(t)}<small style="color:inherit;opacity:.8">${(w[j]*100).toFixed(0)}%</small></button>`).join("");
+  const top=w.map((x,j)=>[x,j]).filter(([,j])=>j!==attSrc).sort((a,b)=>b[0]-a[0])[0];
+  $("attInfo").textContent=`When reading "${toks[attSrc]}", the model pays most attention to "${toks[top[1]]}" (${(top[0]*100).toFixed(0)}%).`+(attSrc===7?`\nSo the model understands that "it" = the ${attEnd==="tired"?"animal":"street"}.`:"")+`\nDarker = more attention. All percentages add up to 100%.`;}
+$("attRow").addEventListener("click",e=>{const b=e.target.closest("[data-j]");if(b){attSrc=+b.dataset.j;att();}});
+$("attTired").addEventListener("click",()=>{attEnd="tired";$("attTired").classList.add("on");$("attWide").classList.remove("on");att();});
+$("attWide").addEventListener("click",()=>{attEnd="wide";$("attWide").classList.add("on");$("attTired").classList.remove("on");att();});att();
+
+/* ---------- 12 Hugging Face pipelines ---------- */
+const HF=[
+ ["sentiment","Sentiment","Classifies text as POSITIVE or NEGATIVE. With no model named, it downloads a DistilBERT model fine-tuned on movie reviews.",
+  `from transformers import pipeline\n\nclf = pipeline("sentiment-analysis")\nprint(clf(["I love this course!", "The ending was a letdown."]))`,
+  `[{'label': 'POSITIVE', 'score': 0.9998},\n {'label': 'NEGATIVE', 'score': 0.9991}]`],
+ ["ner","NER","Finds named entities: people (PER), organizations (ORG), locations (LOC).",
+  `ner = pipeline("ner", aggregation_strategy="simple")\nprint(ner("Ratan Tata founded a startup fund in Mumbai."))`,
+  `[{'entity_group': 'PER', 'word': 'Ratan Tata', 'score': 0.99},\n {'entity_group': 'LOC', 'word': 'Mumbai',     'score': 0.99}]`],
+ ["summ","Summarization","Shortens long text using an encoder–decoder model such as BART.",
+  `summ = pipeline("summarization", model="facebook/bart-large-cnn")\nprint(summ(long_article, max_length=40, min_length=10))`,
+  `[{'summary_text': 'The city opened its first metro line on Monday, cutting\n  average commute times by 25 minutes.'}]`],
+ ["trans","Translation","Translates between languages. Helsinki-NLP publishes free models for hundreds of language pairs.",
+  `tr = pipeline("translation", model="Helsinki-NLP/opus-mt-en-hi")\nprint(tr("Where is the railway station?"))`,
+  `[{'translation_text': 'रेलवे स्टेशन कहाँ है?'}]`],
+ ["zero","Zero-shot","Classifies text into labels you choose on the spot, with no training at all.",
+  `zs = pipeline("zero-shot-classification")\nprint(zs("The new GPU doubles training speed.",\n         candidate_labels=["technology", "sports", "politics"]))`,
+  `{'labels': ['technology', 'politics', 'sports'],\n 'scores': [0.97, 0.02, 0.01]}`],
+ ["mask","Fill-mask","Shows how BERT was trained: predict the hidden word.",
+  `fill = pipeline("fill-mask", model="bert-base-uncased")\nprint(fill("Mumbai is the [MASK] capital of India."))`,
+  `[{'token_str': 'financial', 'score': 0.62},\n {'token_str': 'commercial', 'score': 0.19},\n {'token_str': 'economic', 'score': 0.05}, ...]`],
+ ["gen","Text generation","A GPT-style decoder continues your prompt one token at a time.",
+  `gen = pipeline("text-generation", model="gpt2")\nprint(gen("Natural language processing is", max_new_tokens=20))`,
+  `[{'generated_text': 'Natural language processing is a field of computer\n  science that helps machines understand human speech...'}]`],
+ ["tok","Tokenizer","Look inside: how a real model's subword tokenizer splits text into IDs.",
+  `from transformers import AutoTokenizer\ntok = AutoTokenizer.from_pretrained("bert-base-uncased")\nprint(tok.tokenize("Tokenization is unbelievable"))\nprint(tok("Tokenization is unbelievable")["input_ids"])`,
+  `['token', '##ization', 'is', 'unbelievable']\n[101, 19204, 3989, 2003, 23653, 102]     # 101=[CLS], 102=[SEP]`]];
+let hfSel=0;
+function hl(code){return esc(code).replace(/(#.*)$/gm,'<span class="c-com">$1</span>').replace(/(&quot;[^&]*?&quot;)/g,'<span class="c-str">$1</span>').replace(/\b(from|import|print)\b/g,'<span class="c-kw">$1</span>');}
+function hf(){$("hfTabs").innerHTML=HF.map((h,i)=>`<button class="btn ${i===hfSel?"on":""}" data-h="${i}">${h[1]}</button>`).join("");
+  const h=HF[hfSel];$("hfDesc").textContent=h[2];$("hfCode").innerHTML=hl(h[3]);$("hfOut").textContent=h[4];}
+$("hfTabs").addEventListener("click",e=>{const b=e.target.closest("[data-h]");if(b){hfSel=+b.dataset.h;hf();}});hf();
+
+/* ---------- quizzes ---------- */
+const QZ=[
+ ["Which of these is NOT an NLP task?",["Translating English to Hindi","Detecting spam emails","Sorting a list of numbers","Summarizing a news article"],2,"Sorting numbers involves no human language. The others all read or produce language."],
+ ["You're building a sentiment model for tweets. Which preprocessing step might HURT accuracy?",["Removing URLs","Removing emojis like 😍 and 😡","Fixing extra spaces","Removing HTML tags"],1,"Emojis carry strong emotion. For sentiment, they are useful signals, not noise."],
+ ["Why do models like BERT and GPT use subword tokens?",["They are faster to type","They can handle rare or new words by building them from known pieces","They remove stopwords automatically","They make sentences shorter than characters would"],1,"\"unhappiness\" → un + ##happi + ##ness. Even unseen words can be represented."],
+ ["Why is removing 'not' dangerous for sentiment analysis?",["It's too short","It makes the vocabulary bigger","\"not good\" becomes \"good\", flipping the meaning","It's a proper noun"],2,"Negations reverse sentiment, so keep them when opinion matters."],
+ ["Which output is from LEMMATIZATION (not stemming)?",["studies → studi","better → good","happiness → happi","running → runn"],1,"Only a dictionary-based lemmatizer knows 'better' is a form of 'good'."],
+ ["In Bag of Words, 'dog bites man' and 'man bites dog' get…",["Opposite vectors","Identical vectors","Vectors of different lengths","No vectors"],1,"BoW only counts words and ignores order, so both sentences look exactly the same."],
+ ["A word appears in EVERY document in your collection. Its IDF is…",["Very high","0","1","Equal to its count"],1,"IDF = ln(N / N) = ln(1) = 0. A word everywhere can't tell documents apart."],
+ ["What makes word embeddings better than Bag of Words?",["They are always shorter text","Similar words get similar vectors, capturing meaning","They don't need any training data","They keep the exact word order"],1,"Embeddings place 'happy' near 'joyful'. In BoW every word is unrelated to every other."],
+ ["A lexicon-based analyzer rates \"Oh great, another Monday\" as positive. Why?",["It doesn't know the word 'Monday'","It can't detect sarcasm; it just adds word scores","The sentence is too short","It removed stopwords"],1,"Rule-based systems see 'great' (+3) and miss the sarcastic context."],
+ ["Why is Naive Bayes called 'naive'?",["It was invented by a beginner","It assumes every word is independent of the others","It only works on short texts","It ignores the training data"],1,"Words obviously depend on each other, but assuming independence keeps the math simple and still works well."],
+ ["What does self-attention let a Transformer do?",["Read one word at a time, left to right","Let every word look at every other word to understand context","Remove stopwords","Translate without training"],1,"Self-attention is how 'it' connects to 'animal' in the example above."],
+ ["What does pipeline(\"sentiment-analysis\") do the first time you run it?",["Trains a model from scratch on your laptop","Downloads a pre-trained model from the Hub and runs it","Asks you to label data","Uses a rule-based lexicon"],1,"It fetches a ready-trained model from the Hugging Face Hub. That's the power of pre-training."]];
+let score=0;const answered=new Set();
+document.querySelectorAll(".quiz").forEach(el=>{const i=+el.dataset.q;const[q,opts,ans,why]=QZ[i];
+  el.innerHTML=`<div class="eyebrow" style="margin-bottom:6px">Quick check</div><div class="q">${esc(q)}</div><div class="opts">${opts.map((o,k)=>`<button data-k="${k}">${esc(o)}</button>`).join("")}</div><div class="why" hidden></div>`;
+  el.addEventListener("click",e=>{const b=e.target.closest("button[data-k]");if(!b||answered.has(i))return;answered.add(i);const k=+b.dataset.k;
+    el.querySelectorAll("button").forEach((x,xi)=>{x.disabled=true;if(xi===ans)x.classList.add("right");else if(xi===k)x.classList.add("wrong");});
+    if(k===ans)score++;const w=el.querySelector(".why");w.hidden=false;w.innerHTML=`<b>${k===ans?"Correct.":"Not quite."}</b> ${esc(why)}`;
+    $("scoreline").textContent=`Quiz score ${score} / 12 · ${answered.size} answered`;
+    const sec=el.closest("section");const link=document.querySelector(`.rail a[href="#${sec.id}"]`);if(link)link.classList.add("done");});});
+
+/* ---------- copy buttons ---------- */
+document.addEventListener("click",e=>{const b=e.target.closest(".copy");if(!b)return;const pre=b.closest(".code").querySelector("pre");const txt=pre.innerText;
+  const done=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1400);};
+  try{navigator.clipboard.writeText(txt).then(done,()=>{selectText(pre);b.textContent="Press Ctrl+C";});}catch(_){selectText(pre);b.textContent="Press Ctrl+C";}});
+function selectText(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);}
+
+/* ---------- active nav ---------- */
+const links=[...document.querySelectorAll(".rail a, .chipnav a")];
+if("IntersectionObserver" in window){const io=new IntersectionObserver(ents=>{ents.forEach(en=>{if(en.isIntersecting){const id=en.target.id;links.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+id));
+  const chip=document.querySelector(`.chipnav a[href="#${id}"]`);if(chip&&getComputedStyle(chip.parentElement).display!=="none")chip.parentElement.scrollTo({left:chip.offsetLeft-20,behavior:"smooth"});}});},{rootMargin:"-30% 0px -60% 0px"});
+  document.querySelectorAll("section.lesson").forEach(s=>io.observe(s));}
+})();
+</script>
+
+</body></html>
