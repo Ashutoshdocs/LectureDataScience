@@ -1,0 +1,949 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ML from Zero</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky syllabus rail + one lesson column; each concept = explain → analogy → live demo → code → quick check. Plots are canvas "lab benches". */
+:root{
+  --paper:#F3F5F8; --surface:#FFFFFF; --sunk:#E8ECF2; --ink:#131C2B; --muted:#55617A; --line:#D4DAE4;
+  --accent:#2350C8; --accent-ink:#FFFFFF; --accent-soft:#DDE6FA;
+  --c1:#D9731A; --c1-soft:#FBE7D4; --c2:#2350C8;
+  --k3:#1F8A5A; --k4:#B0368C; --k5:#7A6A12;
+  --mark:#FFE07A; --mark-ink:#131C2B;
+  --pos:#1F8A4C; --pos-soft:#DAF1E3; --neg:#C23A33; --neg-soft:#F8DEDC; --warn:#A8670A;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0E131C; --surface:#151C28; --sunk:#1C2534; --ink:#E4E9F2; --muted:#98A3B8; --line:#273246;
+  --accent:#7EA2FF; --accent-ink:#0A1638; --accent-soft:#1B2A4F;
+  --c1:#F2A057; --c1-soft:#3D2A17; --c2:#7EA2FF;
+  --k3:#5CCB8A; --k4:#E57BC4; --k5:#D8C25A;
+  --mark:#5E4E10; --mark-ink:#FFF3C4;
+  --pos:#5CCB8A; --pos-soft:#15362A; --neg:#F0807A; --neg-soft:#3C1B1A; --warn:#E3A84A;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0E131C; --surface:#151C28; --sunk:#1C2534; --ink:#E4E9F2; --muted:#98A3B8; --line:#273246;
+  --accent:#7EA2FF; --accent-ink:#0A1638; --accent-soft:#1B2A4F;
+  --c1:#F2A057; --c1-soft:#3D2A17; --c2:#7EA2FF;
+  --k3:#5CCB8A; --k4:#E57BC4; --k5:#D8C25A;
+  --mark:#5E4E10; --mark-ink:#FFF3C4;
+  --pos:#5CCB8A; --pos-soft:#15362A; --neg:#F0807A; --neg-soft:#3C1B1A; --warn:#E3A84A;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.62;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:48px;padding-block:32px 80px}
+
+.rail{position:sticky;top:calc(24px + env(safe-area-inset-top, 0px));align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-family:var(--display)}
+.rail .brand{font-weight:800;font-size:20px;letter-spacing:-.01em;margin-bottom:4px}
+.rail .score{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:16px}
+.rail h4{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:16px 0 4px;font-weight:700}
+.rail a{display:flex;gap:10px;align-items:baseline;padding:4px 8px;margin-left:-8px;border-radius:6px;color:var(--ink);text-decoration:none;font-size:14px;font-weight:500}
+.rail a span{font-family:var(--mono);font-size:11px;color:var(--muted);width:18px;flex:none}
+.rail a:hover{background:var(--sunk)}
+.rail a.active{background:var(--accent-soft)}
+.rail a.active span{color:var(--accent)}
+.rail a.done::after{content:"✓";margin-left:auto;color:var(--accent);font-size:12px}
+.chipnav{display:none}
+
+main{min-width:0}
+section.lesson{padding-block:56px 24px;border-top:1px solid var(--line);scroll-margin-top:24px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;letter-spacing:-.015em;line-height:1.12}
+h1{font-size:clamp(40px,7vw,68px);font-weight:800;margin:8px 0 14px}
+h2{font-size:clamp(28px,4vw,38px);font-weight:700;margin:6px 0 14px}
+h3{font-size:19px;font-weight:700;margin:28px 0 8px}
+p{max-width:66ch;margin:0 0 14px}
+.lead{font-size:20px;color:var(--muted);max-width:60ch}
+.mark{background:var(--mark);color:var(--mark-ink);padding:0 .2em;border-radius:3px}
+code{font-family:var(--mono);font-size:.84em;background:var(--sunk);padding:.1em .35em;border-radius:4px}
+ul.plain{max-width:66ch;padding-left:1.1em;margin:0 0 14px}
+ul.plain li{margin-bottom:6px}
+.analogy{border-left:3px solid var(--accent);padding:4px 0 4px 16px;margin:18px 0;max-width:64ch;font-style:italic;color:var(--muted)}
+.analogy b{font-style:normal;color:var(--ink)}
+
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;margin:22px 0;min-width:0}
+.demo-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.demo-tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:8px}
+.demo-tag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+label.fl{font-family:var(--display);font-size:13px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px}
+input[type=text],input[type=number],select{font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+input[type=range]{accent-color:var(--accent);width:100%}
+input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font-family:var(--display);font-weight:600;font-size:14px;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.on,.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.out-label{font-family:var(--display);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:14px 0 6px}
+.result{font-family:var(--mono);font-size:13.5px;background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:12px;white-space:pre-wrap;word-break:break-word}
+.stat{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.big{font-family:var(--display);font-weight:800;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+canvas.plot{width:100%;display:block;border-radius:8px;cursor:crosshair;touch-action:manipulation}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.card h5{font-family:var(--display);font-size:15px;margin:0 0 6px}
+.card p{font-size:14.5px;margin:0;color:var(--muted)}
+.card .io{font-family:var(--mono);font-size:12.5px;margin-top:8px;color:var(--ink)}
+.card .io div{margin-top:3px}
+.card .io b{color:var(--accent);font-weight:600}
+button.card{text-align:left;cursor:pointer;font:inherit;color:inherit}
+button.card:hover,button.card.on{border-color:var(--accent)}
+button.card.on{background:var(--accent-soft)}
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);margin:6px 4px 0 0}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+table{border-collapse:collapse;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th{background:var(--sunk);font-weight:600;font-size:12px}
+tr:last-child td{border-bottom:0}
+th.feat{background:var(--accent-soft);color:var(--ink)}
+th.lab{background:var(--mark);color:var(--mark-ink)}
+td.lab{background:color-mix(in srgb, var(--mark) 40%, transparent);font-weight:600}
+th.clk{cursor:pointer}
+
+.code{position:relative;margin:18px 0;min-width:0}
+.code pre{margin:0;overflow-x:auto;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:16px;font-family:var(--mono);font-size:13px;line-height:1.6;color:var(--ink)}
+.code .cap{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.code .copy{font-family:var(--mono);font-size:11px;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 8px;cursor:pointer}
+.c-com{color:var(--muted);font-style:italic}
+.c-str{color:var(--pos)}
+.c-kw{color:var(--accent);font-weight:600}
+
+.quiz{margin:24px 0 8px;padding:18px 20px;background:var(--accent-soft);border-radius:12px}
+.quiz .q{font-family:var(--display);font-weight:700;font-size:16px;margin-bottom:10px}
+.quiz .opts{display:flex;flex-direction:column;gap:8px}
+.quiz button{text-align:left;font-family:var(--body);font-size:15px;background:var(--surface);border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:8px;cursor:pointer}
+.quiz button:hover:not(:disabled){border-color:var(--accent)}
+.quiz button.right{border-color:var(--pos);background:var(--pos-soft);color:var(--pos);font-weight:600}
+.quiz button.wrong{border-color:var(--neg);background:var(--neg-soft);color:var(--neg)}
+.quiz .why{font-size:14.5px;margin-top:10px}
+
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0;font-family:var(--display);font-size:13.5px;font-weight:600}
+.flow span{background:var(--surface);border:1px solid var(--line);padding:8px 12px;border-radius:8px}
+.flow em{font-style:normal;color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+
+/* hero map */
+.hero{padding-block:24px 40px}
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:22px}
+.map .part{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.map .part h5{font-family:var(--display);font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 8px}
+.map a{display:flex;gap:10px;color:var(--ink);text-decoration:none;font-family:var(--display);font-size:15px;font-weight:500;padding:3px 0}
+.map a span{font-family:var(--mono);font-size:12px;color:var(--accent);width:20px;flex:none;padding-top:2px}
+.map a:hover{color:var(--accent)}
+
+/* ai-or-not game */
+.game{display:grid;gap:8px}
+.game .item{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.game .item .t{flex:1;min-width:180px}
+.game .item.ok{border-color:var(--pos);background:var(--pos-soft)}
+.game .item.bad{border-color:var(--neg);background:var(--neg-soft)}
+.game .fb{flex-basis:100%;font-size:14px}
+
+/* neuron */
+.sl{display:grid;grid-template-columns:130px minmax(0,1fr) 54px;gap:10px;align-items:center;font-family:var(--display);font-size:14px}
+.sl output{font-family:var(--mono);font-size:13px;text-align:right}
+.sw{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.sw button{border:0;background:var(--paper);color:var(--ink);font-family:var(--display);font-size:13px;font-weight:600;padding:5px 12px;cursor:pointer}
+.sw button.on{background:var(--accent);color:var(--accent-ink)}
+
+/* nested circles */
+.nest svg{width:100%;max-width:460px;height:auto;display:block;margin:0 auto}
+.nest text{font-family:var(--display);font-weight:700;pointer-events:none}
+.nest g{cursor:pointer}
+
+/* split chips */
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-family:var(--mono);font-size:11.5px;padding:4px 6px;border-radius:6px;border:1px solid var(--line);min-width:52px;text-align:center;line-height:1.3}
+.chip.tr{background:var(--accent-soft)}
+.chip.te{background:var(--c1-soft);border-color:var(--c1)}
+.chip b{display:block;font-size:10px;font-weight:600}
+.scoreboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px}
+
+/* workflow stepper */
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.steps button{font-family:var(--display);font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:7px 10px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.steps button i{font-style:normal;font-family:var(--mono);font-size:11px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--sunk)}
+.steps button.on{border-color:var(--accent);background:var(--accent-soft)}
+.steps button.on i,.steps button.past i{background:var(--accent);color:var(--accent-ink)}
+
+/* batch */
+.lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px}
+.lane{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--paper);min-height:120px;min-width:0}
+.lane h6{font-family:var(--display);font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.qchip{display:inline-block;font-family:var(--mono);font-size:11.5px;padding:3px 7px;margin:0 4px 4px 0;border-radius:6px;background:var(--c1-soft);border:1px solid var(--c1)}
+.log{font-family:var(--mono);font-size:12px;display:flex;flex-direction:column;gap:3px;max-height:190px;overflow:auto}
+.log div{padding:3px 6px;border-radius:4px;background:var(--surface)}
+.log .f{color:var(--neg)}
+
+/* grid world */
+.gw{display:grid;gap:4px;max-width:420px;margin:0 auto}
+.gw div{aspect-ratio:1;border-radius:6px;display:grid;place-items:center;font-family:var(--mono);font-size:18px;position:relative;border:1px solid var(--line);max-width:100%}
+.gw .wall{background:var(--ink);border-color:var(--ink)}
+.gw .fire{background:var(--neg-soft);border-color:var(--neg)}
+.gw .goal{background:var(--pos-soft);border-color:var(--pos)}
+.gw .agent::after{content:"";position:absolute;width:46%;height:46%;border-radius:50%;background:var(--c1);box-shadow:0 0 0 3px var(--surface)}
+.gw small{position:absolute;bottom:2px;right:4px;font-size:9px;color:var(--muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--display);font-size:13px;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid var(--line)}
+
+footer{font-family:var(--display);font-size:14px;color:var(--muted);padding-top:40px;border-top:1px solid var(--line);margin-top:40px}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:0;padding-block:0 60px}
+  .rail{display:none}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:10;background:var(--paper)}
+  .chipnav{display:flex;position:sticky;top:env(safe-area-inset-top, 0px);z-index:9;gap:6px;overflow-x:auto;padding:10px 16px 10px max(16px, env(safe-area-inset-left, 0px));background:var(--paper);border-bottom:1px solid var(--line);margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));scrollbar-width:none}
+  .chipnav a{flex:none;font-family:var(--display);font-size:13px;font-weight:600;text-decoration:none;color:var(--ink);padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+  .chipnav a.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  section.lesson{scroll-margin-top:60px}
+}
+@media (max-width:520px){body{font-size:16px}.demo{padding:14px}.sl{grid-template-columns:96px minmax(0,1fr) 46px}}
+</style>
+
+<div class="shell">
+<nav class="rail" aria-label="Lessons">
+  <div class="brand">ML from Zero</div>
+  <div class="score" id="scoreline">Quiz score 0 / 15</div>
+  <h4>The big ideas</h4>
+  <a href="#ai"><span>01</span>What is AI?</a>
+  <a href="#ml"><span>02</span>What is Machine Learning?</a>
+  <a href="#dl"><span>03</span>What is Deep Learning?</a>
+  <a href="#compare"><span>04</span>AI vs ML vs DL</a>
+  <a href="#tradvml"><span>05</span>Traditional Programming vs ML</a>
+  <h4>Data and models</h4>
+  <a href="#data"><span>06</span>Dataset, features, labels</a>
+  <a href="#split"><span>07</span>Training and testing data</a>
+  <a href="#workflow"><span>08</span>ML workflow</a>
+  <a href="#training"><span>09</span>Model training</a>
+  <a href="#inference"><span>10</span>Model inference</a>
+  <a href="#batch"><span>11</span>Batch vs real-time</a>
+  <h4>Types of learning</h4>
+  <a href="#supervised"><span>12</span>Supervised Learning</a>
+  <a href="#unsupervised"><span>13</span>Unsupervised Learning</a>
+  <a href="#rl"><span>14</span>Reinforcement Learning</a>
+  <h4>In the real world</h4>
+  <a href="#usecases"><span>15</span>ML use cases</a>
+</nav>
+
+<main>
+<nav class="chipnav" aria-label="Lessons">
+  <a href="#ai">AI</a><a href="#ml">ML</a><a href="#dl">Deep Learning</a><a href="#compare">AI vs ML vs DL</a><a href="#tradvml">Rules vs ML</a><a href="#data">Features &amp; labels</a><a href="#split">Train/test</a><a href="#workflow">Workflow</a><a href="#training">Training</a><a href="#inference">Inference</a><a href="#batch">Batch vs real-time</a><a href="#supervised">Supervised</a><a href="#unsupervised">Unsupervised</a><a href="#rl">Reinforcement</a><a href="#usecases">Use cases</a>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">A hands-on course · 15 lessons</div>
+  <h1>ML from Zero</h1>
+  <p class="lead">A normal program follows rules a person wrote. A machine-learning program writes its own rules by studying examples. This course explains how, one idea at a time, with a live experiment in every lesson. No maths or coding background needed.</p>
+  <div class="map">
+    <div class="part"><h5>Part 1 · The big ideas</h5><a href="#ai"><span>01</span>What is Artificial Intelligence?</a><a href="#ml"><span>02</span>What is Machine Learning?</a><a href="#dl"><span>03</span>What is Deep Learning?</a><a href="#compare"><span>04</span>AI vs ML vs Deep Learning</a><a href="#tradvml"><span>05</span>Traditional Programming vs ML</a></div>
+    <div class="part"><h5>Part 2 · Data and models</h5><a href="#data"><span>06</span>Dataset, features and labels</a><a href="#split"><span>07</span>Training and testing data</a><a href="#workflow"><span>08</span>Machine Learning workflow</a><a href="#training"><span>09</span>Model training</a><a href="#inference"><span>10</span>Model inference</a><a href="#batch"><span>11</span>Batch vs real-time inference</a></div>
+    <div class="part"><h5>Part 3 · Types of learning</h5><a href="#supervised"><span>12</span>Supervised Learning</a><a href="#unsupervised"><span>13</span>Unsupervised Learning</a><a href="#rl"><span>14</span>Reinforcement Learning</a><h5 style="margin-top:16px">Part 4 · Real world</h5><a href="#usecases"><span>15</span>Machine Learning use cases</a></div>
+  </div>
+</header>
+
+<!-- 01 AI -->
+<section class="lesson" id="ai">
+  <div class="eyebrow">Lesson 01 · The big ideas</div>
+  <h2>What is Artificial Intelligence?</h2>
+  <p><b>Artificial Intelligence (AI)</b> is the broad field of making computers do things that normally need human intelligence: seeing, understanding language, making decisions, solving problems, learning from experience.</p>
+  <p>AI is an <i>umbrella</i> term. It includes simple rule-based systems (a chess program from the 1990s following hand-written strategies) and modern learning systems (ChatGPT, self-driving cars).</p>
+  <div class="analogy"><b>Analogy:</b> "Transport" covers bicycles, cars and planes. "AI" similarly covers everything from a simple rule-based chatbot to a model that writes essays.</div>
+  <h3>Two kinds of AI people talk about</h3>
+  <div class="grid">
+    <div class="card"><h5>Narrow AI (exists today)</h5><p>Very good at one specific task. Face unlock, Google Maps traffic prediction, Netflix recommendations, chatbots.</p></div>
+    <div class="card"><h5>General AI (not yet achieved)</h5><p>A machine that can learn and do any intellectual task a human can, across all areas. Still a research goal.</p></div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · AI or not AI?</div><span class="stat" id="gameScore"></span></div>
+    <p class="stat" style="margin:0 0 10px">Decide for each example. A simple test: does it make a judgment that would need intelligence, rather than just following a fixed instruction?</p>
+    <div class="game" id="game"></div>
+  </div>
+  <div class="quiz" data-q="0"></div>
+</section>
+
+<!-- 02 ML -->
+<section class="lesson" id="ml">
+  <div class="eyebrow">Lesson 02 · The big ideas</div>
+  <h2>What is Machine Learning?</h2>
+  <p><b>Machine Learning (ML)</b> is a part of AI where the computer <span class="mark">learns patterns from data</span> instead of being given step-by-step rules. Show it enough examples and it figures out the rule itself, then uses that rule on new cases it has never seen.</p>
+  <div class="analogy"><b>Analogy:</b> how a child learns what a dog is. Nobody hands them a rulebook ("four legs, fur, tail…"). They see many dogs, someone says "dog" each time, and soon they recognise dogs they have never met.</div>
+  <p>Example: to predict house prices, you show the computer hundreds of houses with their size and actual price. It finds the pattern "bigger houses cost more, by roughly this much per square foot" and can then estimate a price for any new house.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · click the chart to add houses</div>
+      <div class="row"><button class="btn" id="lfClear">Clear</button><button class="btn" id="lfReset">Reset</button></div></div>
+    <canvas class="plot" id="lfCanvas" aria-label="House size vs price scatter plot. Click to add points."></canvas>
+    <div class="row" style="margin-top:12px">
+      <label class="fl" for="lfSize" style="margin:0">Predict a house of</label>
+      <input type="number" id="lfSize" value="2000" min="100" max="3000" step="50" style="width:110px"><span class="stat">sq ft</span>
+    </div>
+    <div class="result" id="lfOut" style="margin-top:10px"></div>
+  </div>
+  <p>The orange line is the "rule" the machine learned. Add a few very expensive small houses and watch the rule change: <b>the model is only as good as its data</b>.</p>
+  <div class="code"><div class="cap">Python · scikit-learn <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> sklearn.linear_model <span class="c-kw">import</span> LinearRegression
+
+sizes  = [[650], [800], [1000], [1200], [1500], [1800], [2200], [2600]]   <span class="c-com"># sq ft</span>
+prices = [35, 48, 55, 70, 82, 100, 118, 140]                             <span class="c-com"># ₹ lakh</span>
+
+model = LinearRegression().fit(sizes, prices)   <span class="c-com"># learn the pattern</span>
+print(model.predict([[2000]]))                  <span class="c-com"># ≈ [108.] lakh</span></pre></div>
+  <div class="quiz" data-q="1"></div>
+</section>
+
+<!-- 03 DL -->
+<section class="lesson" id="dl">
+  <div class="eyebrow">Lesson 03 · The big ideas</div>
+  <h2>What is Deep Learning?</h2>
+  <p><b>Deep Learning (DL)</b> is a type of machine learning that uses <b>artificial neural networks</b>, loosely inspired by neurons in the brain. "Deep" means the network has many layers stacked on top of each other.</p>
+  <p>Each layer learns something a bit more complex than the previous one. In a face-recognition network:</p>
+  <div class="flow"><span>Pixels</span><em>→</em><span>Layer 1: edges &amp; lines</span><em>→</em><span>Layer 2: shapes (circles, corners)</span><em>→</em><span>Layer 3: parts (eyes, nose)</span><em>→</em><span>Output: "This is Priya"</span></div>
+  <p>Deep learning shines with <b>unstructured data</b> like images, audio and text, where it's hard for humans to describe the features. It needs a lot of data and computing power (usually GPUs). It powers voice assistants, Google Photos search, self-driving cars and ChatGPT.</p>
+  <h3>The building block: one artificial neuron</h3>
+  <p>A neuron takes inputs, multiplies each by a <b>weight</b> (how important it is), adds them up with a <b>bias</b>, and squashes the result into a number between 0 and 1. Training a network means finding good weights automatically. Here you can set them by hand.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · a neuron that decides "Go to the beach?"</div></div>
+    <div style="display:grid;gap:10px">
+      <div class="sl"><span>Is it sunny?</span><span class="sw" data-in="sun"><button data-v="0">No</button><button data-v="1" class="on">Yes</button></span><span></span></div>
+      <div class="sl"><span>Is it a holiday?</span><span class="sw" data-in="hol"><button data-v="0" class="on">No</button><button data-v="1">Yes</button></span><span></span></div>
+      <div class="sl"><span>Is it raining?</span><span class="sw" data-in="rain"><button data-v="0" class="on">No</button><button data-v="1">Yes</button></span><span></span></div>
+      <div class="out-label" style="margin-bottom:0">Weights (importance)</div>
+      <div class="sl"><label for="wSun">sunny weight</label><input type="range" id="wSun" min="-5" max="5" step="0.5" value="2"><output id="wSunO"></output></div>
+      <div class="sl"><label for="wHol">holiday weight</label><input type="range" id="wHol" min="-5" max="5" step="0.5" value="3"><output id="wHolO"></output></div>
+      <div class="sl"><label for="wRain">rain weight</label><input type="range" id="wRain" min="-5" max="5" step="0.5" value="-4"><output id="wRainO"></output></div>
+      <div class="sl"><label for="wBias">bias</label><input type="range" id="wBias" min="-5" max="5" step="0.5" value="-2.5"><output id="wBiasO"></output></div>
+    </div>
+    <div class="result" id="nOut" style="margin-top:14px"></div>
+    <p class="stat" style="margin:8px 0 0">A deep network is thousands or millions of these neurons wired in layers, and training adjusts all the weights for you.</p>
+  </div>
+  <div class="code"><div class="cap">Python · Keras <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> tensorflow <span class="c-kw">import</span> keras
+
+model = keras.Sequential([
+    keras.layers.Input(shape=(784,)),              <span class="c-com"># a 28×28 image = 784 pixels</span>
+    keras.layers.Dense(128, activation=<span class="c-str">"relu"</span>),   <span class="c-com"># hidden layer 1</span>
+    keras.layers.Dense(64,  activation=<span class="c-str">"relu"</span>),   <span class="c-com"># hidden layer 2</span>
+    keras.layers.Dense(10,  activation=<span class="c-str">"softmax"</span>) <span class="c-com"># 10 outputs: digits 0–9</span>
+])
+model.compile(optimizer=<span class="c-str">"adam"</span>, loss=<span class="c-str">"sparse_categorical_crossentropy"</span>, metrics=[<span class="c-str">"accuracy"</span>])</pre></div>
+  <div class="quiz" data-q="2"></div>
+</section>
+
+<!-- 04 COMPARE -->
+<section class="lesson" id="compare">
+  <div class="eyebrow">Lesson 04 · The big ideas</div>
+  <h2>AI vs ML vs Deep Learning</h2>
+  <p>These three are not competitors. They fit inside each other like Russian dolls: <b>all deep learning is machine learning, and all machine learning is AI</b>, but not the other way round.</p>
+  <div class="demo nest">
+    <div class="demo-head"><div class="demo-tag">Try it · click a circle</div></div>
+    <svg viewBox="0 0 460 340" id="nestSvg" role="img" aria-label="Nested circles: AI contains ML which contains Deep Learning"></svg>
+    <div class="result" id="nestInfo" style="margin-top:10px"></div>
+  </div>
+  <div class="tablewrap"><table>
+    <thead><tr><th style="text-align:left"></th><th>AI</th><th>Machine Learning</th><th>Deep Learning</th></tr></thead>
+    <tbody>
+      <tr><td style="text-align:left">Idea</td><td>Make machines act smart</td><td>Learn patterns from data</td><td>Learn with many-layered neural networks</td></tr>
+      <tr><td style="text-align:left">Needs data?</td><td>Not always (rules)</td><td>Yes, hundreds+</td><td>Yes, usually huge amounts</td></tr>
+      <tr><td style="text-align:left">Who picks features?</td><td>Programmer writes rules</td><td>Often humans</td><td>The network itself</td></tr>
+      <tr><td style="text-align:left">Hardware</td><td>Any</td><td>A normal laptop</td><td>GPUs</td></tr>
+      <tr><td style="text-align:left">Example</td><td>Chess engine with hand rules</td><td>Spam filter, price prediction</td><td>Face ID, ChatGPT</td></tr>
+    </tbody></table></div>
+  <div class="quiz" data-q="3"></div>
+</section>
+
+<!-- 05 TRAD VS ML -->
+<section class="lesson" id="tradvml">
+  <div class="eyebrow">Lesson 05 · The big ideas</div>
+  <h2>Traditional Programming vs Machine Learning</h2>
+  <p>This is the single most important idea in the course. The inputs and outputs swap places.</p>
+  <div class="grid2">
+    <div class="card"><h5>Traditional programming</h5><div class="flow" style="margin:6px 0"><span>Rules</span><em>+</em><span>Data</span><em>→</em><span style="border-color:var(--accent)">Answers</span></div><p>A programmer thinks hard and writes the rules. The computer applies them.</p><div class="io">if temp_c: return temp_c * 1.8 + 32</div></div>
+    <div class="card"><h5>Machine learning</h5><div class="flow" style="margin:6px 0"><span>Data</span><em>+</em><span>Answers</span><em>→</em><span style="border-color:var(--accent)">Rules</span></div><p>You give examples with the correct answers. The computer works out the rule.</p><div class="io">(0→32), (10→50), (20→68)… ⇒ learns ×1.8 +32</div></div>
+  </div>
+  <p><b>When is ML better?</b> When the rules are too complicated to write by hand. Nobody can write rules for "is this photo a cat?" or "is this email spam?" that cover every case. But we can easily collect thousands of labeled examples.</p>
+  <p><b>When is traditional programming better?</b> When the rule is known and exact: calculating GST, sorting a list, converting units. Using ML there is overkill.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · be the machine: find the hidden rule</div></div>
+    <p class="stat" style="margin:0 0 10px">These are input → output examples. The rule is <code>output = w × input + b</code>. Move the sliders until the error reaches zero. You are doing by hand what ML does automatically.</p>
+    <div style="display:grid;gap:10px">
+      <div class="sl"><label for="gW">w (multiply by)</label><input type="range" id="gW" min="0" max="3" step="0.1" value="1"><output id="gWO"></output></div>
+      <div class="sl"><label for="gB">b (then add)</label><input type="range" id="gB" min="0" max="50" step="1" value="10"><output id="gBO"></output></div>
+    </div>
+    <div class="tablewrap" style="margin-top:12px"><table id="gTable"></table></div>
+    <div class="result" id="gOut" style="margin-top:10px"></div>
+  </div>
+  <div class="quiz" data-q="4"></div>
+</section>
+
+<!-- 06 DATA -->
+<section class="lesson" id="data">
+  <div class="eyebrow">Lesson 06 · Data and models</div>
+  <h2>Dataset, features and labels</h2>
+  <p>ML starts with data, so we need three words:</p>
+  <ul class="plain">
+    <li><b>Dataset</b>: the whole collection of examples, usually a table. Each <b>row</b> is one example (one fruit, one customer, one email).</li>
+    <li><b>Features</b> (inputs, often written <code>X</code>): the columns that describe each example. The clues.</li>
+    <li><b>Label</b> (target, output, written <code>y</code>): the column with the answer we want the model to predict.</li>
+  </ul>
+  <div class="analogy"><b>Analogy:</b> a doctor diagnosing. The symptoms (fever, cough, age) are the <b>features</b>. The diagnosis (flu or not) is the <b>label</b>. Past patient records are the <b>dataset</b>.</div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · change what we predict</div>
+      <div class="tabs" id="dsMode"><button class="btn on" data-m="fruit">Predict the fruit</button><button class="btn" data-m="weight">Predict the weight</button></div></div>
+    <div class="tablewrap"><table id="dsTable"></table></div>
+    <div class="legend"><span><i style="background:var(--accent-soft)"></i>Feature (input)</span><span><i style="background:var(--mark)"></i>Label (what we predict)</span></div>
+    <div class="result" id="dsInfo" style="margin-top:10px"></div>
+  </div>
+  <p>The same dataset can serve different problems. What counts as a "label" depends on the question you ask. Good features matter a lot: colour helps tell apples from bananas, but the fruit's serial number would be useless.</p>
+  <div class="code"><div class="cap">Python · pandas <button class="copy">Copy</button></div><pre><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+df = pd.read_csv(<span class="c-str">"fruits.csv"</span>)          <span class="c-com"># the dataset</span>
+
+X = df[[<span class="c-str">"weight_g"</span>, <span class="c-str">"color"</span>, <span class="c-str">"texture"</span>, <span class="c-str">"diameter_cm"</span>]]   <span class="c-com"># features</span>
+y = df[<span class="c-str">"fruit"</span>]                                            <span class="c-com"># label</span>
+print(df.shape)   <span class="c-com"># (rows, columns) e.g. (8, 5)</span></pre></div>
+  <div class="quiz" data-q="5"></div>
+</section>
+
+<!-- 07 SPLIT -->
+<section class="lesson" id="split">
+  <div class="eyebrow">Lesson 07 · Data and models</div>
+  <h2>Training and testing data</h2>
+  <p>Before training, we split the dataset into two parts:</p>
+  <ul class="plain">
+    <li><b>Training set</b> (usually 70–80%): the model learns from these examples.</li>
+    <li><b>Test set</b> (20–30%): hidden during training, used only at the end to check how well the model works on data it has <i>never seen</i>.</li>
+  </ul>
+  <div class="analogy"><b>Analogy:</b> a teacher gives you practice questions (training set), but the final exam has new questions (test set). If the exam reused the practice questions, a student who simply memorized answers would score 100% without understanding anything.</div>
+  <p>That memorizing problem has a name: <b>overfitting</b>. The model does brilliantly on training data and badly on new data. The opposite, a model too simple to capture the pattern, is <b>underfitting</b>.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · predict pass/fail from hours studied</div>
+      <button class="btn" id="spShuffle">Shuffle &amp; re-split</button></div>
+    <div class="sl" style="grid-template-columns:120px minmax(0,1fr) 60px"><label for="spPct">Test set size</label><input type="range" id="spPct" min="10" max="50" step="5" value="25"><output id="spPctO"></output></div>
+    <div class="out-label">30 students · hours studied → result</div>
+    <div class="chips" id="spChips"></div>
+    <div class="legend"><span><i style="background:var(--accent-soft)"></i>Training</span><span><i style="background:var(--c1-soft);border-color:var(--c1)"></i>Testing (hidden)</span></div>
+    <div class="scoreboard" id="spScore"></div>
+  </div>
+  <div class="code"><div class="cap">Python · scikit-learn <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> sklearn.model_selection <span class="c-kw">import</span> train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=42)   <span class="c-com"># 75% train, 25% test</span>
+
+model.fit(X_train, y_train)                   <span class="c-com"># learn only from training data</span>
+print(model.score(X_test, y_test))            <span class="c-com"># honest accuracy on unseen data</span></pre></div>
+  <div class="quiz" data-q="6"></div>
+</section>
+
+<!-- 08 WORKFLOW -->
+<section class="lesson" id="workflow">
+  <div class="eyebrow">Lesson 08 · Data and models</div>
+  <h2>The Machine Learning workflow</h2>
+  <p>Every ML project, from a college assignment to Netflix's recommender, follows roughly the same seven steps. Real projects loop back often: bad results at step 6 usually send you back to step 2 or 3.</p>
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Walk through · a telecom company predicting which customers will leave</div></div>
+    <div class="steps" id="wfSteps"></div>
+    <div id="wfBody"></div>
+    <div class="row" style="margin-top:14px;justify-content:space-between"><button class="btn" id="wfPrev">← Previous</button><button class="btn primary" id="wfNext">Next step →</button></div>
+  </div>
+  <p>A well-known rule of thumb: data collection and cleaning (steps 2–3) take up most of the time in real ML projects. Training the model is often the quickest part.</p>
+  <div class="quiz" data-q="7"></div>
+</section>
+
+<!-- 09 TRAINING -->
+<section class="lesson" id="training">
+  <div class="eyebrow">Lesson 09 · Data and models</div>
+  <h2>Model training</h2>
+  <p>A <b>model</b> is a formula with adjustable knobs called <b>parameters</b> (or weights). <b>Training</b> means turning those knobs until the model's predictions match the training labels as closely as possible. In Lesson 5 you did this by hand. Here the computer does it.</p>
+  <p>Training repeats a simple loop thousands of times:</p>
+  <div class="flow"><span>1. Predict</span><em>→</em><span>2. Measure the error (the <b>loss</b>)</span><em>→</em><span>3. Nudge each knob in the direction that lowers the error</span><em>→</em><span>repeat</span></div>
+  <p>Step 3 is called <b>gradient descent</b>. The size of each nudge is the <b>learning rate</b>.</p>
+  <div class="analogy"><b>Analogy:</b> walking down a foggy hill to the valley. You can't see the bottom, but you can feel which way the ground slopes under your feet, so you take a step downhill and repeat. Steps too small: it takes forever. Steps too large: you jump over the valley and end up higher on the other side.</div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · train a model to learn Celsius → Fahrenheit</div>
+      <div class="row"><label class="fl" for="lr" style="margin:0">Learning rate</label><select id="lr"><option value="0.05">0.05 · small</option><option value="0.5" selected>0.5 · good</option><option value="0.95">0.95 · too big</option></select></div></div>
+    <div class="row">
+      <button class="btn" id="trStep">1 step</button><button class="btn" id="tr10">10 steps</button><button class="btn primary" id="trPlay">▶ Train</button><button class="btn" id="trReset">Reset</button>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div style="min-width:0"><div class="out-label" style="margin-top:0">Loss (error) over time</div><canvas class="plot" id="lossCanvas" aria-label="Loss curve"></canvas></div>
+      <div style="min-width:0"><div class="out-label" style="margin-top:0">The model right now</div><div class="big" id="trFormula"></div><div class="stat" id="trEpoch" style="margin:6px 0 10px"></div><div class="tablewrap"><table id="trTable"></table></div></div>
+    </div>
+  </div>
+  <p>Each pass through the training data is called an <b>epoch</b>. Try the "too big" learning rate: the loss explodes instead of shrinking. Picking these settings (called <b>hyperparameters</b>) is part of the job.</p>
+  <div class="quiz" data-q="8"></div>
+</section>
+
+<!-- 10 INFERENCE -->
+<section class="lesson" id="inference">
+  <div class="eyebrow">Lesson 10 · Data and models</div>
+  <h2>Model inference</h2>
+  <p><b>Inference</b> means using a trained model to make predictions on new data. Training is the learning phase; inference is the using phase. Every time your phone unlocks with your face, the model is doing inference.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th style="text-align:left"></th><th>Training</th><th>Inference</th></tr></thead>
+    <tbody>
+      <tr><td style="text-align:left">Goal</td><td>Learn the parameters</td><td>Use them to predict</td></tr>
+      <tr><td style="text-align:left">Data</td><td>Labeled examples</td><td>New, unlabeled input</td></tr>
+      <tr><td style="text-align:left">How often</td><td>Once, or occasionally</td><td>Millions of times</td></tr>
+      <tr><td style="text-align:left">Speed</td><td>Minutes to weeks</td><td>Milliseconds</td></tr>
+      <tr><td style="text-align:left">Analogy</td><td>Studying for an exam</td><td>Answering the exam question</td></tr>
+    </tbody></table></div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · ask a trained house-price model</div></div>
+    <p class="stat" style="margin:0 0 10px">This model was already trained. Its learned parameters are fixed. You give it a new house and it answers instantly.</p>
+    <div style="display:grid;gap:10px">
+      <div class="sl"><label for="iSize">Size (sq ft)</label><input type="range" id="iSize" min="400" max="3000" step="50" value="1200"><output id="iSizeO"></output></div>
+      <div class="sl"><label for="iBed">Bedrooms</label><input type="range" id="iBed" min="1" max="5" step="1" value="2"><output id="iBedO"></output></div>
+      <div class="sl"><label for="iKm">Km from centre</label><input type="range" id="iKm" min="0" max="30" step="1" value="8"><output id="iKmO"></output></div>
+    </div>
+    <div class="row" style="margin-top:14px;align-items:baseline"><span class="out-label" style="margin:0">Predicted price</span><span class="big" id="iPrice"></span></div>
+    <div class="result" id="iCalc" style="margin-top:10px"></div>
+  </div>
+  <div class="code"><div class="cap">Python · save once, predict forever <button class="copy">Copy</button></div><pre><span class="c-kw">import</span> joblib
+joblib.dump(model, <span class="c-str">"house_model.pkl"</span>)        <span class="c-com"># after training: save the learned model</span>
+
+<span class="c-com"># later, in a web app or another script:</span>
+model = joblib.load(<span class="c-str">"house_model.pkl"</span>)
+print(model.predict([[1200, 2, 8]]))           <span class="c-com"># inference on a new house</span></pre></div>
+  <div class="quiz" data-q="9"></div>
+</section>
+
+<!-- 11 BATCH -->
+<section class="lesson" id="batch">
+  <div class="eyebrow">Lesson 11 · Data and models</div>
+  <h2>Batch vs real-time inference</h2>
+  <p>Once a model is ready, there are two ways to run it:</p>
+  <div class="grid2">
+    <div class="card"><h5>Batch inference</h5><p>Collect lots of inputs, then predict for all of them together on a schedule (every night, every hour). Cheap and efficient, but results are not instant.</p><div class="io"><div><b>Example:</b> Netflix computes your "Top picks" overnight</div><div><b>Example:</b> a bank scores all loan applications at 2 AM</div></div></div>
+    <div class="card"><h5>Real-time (online) inference</h5><p>Predict immediately, the moment each input arrives. Needed when a delay would be useless or costly. Needs servers always running.</p><div class="io"><div><b>Example:</b> UPI fraud check while you pay</div><div><b>Example:</b> Google Maps ETA, face unlock</div></div></div>
+  </div>
+  <div class="analogy"><b>Analogy:</b> a dhobi who collects clothes all week and washes them in one big load on Sunday (batch), versus a dry-cleaner offering a 1-hour express service for each item (real-time).</div>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · a fraud model checking card payments</div>
+      <div class="tabs"><button class="btn on" id="bmRT">Real-time</button><button class="btn" id="bmB">Batch (every 6 s)</button></div></div>
+    <div class="row"><button class="btn primary" id="bmSend">Make a payment</button><label class="stat" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="bmAuto" checked style="accent-color:var(--accent)"> Auto-generate payments</label></div>
+    <div class="lanes">
+      <div class="lane"><h6>Waiting for the model</h6><div id="bmQueue"></div><div class="stat" id="bmTimer"></div></div>
+      <div class="lane"><h6>Model decisions</h6><div class="log" id="bmLog"></div></div>
+    </div>
+    <div class="result" id="bmStat" style="margin-top:10px"></div>
+  </div>
+  <p>In batch mode, a fraudulent payment might be caught after the money is already gone. That's why fraud detection is real-time, while recommendations (which can wait) are usually batch.</p>
+  <div class="quiz" data-q="10"></div>
+</section>
+
+<!-- 12 SUPERVISED -->
+<section class="lesson" id="supervised">
+  <div class="eyebrow">Lesson 12 · Types of learning</div>
+  <h2>Supervised Learning</h2>
+  <p>In <b>supervised learning</b>, every training example comes with the correct answer (a label). The model learns the mapping from features to label, like a student learning with a teacher who marks every answer. It is the most common type of ML.</p>
+  <div class="grid2">
+    <div class="card"><h5>Classification · predict a category</h5><p>The label is a class.</p><div class="io"><div>Email → <b>spam / not spam</b></div><div>X-ray → <b>pneumonia / healthy</b></div><div>Photo → <b>cat / dog / bird</b></div></div></div>
+    <div class="card"><h5>Regression · predict a number</h5><p>The label is a quantity.</p><div class="io"><div>House → <b>₹ 85 lakh</b></div><div>Tomorrow → <b>34 °C</b></div><div>Order → <b>delivery in 27 min</b></div></div></div>
+  </div>
+  <p>Lesson 2's house-price line was regression. Below is classification using <b>k-Nearest Neighbours (k-NN)</b>: to classify a new item, look at the <i>k</i> closest labeled examples and take a majority vote.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · click to add labeled fruits; the shading is the model's prediction</div></div>
+    <div class="row" style="margin-bottom:10px">
+      <span class="stat">Adding:</span><div class="tabs"><button class="btn on" id="knA">● Apple</button><button class="btn" id="knB">■ Orange</button></div>
+      <button class="btn" id="knClear">Clear</button><button class="btn" id="knReset">Reset</button>
+    </div>
+    <div class="sl" style="grid-template-columns:120px minmax(0,1fr) 40px;margin-bottom:10px"><label for="knK">k (neighbours)</label><input type="range" id="knK" min="1" max="9" step="2" value="3"><output id="knKO"></output></div>
+    <canvas class="plot" id="knCanvas" aria-label="k-NN classifier. Click to add points."></canvas>
+    <div class="result" id="knOut" style="margin-top:10px">Move your mouse (or tap) over the chart to classify a new fruit.</div>
+  </div>
+  <div class="code"><div class="cap">Python · scikit-learn <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> sklearn.neighbors <span class="c-kw">import</span> KNeighborsClassifier
+X = [[0.3, 0.4], [0.25, 0.3], [0.7, 0.7], [0.8, 0.6]]   <span class="c-com"># [sweetness, size]</span>
+y = [<span class="c-str">"apple"</span>, <span class="c-str">"apple"</span>, <span class="c-str">"orange"</span>, <span class="c-str">"orange"</span>]          <span class="c-com"># labels = supervision</span>
+
+knn = KNeighborsClassifier(n_neighbors=3).fit(X, y)
+print(knn.predict([[0.65, 0.55]]))   <span class="c-com"># ['orange']</span></pre></div>
+  <div class="quiz" data-q="11"></div>
+</section>
+
+<!-- 13 UNSUPERVISED -->
+<section class="lesson" id="unsupervised">
+  <div class="eyebrow">Lesson 13 · Types of learning</div>
+  <h2>Unsupervised Learning</h2>
+  <p>In <b>unsupervised learning</b>, the data has <b>no labels</b>. Nobody tells the model the right answer. Its job is to discover hidden structure on its own: groups, patterns or unusual items.</p>
+  <div class="analogy"><b>Analogy:</b> tip a box of mixed LEGO on the floor and ask a child to sort it. Nobody gives categories, yet they'll group by colour or size. The groups come from the data itself.</div>
+  <div class="grid">
+    <div class="card"><h5>Clustering</h5><p>Group similar items. Customer segments for marketing, grouping news articles by topic.</p></div>
+    <div class="card"><h5>Anomaly detection</h5><p>Find items that don't fit any pattern. Unusual network traffic, a faulty machine sensor.</p></div>
+    <div class="card"><h5>Association</h5><p>Find things that go together. "People who buy bread often buy butter" on shopping sites.</p></div>
+    <div class="card"><h5>Dimensionality reduction</h5><p>Compress many features into a few while keeping the important information (e.g. PCA).</p></div>
+  </div>
+  <p>The classic clustering algorithm is <b>k-means</b>: place <i>k</i> centres randomly, assign each point to its nearest centre, move each centre to the middle of its points, and repeat until nothing changes.</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · group a shop's customers (no labels given)</div></div>
+    <div class="row" style="margin-bottom:10px">
+      <label class="fl" for="kmK" style="margin:0">Number of groups k</label><select id="kmK"><option>2</option><option selected>3</option><option>4</option><option>5</option></select>
+      <button class="btn" id="kmStep">1 step</button><button class="btn primary" id="kmRun">Run to the end</button><button class="btn" id="kmNew">New customers</button>
+    </div>
+    <canvas class="plot" id="kmCanvas" aria-label="k-means clustering of customers"></canvas>
+    <div class="result" id="kmOut" style="margin-top:10px"></div>
+  </div>
+  <div class="code"><div class="cap">Python · scikit-learn <button class="copy">Copy</button></div><pre><span class="c-kw">from</span> sklearn.cluster <span class="c-kw">import</span> KMeans
+X = customers[[<span class="c-str">"visits_per_month"</span>, <span class="c-str">"spend_per_visit"</span>]]   <span class="c-com"># note: no y (no labels)</span>
+
+km = KMeans(n_clusters=3, random_state=0).fit(X)
+print(km.labels_[:10])         <span class="c-com"># group number for each customer</span>
+print(km.cluster_centers_)     <span class="c-com"># the "typical" customer of each group</span></pre></div>
+  <div class="quiz" data-q="12"></div>
+</section>
+
+<!-- 14 RL -->
+<section class="lesson" id="rl">
+  <div class="eyebrow">Lesson 14 · Types of learning</div>
+  <h2>Reinforcement Learning</h2>
+  <p>In <b>reinforcement learning (RL)</b>, an <b>agent</b> learns by trial and error inside an <b>environment</b>. It takes <b>actions</b>, receives <b>rewards</b> (good) or penalties (bad), and gradually learns a strategy, called a <b>policy</b>, that collects the most reward over time. There is no dataset of correct answers.</p>
+  <div class="analogy"><b>Analogy:</b> training a puppy. You don't explain the rules. When it sits, it gets a treat (+ reward). When it chews your shoes, it gets a firm "no" (− penalty). After many tries, it learns what earns treats.</div>
+  <div class="flow"><span>Agent</span><em>→ action →</em><span>Environment</span><em>→ new state + reward →</em><span>Agent learns</span><em>↺</em></div>
+  <p>Famous examples: AlphaGo beating the world Go champion, robots learning to walk, game-playing AIs, and fine-tuning chatbots using human feedback (RLHF).</p>
+
+  <div class="demo">
+    <div class="demo-head"><div class="demo-tag">Try it · a robot learns to reach the goal (Q-learning)</div></div>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn" id="rlOne">Train 1 episode (watch)</button><button class="btn primary" id="rl50">Train 50 episodes</button><button class="btn" id="rlWatch">Show best route</button><button class="btn" id="rlReset">Reset brain</button>
+    </div>
+    <div class="grid2">
+      <div style="min-width:0"><div class="gw" id="gw"></div>
+        <div class="legend"><span><i style="background:var(--c1)"></i>Robot</span><span><i style="background:var(--pos-soft);border-color:var(--pos)"></i>Goal +10</span><span><i style="background:var(--neg-soft);border-color:var(--neg)"></i>Fire −10</span><span><i style="background:var(--ink)"></i>Wall</span></div></div>
+      <div style="min-width:0"><div class="out-label" style="margin-top:0">Steps needed per episode</div><canvas class="plot" id="rlCanvas" aria-label="Steps per episode chart"></canvas><div class="result" id="rlOut" style="margin-top:10px"></div></div>
+    </div>
+    <p class="stat" style="margin:10px 0 0">Each move costs −1, so shorter routes earn more. Arrows show the robot's current best move in each square; darker squares are ones it has learned are valuable.</p>
+  </div>
+  <div class="quiz" data-q="13"></div>
+</section>
+
+<!-- 15 USE CASES -->
+<section class="lesson" id="usecases">
+  <div class="eyebrow">Lesson 15 · In the real world</div>
+  <h2>Machine Learning use cases</h2>
+  <p>ML is already part of daily life, often without us noticing. Filter by learning type to see which kind of ML each one uses.</p>
+  <div class="tabs" id="ucTabs" style="margin:12px 0"></div>
+  <div class="grid" id="ucGrid"></div>
+  <h3>Where to go next</h3>
+  <ul class="plain">
+    <li>Learn Python basics, then the libraries <b>pandas</b>, <b>scikit-learn</b> and <b>matplotlib</b>.</li>
+    <li>Take a free course: Google's <i>Machine Learning Crash Course</i> or Andrew Ng's <i>Machine Learning Specialization</i>.</li>
+    <li>Practice on Kaggle with beginner datasets: Titanic survival, house prices, iris flowers.</li>
+    <li>Build one small project end to end: collect data → train → evaluate → deploy as a simple web app.</li>
+  </ul>
+  <div class="quiz" data-q="14"></div>
+</section>
+
+<footer>ML from Zero · 15 lessons, each with an explanation, an everyday analogy, a live experiment and a quick check.</footer>
+</main>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function fitCanvas(c,ratio,maxH){const w=c.clientWidth||600;const h=Math.min(maxH||380,Math.round(w*ratio));const d=window.devicePixelRatio||1;c.width=w*d;c.height=h*d;c.style.height=h+"px";const ctx=c.getContext("2d");ctx.setTransform(d,0,0,d,0,0);return{ctx,w,h};}
+const redraws=[];
+function onRedraw(f){redraws.push(f);}
+function redrawAll(){redraws.forEach(f=>f());}
+if(window.matchMedia)matchMedia("(prefers-color-scheme: dark)").addEventListener("change",redrawAll);
+new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(redrawAll,120);});
+function axes(ctx,w,h,P,xl,yl,xt,yt){ctx.fillStyle=css("--paper");ctx.fillRect(0,0,w,h);ctx.strokeStyle=css("--line");ctx.lineWidth=1;ctx.font="11px "+css("--mono");ctx.fillStyle=css("--muted");
+  xt.forEach(([v,x])=>{ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,h-P.b);ctx.stroke();ctx.textAlign="center";ctx.fillText(v,x,h-P.b+14);});
+  yt.forEach(([v,y])=>{ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(w-P.r,y);ctx.stroke();ctx.textAlign="right";ctx.fillText(v,P.l-6,y+4);});
+  ctx.textAlign="center";ctx.fillText(xl,(P.l+w-P.r)/2,h-4);ctx.save();ctx.translate(12,(P.t+h-P.b)/2);ctx.rotate(-Math.PI/2);ctx.fillText(yl,0,0);ctx.restore();}
+
+/* ---------- 01 AI or not ---------- */
+const GAME=[["A calculator adding 2 + 2",false,"It follows a fixed instruction. No judgment involved."],
+ ["Your phone recognising your face to unlock",true,"It has to recognise you across lighting, angles and glasses. That's perception."],
+ ["Google Maps predicting traffic and suggesting a faster route",true,"It predicts future traffic from patterns in millions of trips."],
+ ["An alarm clock ringing at 6:00 AM",false,"It simply triggers at a set time."],
+ ["Gmail moving a scam email to Spam",true,"It judges whether an email looks like spam, learned from millions of examples."],
+ ["A microwave stopping after 2 minutes",false,"A timer, not a decision."],
+ ["Spotify's 'Discover Weekly' playlist",true,"It infers your taste and predicts songs you'll like."],
+ ["A chess program that beats grandmasters",true,"It plans and evaluates positions: classic AI."]];
+const gameAns={};
+function renderGame(){let correct=0;$("game").innerHTML=GAME.map(([t,a,why],i)=>{const g=gameAns[i];const done=g!==undefined;if(done&&g===a)correct++;
+  return `<div class="item ${done?(g===a?"ok":"bad"):""}"><span class="t">${esc(t)}</span><span class="tabs"><button class="btn ${g===true?"on":""}" data-g="${i}" data-v="1">AI</button><button class="btn ${g===false?"on":""}" data-g="${i}" data-v="0">Not AI</button></span>${done?`<div class="fb"><b>${g===a?"Correct.":"Not quite."}</b> ${a?"This is AI.":"This is not AI."} ${esc(why)}</div>`:""}</div>`;}).join("");
+  const n=Object.keys(gameAns).length;$("gameScore").textContent=n?`${correct} / ${n} correct`:"";}
+$("game").addEventListener("click",e=>{const b=e.target.closest("[data-g]");if(!b)return;gameAns[b.dataset.g]=b.dataset.v==="1";renderGame();});renderGame();
+
+/* ---------- 02 line fit ---------- */
+const LF0=[[650,35],[800,48],[1000,55],[1200,70],[1500,82],[1800,100],[2200,118],[2600,140]];
+let lf=LF0.map(p=>p.slice());
+function lsq(pts){const n=pts.length;if(n<2)return null;const mx=pts.reduce((a,p)=>a+p[0],0)/n,my=pts.reduce((a,p)=>a+p[1],0)/n;let sxy=0,sxx=0;pts.forEach(([x,y])=>{sxy+=(x-mx)*(y-my);sxx+=(x-mx)**2;});if(!sxx)return null;const m=sxy/sxx;return{m,b:my-m*mx};}
+let lfGeo;
+function drawLf(){const c=$("lfCanvas");const{ctx,w,h}=fitCanvas(c,.6,360);const P={l:52,r:14,t:12,b:34};
+  const X=v=>P.l+v/3000*(w-P.l-P.r),Y=v=>h-P.b-v/200*(h-P.t-P.b);lfGeo={P,w,h};
+  axes(ctx,w,h,P,"House size (sq ft)","Price (₹ lakh)",[0,1000,2000,3000].map(v=>[v,X(v)]),[0,50,100,150,200].map(v=>[v,Y(v)]));
+  const f=lsq(lf);
+  if(f){ctx.strokeStyle=css("--c1");ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(X(0),Y(f.b));ctx.lineTo(X(3000),Y(f.m*3000+f.b));ctx.stroke();
+    const s=+$("lfSize").value||0;const p=f.m*s+f.b;ctx.setLineDash([4,4]);ctx.strokeStyle=css("--accent");ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(X(s),h-P.b);ctx.lineTo(X(s),Y(p));ctx.lineTo(P.l,Y(p));ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=css("--accent");ctx.beginPath();ctx.arc(X(s),Y(p),6,0,7);ctx.fill();}
+  lf.forEach(([x,y])=>{ctx.fillStyle=css("--ink");ctx.beginPath();ctx.arc(X(x),Y(y),4.5,0,7);ctx.fill();});
+  const s=+$("lfSize").value||0;
+  $("lfOut").textContent=f?`Learned rule:  price = ${f.m.toFixed(4)} × size ${f.b>=0?"+":"−"} ${Math.abs(f.b).toFixed(1)}\n(about ₹${(f.m*100000).toFixed(0)} per extra sq ft)\n\nPrediction for ${s} sq ft → ₹ ${(f.m*s+f.b).toFixed(1)} lakh   (learned from ${lf.length} houses)`:"Add at least 2 houses so the machine can find a pattern.";}
+$("lfCanvas").addEventListener("click",e=>{const r=e.currentTarget.getBoundingClientRect();const{P,w,h}=lfGeo;const x=(e.clientX-r.left-P.l)/(w-P.l-P.r)*3000,y=(h-P.b-(e.clientY-r.top))/(h-P.t-P.b)*200;if(x<0||x>3000||y<0||y>200)return;lf.push([Math.round(x),Math.round(y)]);drawLf();});
+$("lfClear").onclick=()=>{lf=[];drawLf();};$("lfReset").onclick=()=>{lf=LF0.map(p=>p.slice());drawLf();};$("lfSize").addEventListener("input",drawLf);
+onRedraw(drawLf);
+
+/* ---------- 03 neuron ---------- */
+const nIn={sun:1,hol:0,rain:0};
+document.querySelectorAll(".sw[data-in]").forEach(sw=>sw.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;nIn[sw.dataset.in]=+b.dataset.v;sw.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));neuron();}));
+function neuron(){const w={sun:+$("wSun").value,hol:+$("wHol").value,rain:+$("wRain").value},b=+$("wBias").value;
+  ["wSun","wHol","wRain","wBias"].forEach(id=>$(id+"O").textContent=(+$(id).value).toFixed(1));
+  const z=nIn.sun*w.sun+nIn.hol*w.hol+nIn.rain*w.rain+b;const o=1/(1+Math.exp(-z));
+  $("nOut").textContent=`sum = (${nIn.sun} × ${w.sun}) + (${nIn.hol} × ${w.hol}) + (${nIn.rain} × ${w.rain}) + bias ${b} = ${z.toFixed(2)}\noutput = sigmoid(${z.toFixed(2)}) = ${o.toFixed(2)}\n\nDecision: ${o>=0.5?"GO TO THE BEACH 🏖":"STAY HOME 🏠"}  (${(o*100).toFixed(0)}% sure)`;}
+["wSun","wHol","wRain","wBias"].forEach(id=>$(id).addEventListener("input",neuron));neuron();
+
+/* ---------- 04 nested ---------- */
+const NEST={ai:["Artificial Intelligence","The whole field: any technique that makes machines behave intelligently, including hand-written rules.\nExamples: rule-based chess engines, old expert systems, simple chatbots with scripted replies, plus everything inside."],
+ ml:["Machine Learning","A subset of AI: systems that learn patterns from data instead of following hand-written rules.\nExamples: spam filters, loan approval models, product recommendations, house-price prediction."],
+ dl:["Deep Learning","A subset of ML: learning with neural networks of many layers. Learns its own features from raw data.\nExamples: Face ID, voice assistants, Google Translate, ChatGPT, self-driving perception."]};
+let nestSel="ml";
+function drawNest(){const r=[["ai",230,170,160,150,"--accent-soft"],["ml",230,195,115,115,"--c1-soft"],["dl",230,225,68,72,"--mark"]];
+  $("nestSvg").innerHTML=r.map(([k,cx,cy,rx,ry,f])=>`<g data-k="${k}"><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="var(${f})" stroke="var(${k===nestSel?"--ink":"--line"})" stroke-width="${k===nestSel?3:1.5}"/></g>`).join("")+
+   `<text x="230" y="50" text-anchor="middle" font-size="18" fill="var(--ink)">Artificial Intelligence</text><text x="230" y="112" text-anchor="middle" font-size="16" fill="var(--ink)">Machine Learning</text><text x="230" y="222" text-anchor="middle" font-size="15" fill="var(--mark-ink)">Deep</text><text x="230" y="240" text-anchor="middle" font-size="15" fill="var(--mark-ink)">Learning</text>`;
+  const n=NEST[nestSel];$("nestInfo").textContent=n[0]+"\n"+n[1];}
+$("nestSvg").addEventListener("click",e=>{const g=e.target.closest("[data-k]");if(g){nestSel=g.dataset.k;drawNest();}});drawNest();
+
+/* ---------- 05 guess the rule ---------- */
+const GP=[[0,32],[10,50],[20,68],[30,86],[100,212]];
+function guess(){const w=+$("gW").value,b=+$("gB").value;$("gWO").textContent=w.toFixed(1);$("gBO").textContent=b;
+  let err=0;$("gTable").innerHTML=`<thead><tr><th>Input (°C)</th>${GP.map(p=>`<td>${p[0]}</td>`).join("")}</tr></thead><tbody><tr><th>Correct output</th>${GP.map(p=>`<td>${p[1]}</td>`).join("")}</tr><tr><th>Your rule gives</th>${GP.map(([x,y])=>{const p=w*x+b;err+=Math.abs(p-y);const ok=Math.abs(p-y)<.01;return `<td style="color:${ok?"var(--pos)":"var(--neg)"};font-weight:600">${+p.toFixed(1)}</td>`}).join("")}</tr></tbody>`;
+  err/=GP.length;$("gOut").textContent=`Your rule: output = ${w.toFixed(1)} × input + ${b}\nAverage error: ${err.toFixed(1)}`+(err<0.01?`\n\n🎉 You found it! This is Celsius → Fahrenheit (F = 1.8 × C + 32).\nYou just "trained a model": you adjusted two parameters until the error was zero. In Lesson 9 the computer does this automatically.`:err<10?"\nGetting close…":"");}
+["gW","gB"].forEach(id=>$(id).addEventListener("input",guess));guess();
+
+/* ---------- 06 dataset ---------- */
+const FRUIT=[[150,"red","smooth",7.5,"Apple"],[170,"green","smooth",8,"Apple"],[120,"yellow","smooth",3.5,"Banana"],[130,"yellow","smooth",3.8,"Banana"],[140,"orange","rough",7,"Orange"],[160,"orange","rough",7.6,"Orange"],[1200,"green","rough",15,"Watermelon"],[155,"red","smooth",7.8,"Apple"]];
+const COLS=["weight_g","color","texture","diameter_cm","fruit"];
+const COLINFO={weight_g:"How heavy the fruit is, in grams. A number, so it's a numeric feature.",color:"The skin colour. A word from a fixed set, so it's a categorical feature (models need it converted to numbers).",texture:"Smooth or rough. Another categorical feature.",diameter_cm:"How wide the fruit is. A numeric feature.",fruit:"The fruit's name."};
+let dsMode="fruit";
+function ds(){const lab=dsMode==="fruit"?4:0;
+  $("dsTable").innerHTML=`<thead><tr><th>#</th>${COLS.map((c,i)=>`<th class="clk ${i===lab?"lab":"feat"}" data-c="${i}">${c}</th>`).join("")}</tr></thead><tbody>${FRUIT.map((r,ri)=>`<tr><td>${ri+1}</td>${r.map((v,i)=>`<td class="${i===lab?"lab":""}">${v}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  $("dsInfo").textContent=dsMode==="fruit"?`Question: "What fruit is this?"\nFeatures (X): weight_g, color, texture, diameter_cm   →   Label (y): fruit\nThe label is a category, so this is a CLASSIFICATION problem.\nDataset: ${FRUIT.length} rows (examples) × ${COLS.length} columns. Click any column header to learn about it.`:`Question: "How heavy is this fruit?"\nFeatures (X): color, texture, diameter_cm, fruit   →   Label (y): weight_g\nThe label is a number, so this is a REGRESSION problem.\nSame data, different question, different label.`;}
+$("dsMode").addEventListener("click",e=>{const b=e.target.closest("[data-m]");if(!b)return;dsMode=b.dataset.m;[...$("dsMode").children].forEach(x=>x.classList.toggle("on",x===b));ds();});
+$("dsTable").addEventListener("click",e=>{const th=e.target.closest("th[data-c]");if(!th)return;const i=+th.dataset.c;const lab=dsMode==="fruit"?4:0;const c=COLS[i];
+  $("dsInfo").textContent=`Column "${c}" is a ${i===lab?"LABEL: the answer the model must learn to predict.":"FEATURE: a clue the model uses."}\n${COLINFO[c]}`;});ds();
+
+/* ---------- 07 split ---------- */
+let spSeed=7;let students=[];
+function makeStudents(){const r=rng(42);students=[];for(let i=0;i<30;i++){const h=Math.round(r()*100)/10;const pass=h+(r()-.5)*3.2>5;students.push({id:i+1,h,pass});}}
+makeStudents();let order=students.map((_,i)=>i);
+function shuffle(){const r=rng(spSeed++);for(let i=order.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[order[i],order[j]]=[order[j],order[i]];}}
+shuffle();
+function split(){const pct=+$("spPct").value;$("spPctO").textContent=pct+"%";const nTest=Math.round(30*pct/100);
+  const test=new Set(order.slice(0,nTest));const tr=students.filter((_,i)=>!test.has(i)),te=students.filter((_,i)=>test.has(i));
+  $("spChips").innerHTML=students.map((s,i)=>`<span class="chip ${test.has(i)?"te":"tr"}">${s.h.toFixed(1)}h<b style="color:${s.pass?"var(--pos)":"var(--neg)"}">${s.pass?"pass":"fail"}</b></span>`).join("");
+  let best=0,bt=5;const cands=[...new Set(tr.map(s=>s.h))].concat([0,10.1]);cands.forEach(t=>{const a=tr.filter(s=>(s.h>=t)===s.pass).length;if(a>best){best=a;bt=t;}});
+  const acc=(set,f)=>set.length?Math.round(set.filter(s=>f(s)===s.pass).length/set.length*100):0;
+  const thr=s=>s.h>=bt;const memo=new Map(tr.map(s=>[s.h,s.pass]));const mem=s=>memo.has(s.h)?memo.get(s.h):false;
+  $("spScore").innerHTML=`<div class="card"><h5>Learner model</h5><p>Learned the rule: "pass if hours ≥ ${bt.toFixed(1)}"</p><div class="io"><div>Training accuracy: <b>${acc(tr,thr)}%</b></div><div>Test accuracy: <b>${acc(te,thr)}%</b></div></div></div>
+   <div class="card"><h5>Memorizer model (overfits)</h5><p>Stores every training answer exactly; guesses "fail" for anything new.</p><div class="io"><div>Training accuracy: <b>${acc(tr,mem)}%</b></div><div>Test accuracy: <b style="color:var(--neg)">${acc(te,mem)}%</b></div></div></div>`;}
+$("spPct").addEventListener("input",split);$("spShuffle").onclick=()=>{shuffle();split();};split();
+
+/* ---------- 08 workflow ---------- */
+const WF=[["Define the problem","What exactly do we want to predict, and why?","Predict which customers are likely to cancel their mobile plan next month, so the retention team can offer them a discount first. Success = catching most leavers without spamming happy customers."],
+ ["Collect data","Gather examples, ideally with the answer included.","Pull 2 years of records for 50,000 customers: monthly bill, data usage, number of complaint calls, contract type, tenure, and whether they actually left (the label)."],
+ ["Clean & prepare","Fix missing values, errors and duplicates; turn text into numbers; choose features.","Fill 1,200 missing 'data usage' values, remove duplicate accounts, convert 'contract type' (monthly / yearly) into numbers, create a new feature 'complaints in last 90 days'. Then split into 80% train / 20% test."],
+ ["Choose a model","Pick an algorithm suited to the problem.","This is supervised classification (left / stayed). Start simple with Logistic Regression as a baseline, then try a Random Forest."],
+ ["Train","Let the model learn from the training set.","model.fit(X_train, y_train). The Random Forest learns that many complaints + month-to-month contract + rising bills strongly signal leaving."],
+ ["Evaluate","Measure performance on the unseen test set.","Accuracy 86%. More importantly, recall = 78%: it catches 78 of every 100 customers who actually leave. Good enough for the business goal; otherwise loop back to step 2 or 3."],
+ ["Deploy & monitor","Put it into use and watch it over time.","Every Monday the model scores all customers (batch inference) and sends the top 500 at-risk names to the retention team. Accuracy is tracked monthly; when customer behaviour changes, the model is retrained."]];
+let wf=0;
+function renderWf(){$("wfSteps").innerHTML=WF.map((s,i)=>`<button class="${i===wf?"on":i<wf?"past":""}" data-s="${i}"><i>${i+1}</i>${s[0]}</button>`).join("");
+  const s=WF[wf];$("wfBody").innerHTML=`<h3 style="margin-top:4px">Step ${wf+1}: ${esc(s[0])}</h3><p>${esc(s[1])}</p><div class="out-label">In our example</div><div class="result">${esc(s[2])}</div>`;
+  $("wfPrev").disabled=wf===0;$("wfNext").textContent=wf===WF.length-1?"Start over ↺":"Next step →";}
+$("wfSteps").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){wf=+b.dataset.s;renderWf();}});
+$("wfPrev").onclick=()=>{if(wf>0){wf--;renderWf();}};$("wfNext").onclick=()=>{wf=wf===WF.length-1?0:wf+1;renderWf();};renderWf();
+
+/* ---------- 09 training (gradient descent) ---------- */
+const TD=[[0,32],[10,50],[20,68],[30,86],[100,212]];
+let W=0,B=0,epoch=0,losses=[],playing=null;
+const lossFn=()=>TD.reduce((a,[c,f])=>a+(W*c/100+B-f)**2,0)/TD.length;
+function gdStep(){const lr=+$("lr").value;let gw=0,gb=0;TD.forEach(([c,f])=>{const x=c/100,e=W*x+B-f;gw+=2*e*x;gb+=2*e;});gw/=TD.length;gb/=TD.length;W-=lr*gw;B-=lr*gb;epoch++;const L=lossFn();losses.push(L);return isFinite(L)&&L<1e12;}
+function trReset(){W=0;B=0;epoch=0;losses=[lossFn()];stop();drawTr();}
+function stop(){if(playing){clearInterval(playing);playing=null;$("trPlay").textContent="▶ Train";}}
+function drawTr(){const L=losses[losses.length-1];const w=W/100;
+  $("trFormula").textContent=isFinite(L)&&L<1e12?`F = ${w.toFixed(3)} × C + ${B.toFixed(2)}`:"F = 💥 (exploded)";
+  $("trEpoch").textContent=`Epoch ${epoch} · loss ${isFinite(L)?(L<1e9?L.toFixed(3):L.toExponential(1)):"∞"}`+(L<0.001?" · ✓ learned!":"")+`  (target: F = 1.8 × C + 32)`;
+  $("trTable").innerHTML=`<thead><tr><th>°C</th><th>True °F</th><th>Model says</th></tr></thead><tbody>${TD.map(([c,f])=>{const p=W*c/100+B;return `<tr><td>${c}</td><td>${f}</td><td style="color:${Math.abs(p-f)<0.5?"var(--pos)":"var(--neg)"};font-weight:600">${isFinite(p)&&Math.abs(p)<1e7?p.toFixed(1):"—"}</td></tr>`}).join("")}</tbody>`;
+  const c=$("lossCanvas");const{ctx,w:cw,h}=fitCanvas(c,.62,260);const P={l:48,r:10,t:10,b:30};
+  const vals=losses.map(v=>Math.log10(Math.max(1e-4,Math.min(v,1e12))));const lo=-4,hi=Math.max(5,...vals);const n=Math.max(10,losses.length-1);
+  const X=i=>P.l+i/n*(cw-P.l-P.r),Y=v=>h-P.b-(v-lo)/(hi-lo)*(h-P.t-P.b);
+  axes(ctx,cw,h,P,"epoch","loss (log scale)",[0,Math.round(n/2),n].map(v=>[v,X(v)]),[-4,0,4].filter(v=>v<=hi).map(v=>[v===0?"1":"1e"+v,Y(v)]));
+  ctx.strokeStyle=css("--accent");ctx.lineWidth=2.5;ctx.beginPath();vals.forEach((v,i)=>{i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v));});ctx.stroke();
+  ctx.fillStyle=css("--accent");ctx.beginPath();ctx.arc(X(vals.length-1),Y(vals[vals.length-1]),4,0,7);ctx.fill();}
+function runSteps(k){for(let i=0;i<k;i++){if(!gdStep()){stop();break;}}drawTr();}
+$("trStep").onclick=()=>runSteps(1);$("tr10").onclick=()=>runSteps(10);$("trReset").onclick=trReset;$("lr").onchange=trReset;
+$("trPlay").onclick=()=>{if(playing){stop();return;}$("trPlay").textContent="❚❚ Pause";playing=setInterval(()=>{runSteps(2);if(epoch>=400||losses[losses.length-1]<1e-4)stop();},40);};
+losses=[lossFn()];drawTr();onRedraw(drawTr);
+
+/* ---------- 10 inference ---------- */
+function inf(){const s=+$("iSize").value,b=+$("iBed").value,k=+$("iKm").value;$("iSizeO").textContent=s;$("iBedO").textContent=b;$("iKmO").textContent=k;
+  const p=Math.max(5,12+0.045*s+6*b-1.4*k);$("iPrice").textContent=`₹ ${p.toFixed(1)} lakh`;
+  $("iCalc").textContent=`Learned parameters (fixed after training):\n  base 12 · per sq ft 0.045 · per bedroom 6 · per km −1.4\n\nprice = 12 + 0.045×${s} + 6×${b} − 1.4×${k} = ${p.toFixed(1)} lakh\nTime taken: well under 1 millisecond. No learning happened, just a calculation.`;}
+["iSize","iBed","iKm"].forEach(id=>$(id).addEventListener("input",inf));inf();
+
+/* ---------- 11 batch vs real-time ---------- */
+let bm="rt",queue=[],logs=[],txn=0,nextBatch=Date.now()+6000,lastAuto=0,stats={n:0,wait:0,fraudLate:0};
+const SHOPS=["Swiggy","Amazon","Petrol pump","Zara","Unknown site (abroad)","Grocery","Metro card","Electronics store"];
+const br=rng(99);
+function newTxn(){txn++;const shop=SHOPS[Math.floor(br()*SHOPS.length)];const amt=shop.startsWith("Unknown")?Math.round(40000+br()*60000):Math.round(80+br()*4000);const fraud=shop.startsWith("Unknown")||amt>3800;queue.push({id:txn,shop,amt,fraud,t:Date.now()});if(bm==="rt")setTimeout(processAll,60);renderBm();}
+function processAll(){const now=Date.now();queue.forEach(q=>{const wait=(now-q.t)/1000;stats.n++;stats.wait+=wait;if(q.fraud&&wait>2)stats.fraudLate++;logs.unshift({...q,wait});});queue=[];logs=logs.slice(0,30);renderBm();}
+function renderBm(){$("bmQueue").innerHTML=queue.map(q=>`<span class="qchip">#${q.id} ₹${q.amt.toLocaleString("en-IN")}</span>`).join("")||'<span class="stat">Empty</span>';
+  $("bmLog").innerHTML=logs.map(l=>`<div class="${l.fraud?"f":""}">#${l.id} ₹${l.amt.toLocaleString("en-IN")} ${esc(l.shop)} → ${l.fraud?"BLOCKED (fraud)":"approved"} · ${l.wait<1?Math.round(l.wait*1000)+" ms":l.wait.toFixed(1)+" s"}${l.fraud&&l.wait>2?" ⚠ too late":""}</div>`).join("")||'<div class="stat">No decisions yet</div>';
+  $("bmStat").textContent=`${stats.n} payments checked · average wait ${stats.n?(stats.wait/stats.n).toFixed(2):"0"} s · frauds caught too late: ${stats.fraudLate}`;}
+setInterval(()=>{const now=Date.now();if($("bmAuto").checked&&now-lastAuto>1700&&!document.hidden){lastAuto=now;newTxn();}
+  if(bm==="batch"){const left=Math.max(0,nextBatch-now);$("bmTimer").textContent=`Next batch run in ${(left/1000).toFixed(1)} s`;if(left<=0){processAll();nextBatch=now+6000;}}else $("bmTimer").textContent="Each payment is checked the moment it arrives.";},100);
+function setBm(m){bm=m;$("bmRT").classList.toggle("on",m==="rt");$("bmB").classList.toggle("on",m==="batch");stats={n:0,wait:0,fraudLate:0};logs=[];if(m==="rt")processAll();nextBatch=Date.now()+6000;renderBm();}
+$("bmRT").onclick=()=>setBm("rt");$("bmB").onclick=()=>setBm("batch");$("bmSend").onclick=newTxn;renderBm();
+
+/* ---------- 12 kNN ---------- */
+function knInit(){const r=rng(5);const p=[];for(let i=0;i<12;i++)p.push([.3+(r()-.5)*.35,.35+(r()-.5)*.35,0]);for(let i=0;i<12;i++)p.push([.68+(r()-.5)*.35,.66+(r()-.5)*.35,1]);return p;}
+let kn=knInit(),knCls=0,knHover=null,knGeo;
+function knPredict(x,y){const k=+$("knK").value;if(!kn.length)return null;const d=kn.map(p=>[(p[0]-x)**2+(p[1]-y)**2,p[2]]).sort((a,b)=>a[0]-b[0]).slice(0,k);const v=d.filter(q=>q[1]===1).length;return{cls:v*2>d.length?1:0,votes:[d.length-v,v]};}
+function drawKn(){$("knKO").textContent=$("knK").value;const c=$("knCanvas");const{ctx,w,h}=fitCanvas(c,.62,380);const P={l:40,r:10,t:10,b:30};knGeo={P,w,h};
+  const X=v=>P.l+v*(w-P.l-P.r),Y=v=>h-P.b-v*(h-P.t-P.b);
+  axes(ctx,w,h,P,"sweetness →","size →",[],[]);
+  const c0=css("--c1"),c1=css("--c2");const cols=40,rows=Math.round(cols*(h-P.t-P.b)/(w-P.l-P.r));const cw=(w-P.l-P.r)/cols,ch=(h-P.t-P.b)/rows;
+  if(kn.length){ctx.globalAlpha=.16;for(let i=0;i<cols;i++)for(let j=0;j<rows;j++){const pr=knPredict((i+.5)/cols,1-(j+.5)/rows);ctx.fillStyle=pr.cls?c1:c0;ctx.fillRect(P.l+i*cw,P.t+j*ch,cw+.5,ch+.5);}ctx.globalAlpha=1;}
+  kn.forEach(([x,y,k])=>{ctx.fillStyle=k?c1:c0;ctx.strokeStyle=css("--surface");ctx.lineWidth=2;ctx.beginPath();if(k)ctx.rect(X(x)-5,Y(y)-5,10,10);else ctx.arc(X(x),Y(y),5.5,0,7);ctx.fill();ctx.stroke();});
+  if(knHover){const pr=knPredict(knHover[0],knHover[1]);if(pr){const k=+$("knK").value;const near=kn.map(p=>[(p[0]-knHover[0])**2+(p[1]-knHover[1])**2,p]).sort((a,b)=>a[0]-b[0]).slice(0,k);
+    ctx.strokeStyle=css("--ink");ctx.lineWidth=1;ctx.setLineDash([3,3]);near.forEach(([,p])=>{ctx.beginPath();ctx.moveTo(X(knHover[0]),Y(knHover[1]));ctx.lineTo(X(p[0]),Y(p[1]));ctx.stroke();});ctx.setLineDash([]);
+    ctx.fillStyle=css("--ink");ctx.beginPath();ctx.arc(X(knHover[0]),Y(knHover[1]),7,0,7);ctx.fill();
+    $("knOut").textContent=`New fruit at sweetness ${knHover[0].toFixed(2)}, size ${knHover[1].toFixed(2)}\nIts ${k} nearest labeled neighbours: ${pr.votes[0]} apple, ${pr.votes[1]} orange\nPrediction: ${pr.cls?"ORANGE ■":"APPLE ●"}`;}}}
+function knPos(e){const r=$("knCanvas").getBoundingClientRect();const{P,w,h}=knGeo;const x=(e.clientX-r.left-P.l)/(w-P.l-P.r),y=(h-P.b-(e.clientY-r.top))/(h-P.t-P.b);return x>=0&&x<=1&&y>=0&&y<=1?[x,y]:null;}
+$("knCanvas").addEventListener("mousemove",e=>{knHover=knPos(e);drawKn();});
+$("knCanvas").addEventListener("mouseleave",()=>{knHover=null;drawKn();});
+$("knCanvas").addEventListener("click",e=>{const p=knPos(e);if(!p)return;if(e.pointerType==="touch"||matchMedia("(hover: none)").matches){knHover=p;}kn.push([p[0],p[1],knCls]);drawKn();});
+$("knA").onclick=()=>{knCls=0;$("knA").classList.add("on");$("knB").classList.remove("on");};$("knB").onclick=()=>{knCls=1;$("knB").classList.add("on");$("knA").classList.remove("on");};
+$("knClear").onclick=()=>{kn=[];knHover=null;$("knOut").textContent="Add some apples and oranges, then hover to classify.";drawKn();};$("knReset").onclick=()=>{kn=knInit();drawKn();};$("knK").addEventListener("input",drawKn);
+onRedraw(drawKn);
+
+/* ---------- 13 k-means ---------- */
+let kmSeed=3,kmPts=[],kmC=[],kmAssign=[],kmIter=0,kmPhase="assign",kmDone=false;
+function kmData(){const r=rng(kmSeed++);const blobs=[[.2,.75,"rare big spenders"],[.75,.25,"frequent small buyers"],[.7,.75,"loyal big spenders"],[.25,.25,"occasional low spenders"]];kmPts=[];
+  blobs.slice(0,3+(r()>.5?1:0)).forEach(([x,y])=>{for(let i=0;i<22;i++){const a=r()*6.28,d=Math.sqrt(r())*.14;kmPts.push([Math.min(.98,Math.max(.02,x+Math.cos(a)*d)),Math.min(.98,Math.max(.02,y+Math.sin(a)*d))]);}});kmInit();}
+function kmInit(){const k=+$("kmK").value;const r=rng(kmSeed*7);kmC=[];const used=new Set();while(kmC.length<k){const i=Math.floor(r()*kmPts.length);if(!used.has(i)){used.add(i);kmC.push(kmPts[i].slice());}}kmAssign=kmPts.map(()=>-1);kmIter=0;kmPhase="assign";kmDone=false;drawKm();}
+function kmStep(){if(kmDone)return;if(kmPhase==="assign"){let ch=false;kmPts.forEach((p,i)=>{let best=0,bd=9;kmC.forEach((c,j)=>{const d=(p[0]-c[0])**2+(p[1]-c[1])**2;if(d<bd){bd=d;best=j;}});if(kmAssign[i]!==best){ch=true;kmAssign[i]=best;}});if(!ch&&kmIter>0)kmDone=true;kmPhase="update";kmIter++;}
+  else{kmC=kmC.map((c,j)=>{const m=kmPts.filter((_,i)=>kmAssign[i]===j);return m.length?[m.reduce((a,p)=>a+p[0],0)/m.length,m.reduce((a,p)=>a+p[1],0)/m.length]:c;});kmPhase="assign";}drawKm();}
+function drawKm(){const c=$("kmCanvas");const{ctx,w,h}=fitCanvas(c,.6,360);const P={l:40,r:10,t:10,b:30};const X=v=>P.l+v*(w-P.l-P.r),Y=v=>h-P.b-v*(h-P.t-P.b);
+  axes(ctx,w,h,P,"visits per month →","spend per visit →",[],[]);const pal=["--c1","--c2","--k3","--k4","--k5"].map(css);
+  kmPts.forEach((p,i)=>{const a=kmAssign[i];ctx.fillStyle=a<0?css("--muted"):pal[a];ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),4.5,0,7);ctx.fill();});
+  kmC.forEach((cc,j)=>{const x=X(cc[0]),y=Y(cc[1]);ctx.strokeStyle=css("--surface");ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(x-9,y-9);ctx.lineTo(x+9,y+9);ctx.moveTo(x+9,y-9);ctx.lineTo(x-9,y+9);ctx.stroke();ctx.strokeStyle=pal[j];ctx.lineWidth=3.5;ctx.stroke();});
+  const sizes=kmC.map((_,j)=>kmAssign.filter(a=>a===j).length);
+  $("kmOut").textContent=(kmIter===0?`${kmPts.length} customers, no labels. ${kmC.length} centres (✕) placed randomly. Press "1 step".`:kmDone?`✓ Converged after ${kmIter} rounds: no customer changed group.\nGroup sizes: ${sizes.join(", ")}. The shop can now design a different offer for each segment.`:kmPhase==="update"?`Round ${kmIter}: each customer joined its nearest centre. Next step: move each centre to the middle of its group.`:`Round ${kmIter}: centres moved to the middle of their groups. Next step: reassign customers.`)+`\nThe algorithm was never told what the groups mean. A human interprets them afterwards (e.g. "loyal big spenders").`;}
+$("kmStep").onclick=kmStep;$("kmRun").onclick=()=>{let g=0;while(!kmDone&&g++<100)kmStep();};$("kmNew").onclick=kmData;$("kmK").onchange=kmInit;
+kmData();onRedraw(drawKm);
+
+/* ---------- 14 Q-learning ---------- */
+const MAP=["....FG",".##...","......",".F##.F","S....."];const R=MAP.length,C=MAP[0].length;
+const ACT=[[-1,0,"↑"],[1,0,"↓"],[0,-1,"←"],[0,1,"→"]];
+let Q,eps=[],agent=[4,0],anim=null;const qr=rng(11);
+function qReset(){Q=Array.from({length:R},()=>Array.from({length:C},()=>[0,0,0,0]));eps=[];agent=[4,0];stopAnim();drawGw();drawRl();}
+const cell=(r,c)=>MAP[r][c];
+function stepEnv(r,c,a){let nr=r+ACT[a][0],nc=c+ACT[a][1];if(nr<0||nr>=R||nc<0||nc>=C||cell(nr,nc)==="#"){nr=r;nc=c;}const t=cell(nr,nc);return{nr,nc,rew:t==="G"?10:t==="F"?-10:-1,done:t==="G"||t==="F"};}
+const argmax=q=>{let b=0;for(let i=1;i<4;i++)if(q[i]>q[b])b=i;return q.every(v=>v===q[0])?Math.floor(qr()*4):b;};
+function episode(greedy){let r=4,c=0,steps=0,total=0;const path=[[r,c]];for(;steps<60;steps++){const a=!greedy&&qr()<0.2?Math.floor(qr()*4):argmax(Q[r][c]);const s=stepEnv(r,c,a);
+  if(!greedy){const tgt=s.rew+(s.done?0:0.9*Math.max(...Q[s.nr][s.nc]));Q[r][c][a]+=0.5*(tgt-Q[r][c][a]);}
+  total+=s.rew;r=s.nr;c=s.nc;path.push([r,c]);if(s.done){steps++;break;}}
+  return{path,steps,total,end:cell(r,c)};}
+function drawGw(){let vmax=1;for(let r=0;r<R;r++)for(let c=0;c<C;c++)vmax=Math.max(vmax,Math.max(...Q[r][c]));
+  $("gw").style.gridTemplateColumns=`repeat(${C},1fr)`;
+  let h="";for(let r=0;r<R;r++)for(let c=0;c<C;c++){const t=cell(r,c);const isA=agent[0]===r&&agent[1]===c;let cls=t==="#"?"wall":t==="F"?"fire":t==="G"?"goal":"";let inner="",style="";
+    if(t==="G")inner="★";else if(t==="F")inner="🔥";else if(t!=="#"){const q=Q[r][c];const learned=q.some(v=>v!==0);if(learned){const m=Math.max(...q);inner=ACT[q.indexOf(m)][2];if(m>0)style=`background:color-mix(in srgb, var(--accent) ${Math.round(Math.min(1,m/vmax)*45)}%, var(--surface))`;}if(t==="S")inner+=`<small>start</small>`;}
+    h+=`<div class="${cls} ${isA?"agent":""}" style="${style}">${inner}</div>`;}
+  $("gw").innerHTML=h;}
+function drawRl(){const c=$("rlCanvas");const{ctx,w,h}=fitCanvas(c,.6,240);const P={l:36,r:10,t:10,b:30};const n=Math.max(10,eps.length);const mx=60;
+  const X=i=>P.l+i/(n-1||1)*(w-P.l-P.r),Y=v=>h-P.b-v/mx*(h-P.t-P.b);
+  axes(ctx,w,h,P,"episode","steps",[[1,X(0)],[n,X(n-1)]],[0,20,40,60].map(v=>[v,Y(v)]));
+  if(eps.length){ctx.strokeStyle=css("--accent");ctx.lineWidth=2;ctx.beginPath();eps.forEach((e,i)=>{const y=Y(Math.min(mx,e.steps));i?ctx.lineTo(X(i),y):ctx.moveTo(X(i),y);});ctx.stroke();
+    eps.forEach((e,i)=>{if(e.end!=="G"){ctx.fillStyle=css("--neg");ctx.beginPath();ctx.arc(X(i),Y(Math.min(mx,e.steps)),3,0,7);ctx.fill();}});}
+  const last=eps.slice(-10);const goals=last.filter(e=>e.end==="G").length;
+  $("rlOut").textContent=eps.length?`${eps.length} episodes trained.\nLast 10: reached goal ${goals}/10 times · avg ${(last.reduce((a,e)=>a+e.steps,0)/last.length).toFixed(1)} steps.\nRed dots = episodes that ended in fire or ran out of steps.\nShortest possible route: 9 steps.`:"The robot knows nothing yet. Its first moves are random.";}
+function stopAnim(){if(anim){clearInterval(anim);anim=null;}}
+function animate(path,done){stopAnim();let i=0;anim=setInterval(()=>{agent=path[i];drawGw();i++;if(i>=path.length){stopAnim();setTimeout(()=>{agent=[4,0];drawGw();},500);done&&done();}},110);}
+$("rlOne").onclick=()=>{const e=episode(false);eps.push(e);drawRl();animate(e.path);};
+$("rl50").onclick=()=>{stopAnim();for(let i=0;i<50;i++)eps.push(episode(false));agent=[4,0];drawGw();drawRl();};
+$("rlWatch").onclick=()=>{const e=episode(true);animate(e.path);$("rlOut").textContent=`Best route the robot knows: ${e.steps} steps, ${e.end==="G"?"reaches the goal ★":"doesn't reach the goal yet. Train more!"}`;};
+$("rlReset").onclick=qReset;qReset();onRedraw(drawRl);
+
+/* ---------- 15 use cases ---------- */
+const UC=[["Healthcare","Disease detection from X-rays","Deep learning spots signs of pneumonia, TB or cancer in scans, helping doctors prioritise urgent cases.",["sup","dl"]],
+ ["Finance","UPI & card fraud detection","Flags unusual payments in real time based on amount, location and spending history.",["sup"]],
+ ["Finance","Credit scoring","Predicts the chance a borrower repays a loan from income, history and behaviour.",["sup"]],
+ ["Shopping","Product recommendations","'Customers who bought this also bought…' on Amazon and Flipkart.",["unsup","sup"]],
+ ["Marketing","Customer segmentation","Groups customers by behaviour so each group gets relevant offers.",["unsup"]],
+ ["Transport","Delivery-time & ETA prediction","Swiggy, Zomato and Google Maps estimate arrival times from traffic and past trips.",["sup"]],
+ ["Transport","Self-driving cars","Cameras + deep learning detect lanes, cars and pedestrians; RL helps with driving decisions.",["dl","rl"]],
+ ["Language","Translation & chatbots","Google Translate and ChatGPT use large deep-learning models trained on huge amounts of text.",["dl"]],
+ ["Entertainment","Netflix / YouTube suggestions","Predicts what you'll watch next from your history and similar users.",["sup","unsup"]],
+ ["Agriculture","Crop disease detection","Farmers photograph a leaf; a model identifies the disease and suggests treatment.",["sup","dl"]],
+ ["Industry","Predictive maintenance","Sensor data reveals when a machine is likely to fail, before it breaks down.",["unsup","sup"]],
+ ["Games & robots","Game-playing and robotics","AlphaGo and warehouse robots learn strategies by trial and error.",["rl"]],
+ ["Security","Face recognition","Phone unlock and airport DigiYatra match your face to a stored template.",["dl"]],
+ ["Energy","Electricity demand forecasting","Power companies predict tomorrow's demand to plan supply.",["sup"]]];
+const UCT=[["all","All"],["sup","Supervised"],["unsup","Unsupervised"],["rl","Reinforcement"],["dl","Deep learning"]];
+const UCN={sup:"Supervised",unsup:"Unsupervised",rl:"Reinforcement",dl:"Deep learning"};let uc="all";
+function renderUc(){$("ucTabs").innerHTML=UCT.map(([k,n])=>`<button class="btn ${k===uc?"on":""}" data-u="${k}">${n}</button>`).join("");
+  $("ucGrid").innerHTML=UC.filter(u=>uc==="all"||u[3].includes(uc)).map(([ind,t,d,tags])=>`<div class="card"><div class="stat" style="margin-bottom:4px">${esc(ind)}</div><h5>${esc(t)}</h5><p>${esc(d)}</p>${tags.map(g=>`<span class="pill">${UCN[g]}</span>`).join("")}</div>`).join("");}
+$("ucTabs").addEventListener("click",e=>{const b=e.target.closest("[data-u]");if(b){uc=b.dataset.u;renderUc();}});renderUc();
+
+/* ---------- quizzes ---------- */
+const QZ=[
+ ["Which statement about AI is true?",["AI only means robots","AI is a broad field that includes rule-based systems and learning systems","AI always requires deep learning","AI that can do every human task already exists"],1,"AI is the umbrella term. Today's AI is 'narrow': good at specific tasks."],
+ ["What does a machine-learning model learn from?",["Rules typed by a programmer","Examples (data)","The internet automatically","Nothing; it is pre-programmed"],1,"ML finds patterns in example data and applies them to new cases."],
+ ["What makes deep learning 'deep'?",["It uses very large computers","It has many layers of neurons","It thinks deeply like a human","It uses deep data storage"],1,"'Deep' refers to many stacked layers, each learning more complex features."],
+ ["Which is correct?",["All AI is deep learning","All machine learning is deep learning","All deep learning is machine learning","ML and AI are unrelated"],2,"DL ⊂ ML ⊂ AI. Deep learning is one kind of machine learning, which is one kind of AI."],
+ ["In machine learning, what does the computer produce?",["The answers, from rules and data","The rules, from data and answers","The data, from rules","Nothing"],1,"Traditional: rules + data → answers. ML: data + answers → rules."],
+ ["You want to predict whether a loan will be repaid. 'Repaid: yes/no' is the…",["Feature","Label","Dataset","Model"],1,"The label is the answer the model learns to predict. Income, age, etc. are features."],
+ ["Why do we keep a separate test set?",["To make training faster","To check performance on data the model has never seen","To have more training data","Because the model needs two datasets to work"],1,"Testing on training data would reward memorization (overfitting)."],
+ ["In a real ML project, which steps usually take the most time?",["Training the model","Collecting and cleaning the data","Writing the final report","Choosing the model name"],1,"Real-world data is messy. Collecting and preparing it typically takes most of the effort."],
+ ["During training, what is the 'loss'?",["The amount of data lost","A measure of how wrong the model's predictions are","The money spent on GPUs","The number of epochs"],1,"Training adjusts parameters to make the loss as small as possible."],
+ ["Your phone unlocks with your face. What is happening at that moment?",["Training","Inference","Data collection","Clustering"],1,"The already-trained model is making a prediction on new input: that's inference."],
+ ["Which task most needs REAL-TIME inference?",["Monthly sales report","Weekly email of recommended songs","Blocking a fraudulent UPI payment","Yearly customer segmentation"],2,"A fraud decision is useless after the money is gone."],
+ ["Predicting tomorrow's temperature (e.g. 34 °C) is which type of supervised learning?",["Classification","Regression","Clustering","Reinforcement"],1,"The output is a number, so it's regression. Categories would be classification."],
+ ["What makes a problem 'unsupervised'?",["There is no computer","The data has no labels","A teacher marks every answer","It uses rewards"],1,"With no labels, the model finds structure (such as groups) on its own."],
+ ["How does a reinforcement learning agent learn?",["From a labeled dataset","By grouping similar data","By trial and error, guided by rewards and penalties","By copying human code"],2,"Like training a puppy with treats: actions that earn reward become more likely."],
+ ["A shop groups customers by shopping habits without any predefined categories. Which type is this?",["Supervised","Unsupervised","Reinforcement","Traditional programming"],1,"No labels, discovering groups = unsupervised clustering."]];
+let score=0;const answered=new Set();
+document.querySelectorAll(".quiz").forEach(el=>{const i=+el.dataset.q;const[q,opts,ans,why]=QZ[i];
+  el.innerHTML=`<div class="eyebrow" style="margin-bottom:6px">Quick check</div><div class="q">${esc(q)}</div><div class="opts">${opts.map((o,k)=>`<button data-k="${k}">${esc(o)}</button>`).join("")}</div><div class="why" hidden></div>`;
+  el.addEventListener("click",e=>{const b=e.target.closest("button[data-k]");if(!b||answered.has(i))return;answered.add(i);const k=+b.dataset.k;
+    el.querySelectorAll("button").forEach((x,xi)=>{x.disabled=true;if(xi===ans)x.classList.add("right");else if(xi===k)x.classList.add("wrong");});
+    if(k===ans)score++;const w=el.querySelector(".why");w.hidden=false;w.innerHTML=`<b>${k===ans?"Correct.":"Not quite."}</b> ${esc(why)}`;
+    $("scoreline").textContent=`Quiz score ${score} / 15 · ${answered.size} answered`;
+    const link=document.querySelector(`.rail a[href="#${el.closest("section").id}"]`);if(link)link.classList.add("done");});});
+
+/* ---------- copy & nav ---------- */
+document.addEventListener("click",e=>{const b=e.target.closest(".copy");if(!b)return;const pre=b.closest(".code").querySelector("pre");
+  const sel=()=>{const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="Press Ctrl+C";};
+  try{navigator.clipboard.writeText(pre.innerText).then(()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1400);},sel);}catch(_){sel();}});
+const links=[...document.querySelectorAll(".rail a, .chipnav a")];
+if("IntersectionObserver" in window){const io=new IntersectionObserver(ents=>{ents.forEach(en=>{if(en.isIntersecting){const id=en.target.id;links.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+id));
+  const chip=document.querySelector(`.chipnav a[href="#${id}"]`);if(chip&&getComputedStyle(chip.parentElement).display!=="none")chip.parentElement.scrollTo({left:chip.offsetLeft-20,behavior:"smooth"});}});},{rootMargin:"-30% 0px -60% 0px"});
+  document.querySelectorAll("section.lesson").forEach(s=>io.observe(s));}
+})();
+</script>
+
+</body></html>
