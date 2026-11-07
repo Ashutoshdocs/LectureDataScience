@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Collections Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.dir{display:grid;gap:8px;margin:.6em 0 1em}
+.dir div{display:grid;grid-template-columns:150px 70px 1fr 70px;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.dir b{font-family:var(--f-mono);color:var(--accent)}
+.dir span{font-weight:600;text-align:center;background:var(--accent-soft);border-radius:6px;padding:3px 6px}
+.dir i{font:normal 13px var(--f-mono);text-align:center;color:var(--muted)}
+@media (max-width:600px){.dir div{grid-template-columns:1fr}}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Python <b>Collections</b> Lab</h1><span>Lists · Tuples · Sets · Dictionaries · edit, run and step through every example</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore the original example">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Real Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "Lists", "level": "Beginner", "summary": "Ordered, changeable collections.", "lessons": [{"title": "What is a list?", "code": "marks = [85, 92, 78, 90]\nnames = [\"Rahul\", \"Amit\", \"Priya\"]\nmixed = [10, \"Python\", 3.5, True]\nempty = []\n\nprint(marks)\nprint(names)\nprint(mixed)\nprint(empty)\nprint(type(marks))\nprint(len(names))", "explain": "<p>A <b>list<\/b> stores many values in <b>one variable<\/b>, in a specific <b>order<\/b>. You write it with <b>square brackets<\/b> <code>[ ]<\/code> and separate items with commas.<\/p>\n<p>Without a list you would need <code>mark1<\/code>, <code>mark2<\/code>, <code>mark3<\/code>… With a list, one name holds them all.<\/p>\n<table class=\"tbl\"><tr><th>Property<\/th><th>List<\/th><\/tr>\n<tr><td>Brackets<\/td><td><code>[ ]<\/code><\/td><\/tr>\n<tr><td>Ordered?<\/td><td>Yes — items keep their position<\/td><\/tr>\n<tr><td>Changeable (mutable)?<\/td><td>Yes — add, remove, update items<\/td><\/tr>\n<tr><td>Duplicates allowed?<\/td><td>Yes<\/td><\/tr>\n<tr><td>Mixed types?<\/td><td>Yes (but usually keep one type per list)<\/td><\/tr><\/table>\n<p><code>len()<\/code> gives the number of items.<\/p>", "walk": [["1", "A list of integers."], ["2", "A list of strings."], ["3", "Lists can mix types."], ["4", "An empty list — useful as a starting point to fill later."], ["10", "<code>type()<\/code> confirms it's a <code>list<\/code>."], ["11", "<code>len()<\/code> counts items → 3."]], "trace": null, "tip": "A list is an ordered, changeable collection written with [ ].", "tryit": ["Create a list of your 5 favourite foods and print its length."], "file": null, "expected": {"out": "[85, 92, 78, 90]\n['Rahul', 'Amit', 'Priya']\n[10, 'Python', 3.5, True]\n[]\n<class 'list'>\n3", "err": null, "line": null}}, {"title": "Indexing and slicing", "code": "fruits = [\"apple\", \"banana\", \"cherry\", \"mango\", \"kiwi\"]\n\nprint(fruits[0])\nprint(fruits[2])\nprint(fruits[-1])\nprint(fruits[-2])\n\nprint(fruits[1:4])\nprint(fruits[:2])\nprint(fruits[2:])\nprint(fruits[::2])\nprint(fruits[::-1])", "explain": "<p>Each item has a position number called an <b>index<\/b>. Indexing <b>starts at 0<\/b>.<\/p>\n<table class=\"tbl\"><tr><th>Item<\/th><td>apple<\/td><td>banana<\/td><td>cherry<\/td><td>mango<\/td><td>kiwi<\/td><\/tr>\n<tr><th>Index<\/th><td>0<\/td><td>1<\/td><td>2<\/td><td>3<\/td><td>4<\/td><\/tr>\n<tr><th>Negative<\/th><td>-5<\/td><td>-4<\/td><td>-3<\/td><td>-2<\/td><td>-1<\/td><\/tr><\/table>\n<p><b>Negative indexes<\/b> count from the end: <code>-1<\/code> is always the last item.<\/p>\n<h4>Slicing: <code>list[start:stop:step]<\/code><\/h4>\n<ul><li><code>start<\/code> is <b>included<\/b>, <code>stop<\/code> is <b>excluded<\/b>. So <code>[1:4]<\/code> gives indexes 1, 2, 3.<\/li>\n<li>Leave out <code>start<\/code> → from the beginning. Leave out <code>stop<\/code> → to the end.<\/li>\n<li><code>step<\/code> skips items; <code>[::-1]<\/code> walks backwards and reverses the list.<\/li><\/ul>\n<div class=\"warn\">Asking for an index that doesn't exist, like <code>fruits[10]<\/code>, raises <code>IndexError: list index out of range<\/code>. Slices never raise this — they just return fewer items.<\/div>", "walk": [["3", "Index 0 → first item."], ["5", "-1 → last item."], ["8", "Indexes 1, 2, 3 (4 excluded)."], ["9", "From start up to index 2 (excluded)."], ["10", "From index 2 to the end."], ["11", "Every 2nd item."], ["12", "Step -1 → reversed copy."]], "trace": null, "tip": "Index from 0; slices include start, exclude stop.", "tryit": ["Print <code>fruits[10]<\/code> and read the error.", "Print <code>fruits[1:100]<\/code>. Why no error?"], "file": null, "expected": {"out": "apple\ncherry\nkiwi\nmango\n['banana', 'cherry', 'mango']\n['apple', 'banana']\n['cherry', 'mango', 'kiwi']\n['apple', 'cherry', 'kiwi']\n['kiwi', 'mango', 'cherry', 'banana', 'apple']", "err": null, "line": null}}, {"title": "Lists are mutable", "code": "colors = [\"red\", \"green\", \"blue\"]\nprint(\"Before:\", colors)\n\ncolors[1] = \"yellow\"\nprint(\"After :\", colors)\n\ncolors[0:2] = [\"black\", \"white\"]\nprint(\"Slice :\", colors)", "explain": "<p><b>Mutable<\/b> means \"can be changed after creation\". You can replace an item by assigning to its index.<\/p>\n<p>You can even replace a whole <b>slice<\/b> at once (line 7).<\/p>\n<div class=\"note\">This is the biggest difference between a list and a tuple. A tuple would refuse line 4 with a <code>TypeError<\/code> — you'll see that in the Tuples module.<\/div>", "walk": [["4", "Replace the item at index 1."], ["7", "Replace indexes 0 and 1 together."]], "trace": null, "tip": "Lists can be changed in place: my_list[i] = new_value.", "tryit": [], "file": null, "expected": {"out": "Before: ['red', 'green', 'blue']\nAfter : ['red', 'yellow', 'blue']\nSlice : ['black', 'white', 'blue']", "err": null, "line": null}}, {"title": "Adding items: append, insert, extend", "code": "cart = [\"pen\"]\n\ncart.append(\"notebook\")\nprint(\"append :\", cart)\n\ncart.insert(0, \"bag\")\nprint(\"insert :\", cart)\n\ncart.extend([\"eraser\", \"ruler\"])\nprint(\"extend :\", cart)\n\ncart.append([\"glue\", \"tape\"])\nprint(\"append a list:\", cart)\nprint(\"length:\", len(cart))", "explain": "<table class=\"tbl\"><tr><th>Method<\/th><th>What it does<\/th><\/tr>\n<tr><td><code>append(x)<\/code><\/td><td>Adds <b>one<\/b> item at the <b>end<\/b><\/td><\/tr>\n<tr><td><code>insert(i, x)<\/code><\/td><td>Adds one item at <b>position i<\/b>, shifting the rest right<\/td><\/tr>\n<tr><td><code>extend(iterable)<\/code><\/td><td>Adds <b>each<\/b> item of another collection at the end<\/td><\/tr><\/table>\n<div class=\"warn\"><b>Classic gotcha (lines 12–14):<\/b> <code>append([\"glue\", \"tape\"])<\/code> adds the whole list as <b>one<\/b> item — a list inside a list. That's why the length is 6, not 7. Use <code>extend<\/code> when you want the items added individually.<\/div>\n<p>These methods change the list <b>in place<\/b> and return <code>None<\/code>. Writing <code>cart = cart.append(\"x\")<\/code> would destroy your list!<\/p>", "walk": [["3", "Add at the end."], ["6", "Add at index 0 (front)."], ["9", "Add two separate items."], ["12", "Adds ONE item, which happens to be a list."], ["14", "5 strings + 1 nested list = 6."]], "trace": [[1, "cart = ['pen']", null], [3, "append → ['pen', 'notebook']", null], [4, "", "append : ['pen', 'notebook']"], [6, "insert at 0 → bag goes to the front.", null], [7, "", "insert : ['bag', 'pen', 'notebook']"], [9, "extend adds eraser and ruler one by one.", null], [10, "", "extend : ['bag', 'pen', 'notebook', 'eraser', 'ruler']"], [12, "append adds the whole list as a single item.", null], [13, "", "append a list: ['bag', 'pen', 'notebook', 'eraser', 'ruler', ['glue', 'tape']]"], [14, "6 items: the last one is a nested list.", "length: 6"]], "tip": "append adds one item; extend adds many.", "tryit": ["Write <code>x = cart.append(\"clip\")<\/code> then <code>print(x)<\/code>. What do list methods return?"], "file": null, "expected": {"out": "append : ['pen', 'notebook']\ninsert : ['bag', 'pen', 'notebook']\nextend : ['bag', 'pen', 'notebook', 'eraser', 'ruler']\nappend a list: ['bag', 'pen', 'notebook', 'eraser', 'ruler', ['glue', 'tape']]\nlength: 6", "err": null, "line": null}}, {"title": "Removing items: remove, pop, del, clear", "code": "nums = [10, 20, 30, 20, 40, 50]\n\nnums.remove(20)\nprint(\"remove(20):\", nums)\n\nlast = nums.pop()\nprint(\"pop()      :\", nums, \"-> removed\", last)\n\nsecond = nums.pop(1)\nprint(\"pop(1)     :\", nums, \"-> removed\", second)\n\ndel nums[0]\nprint(\"del nums[0]:\", nums)\n\nnums.clear()\nprint(\"clear()    :\", nums)", "explain": "<table class=\"tbl\"><tr><th>Way<\/th><th>Removes by<\/th><th>Returns the item?<\/th><\/tr>\n<tr><td><code>remove(x)<\/code><\/td><td><b>Value<\/b> — first match only<\/td><td>No<\/td><\/tr>\n<tr><td><code>pop()<\/code><\/td><td>Last item<\/td><td><b>Yes<\/b><\/td><\/tr>\n<tr><td><code>pop(i)<\/code><\/td><td>Index <code>i<\/code><\/td><td><b>Yes<\/b><\/td><\/tr>\n<tr><td><code>del list[i]<\/code><\/td><td>Index (or slice)<\/td><td>No<\/td><\/tr>\n<tr><td><code>clear()<\/code><\/td><td>Everything<\/td><td>No<\/td><\/tr><\/table>\n<p>Notice <code>remove(20)<\/code> removed only the <b>first<\/b> 20; the second 20 is still there.<\/p>\n<div class=\"warn\"><code>remove(99)<\/code> on a value that isn't in the list raises <code>ValueError<\/code>. <code>pop()<\/code> on an empty list raises <code>IndexError<\/code>.<\/div>", "walk": [["3", "Removes the first 20 only."], ["6", "Removes and returns 50."], ["9", "Removes index 1 (now 30) and returns it."], ["12", "Delete by index."], ["15", "Empty the list."]], "trace": null, "tip": "remove = by value; pop/del = by position; pop gives the item back.", "tryit": [], "file": null, "expected": {"out": "remove(20): [10, 30, 20, 40, 50]\npop()      : [10, 30, 20, 40] -> removed 50\npop(1)     : [10, 20, 40] -> removed 30\ndel nums[0]: [20, 40]\nclear()    : []", "err": null, "line": null}}, {"title": "Looping and useful methods", "code": "marks = [78, 92, 85, 64, 92]\n\nfor m in marks:\n    print(\"Mark:\", m)\n\nfor i, m in enumerate(marks):\n    print(\"Student\", i + 1, \"scored\", m)\n\nprint(\"Highest:\", max(marks))\nprint(\"Lowest :\", min(marks))\nprint(\"Total  :\", sum(marks))\nprint(\"Count of 92:\", marks.count(92))\nprint(\"Index of 85:\", marks.index(85))\nprint(\"85 in marks?\", 85 in marks)\n\nmarks.sort()\nprint(\"Sorted:\", marks)\nprint(\"Sorted desc:\", sorted(marks, reverse=True))", "explain": "<p><b>Looping:<\/b> <code>for m in marks<\/code> visits each item in order. <code>enumerate()<\/code> gives you the index <em>and<\/em> the item together.<\/p>\n<p><b>Built‑in functions<\/b> that work on lists: <code>len<\/code>, <code>max<\/code>, <code>min<\/code>, <code>sum<\/code>, <code>sorted<\/code>.<\/p>\n<p><b>List methods:<\/b> <code>count(x)<\/code> counts occurrences; <code>index(x)<\/code> finds the first position.<\/p>\n<p><b>Membership:<\/b> <code>x in list<\/code> returns <code>True<\/code>/<code>False<\/code>.<\/p>\n<div class=\"note\"><b><code>list.sort()<\/code> vs <code>sorted(list)<\/code>:<\/b> <code>.sort()<\/code> changes the original list and returns <code>None<\/code>. <code>sorted()<\/code> leaves the original alone and returns a <b>new<\/b> sorted list.<\/div>", "walk": [["3-4", "Visit each item."], ["6-7", "enumerate gives (index, item) pairs."], ["14", "Membership test."], ["16", "Sorts the list itself."], ["18", "Returns a new list, descending."]], "trace": null, "tip": "sort() changes the list; sorted() returns a new one.", "tryit": [], "file": null, "expected": {"out": "Mark: 78\nMark: 92\nMark: 85\nMark: 64\nMark: 92\nStudent 1 scored 78\nStudent 2 scored 92\nStudent 3 scored 85\nStudent 4 scored 64\nStudent 5 scored 92\nHighest: 92\nLowest : 64\nTotal  : 411\nCount of 92: 2\nIndex of 85: 2\n85 in marks? True\nSorted: [64, 78, 85, 92, 92]\nSorted desc: [92, 92, 85, 78, 64]", "err": null, "line": null}}, {"title": "List comprehension", "code": "numbers = [1, 2, 3, 4, 5, 6]\n\nsquares = []\nfor n in numbers:\n    squares.append(n * n)\nprint(\"Loop         :\", squares)\n\nsquares2 = [n * n for n in numbers]\nprint(\"Comprehension:\", squares2)\n\nevens = [n for n in numbers if n % 2 == 0]\nprint(\"Evens        :\", evens)\n\nnames = [\"rahul\", \"amit\", \"priya\"]\nprint([name.title() for name in names])", "explain": "<p>A <b>list comprehension<\/b> builds a new list in one line. Lines 3–5 and line 8 produce the same result.<\/p>\n<pre class=\"snippet\">[expression  for item in collection  if condition]<\/pre>\n<ul><li><b>expression<\/b> — what to put in the new list (<code>n * n<\/code>)<\/li>\n<li><b>for<\/b> — where items come from<\/li>\n<li><b>if<\/b> (optional) — a filter; only matching items are kept<\/li><\/ul>\n<div class=\"note\">Read it in English: \"<em>n times n, for each n in numbers<\/em>\". Keep comprehensions short; if it doesn't fit on one readable line, use a normal loop.<\/div>", "walk": [["3-5", "The long way: empty list + loop + append."], ["8", "Same result in one line."], ["11", "With a filter: only even numbers."], ["15", "Transform strings too."]], "trace": null, "tip": "[expr for x in items if cond] — build a list in one line.", "tryit": [], "file": null, "expected": {"out": "Loop         : [1, 4, 9, 16, 25, 36]\nComprehension: [1, 4, 9, 16, 25, 36]\nEvens        : [2, 4, 6]\n['Rahul', 'Amit', 'Priya']", "err": null, "line": null}}, {"title": "Gotcha: copying a list", "code": "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(\"a:\", a)\nprint(\"b:\", b)\nprint(\"same object?\", a is b)\n\nc = a.copy()\nc.append(99)\nprint(\"a:\", a)\nprint(\"c:\", c)\nprint(\"same object?\", a is c)", "explain": "<p>This surprises almost every beginner. <code>b = a<\/code> does <b>not<\/b> copy the list. It makes <code>b<\/code> a second <b>name<\/b> for the <b>same<\/b> list. Change it through <code>b<\/code> and you see the change through <code>a<\/code>.<\/p>\n<div class=\"pack\"><code>a ─┐<\/code><span>both point to<\/span><code>[1, 2, 3, 4]<\/code><span>←<\/span><code>└─ b<\/code><\/div>\n<p>To get an independent list, make a <b>copy<\/b>: <code>a.copy()<\/code>, <code>list(a)<\/code> or <code>a[:]<\/code>.<\/p>\n<p><code>is<\/code> checks whether two names refer to the <b>exact same object<\/b>.<\/p>\n<div class=\"warn\">This matters in functions too: if you pass a list into a function and the function appends to it, the caller's list changes.<\/div>", "walk": [["2", "No copy — b and a are the same list."], ["3", "Changes the shared list."], ["6", "True: same object."], ["8", "A real copy."], ["10", "a is untouched."]], "trace": null, "tip": "b = a shares the list; use a.copy() for a separate one.", "tryit": [], "file": null, "expected": {"out": "a: [1, 2, 3, 4]\nb: [1, 2, 3, 4]\nsame object? True\na: [1, 2, 3, 4]\nc: [1, 2, 3, 4, 99]\nsame object? False", "err": null, "line": null}}]}, {"title": "Tuples", "level": "Beginner", "summary": "Ordered, unchangeable collections.", "lessons": [{"title": "What is a tuple?", "code": "point = (10, 20)\nstudent = (\"Rahul\", 25, \"Pune\")\ncolors = \"red\", \"green\", \"blue\"\n\nprint(point)\nprint(student)\nprint(colors)\nprint(type(colors))\n\nprint(student[0])\nprint(student[-1])\nprint(student[0:2])\nprint(len(student))", "explain": "<p>A <b>tuple<\/b> is like a list, but <b>immutable<\/b>: once created, it cannot be changed. You write it with <b>round brackets<\/b> <code>( )<\/code>.<\/p>\n<p>Line 3 shows that the <b>commas<\/b> are what really make a tuple — the brackets are optional. This is called <b>tuple packing<\/b>, and it is exactly what happens in <code>return a, b, c<\/code> (see the Return module).<\/p>\n<p>Indexing, negative indexes, slicing and <code>len()<\/code> work exactly like lists.<\/p>\n<table class=\"tbl\"><tr><th>Property<\/th><th>Tuple<\/th><\/tr>\n<tr><td>Brackets<\/td><td><code>( )<\/code> (optional)<\/td><\/tr><tr><td>Ordered?<\/td><td>Yes<\/td><\/tr>\n<tr><td>Changeable?<\/td><td><b>No<\/b><\/td><\/tr><tr><td>Duplicates?<\/td><td>Yes<\/td><\/tr><\/table>", "walk": [["1-2", "Tuples with brackets."], ["3", "No brackets — commas alone make a tuple."], ["10-13", "Same indexing and slicing as lists."]], "trace": null, "tip": "A tuple is an ordered collection that can't be changed. Commas make it.", "tryit": [], "file": null, "expected": {"out": "(10, 20)\n('Rahul', 25, 'Pune')\n('red', 'green', 'blue')\n<class 'tuple'>\nRahul\nPune\n('Rahul', 25)\n3", "err": null, "line": null}}, {"title": "Gotcha: the single-item tuple", "code": "a = (5)\nb = (5,)\nc = 5,\n\nprint(a, type(a))\nprint(b, type(b))\nprint(c, type(c))\n\nempty = ()\nprint(empty, type(empty))", "explain": "<p><code>(5)<\/code> is <b>not<\/b> a tuple — it's just the number 5 in brackets (like in maths: <code>(2 + 3) * 4<\/code>).<\/p>\n<p>To make a one‑item tuple you need a <b>trailing comma<\/b>: <code>(5,)<\/code> or just <code>5,<\/code>.<\/p>\n<div class=\"note\">Again: commas make tuples, brackets don't. The only exception is the empty tuple <code>()<\/code>.<\/div>", "walk": [["1", "Just an int in brackets."], ["2-3", "The comma makes it a tuple."], ["9", "Empty tuple."]], "trace": null, "tip": "One-item tuple needs a trailing comma: (5,)", "tryit": [], "file": null, "expected": {"out": "5 <class 'int'>\n(5,) <class 'tuple'>\n(5,) <class 'tuple'>\n() <class 'tuple'>", "err": null, "line": null}}, {"title": "Tuples are immutable", "code": "days = (\"Mon\", \"Tue\", \"Wed\")\nprint(days)\n\ndays[0] = \"Sunday\"\nprint(days)", "explain": "<p>Trying to change a tuple item fails with:<\/p>\n<p><code>TypeError: 'tuple' object does not support item assignment<\/code><\/p>\n<p>Tuples also have no <code>append<\/code>, <code>remove<\/code> or <code>sort<\/code> methods.<\/p>\n<h4>Why would you want something you can't change?<\/h4>\n<ul><li><b>Safety<\/b> — data that should never change (days of the week, coordinates, RGB colours) can't be changed by accident.<\/li>\n<li><b>Dictionary keys<\/b> — tuples can be used as dict keys; lists can't (next lesson).<\/li>\n<li><b>Speed &amp; memory<\/b> — tuples are slightly lighter than lists.<\/li>\n<li><b>Meaning<\/b> — a tuple signals \"this is a fixed record\", like <code>(name, age, city)<\/code>.<\/li><\/ul>\n<div class=\"note\">To \"change\" a tuple you create a <b>new<\/b> one: <code>days = (\"Sun\",) + days[1:]<\/code>.<\/div>", "walk": [["4", "Not allowed → TypeError."], ["5", "Never reached."]], "trace": null, "tip": "Tuples can't be changed after creation — that's a feature.", "tryit": ["Replace line 4 with <code>days = (\"Sun\",) + days[1:]<\/code> and run."], "file": null, "expected": {"out": "('Mon', 'Tue', 'Wed')", "err": "TypeError: 'tuple' object does not support item assignment", "line": 4}}, {"title": "Packing and unpacking", "code": "student = (\"Rahul\", 25, \"Pune\")\n\nname, age, city = student\nprint(name)\nprint(age)\nprint(city)\n\na = 10\nb = 20\na, b = b, a\nprint(\"a =\", a, \"b =\", b)\n\nfirst, *rest = (1, 2, 3, 4, 5)\nprint(first, rest)", "explain": "<p><b>Packing:<\/b> putting several values into one tuple: <code>student = \"Rahul\", 25, \"Pune\"<\/code>.<\/p>\n<p><b>Unpacking:<\/b> pulling them out into separate variables in one line (line 3). The number of variables must match the number of items.<\/p>\n<p><b>Swap trick (line 10):<\/b> <code>a, b = b, a<\/code> — the right side is packed into a tuple <code>(20, 10)<\/code> first, then unpacked into <code>a<\/code> and <code>b<\/code>. No temporary variable needed.<\/p>\n<p><b>Star unpacking (line 13):<\/b> <code>*rest<\/code> collects \"everything else\" into a <b>list<\/b> — the same idea as <code>*args<\/code>.<\/p>\n<div class=\"warn\"><code>x, y = (1, 2, 3)<\/code> → <code>ValueError: too many values to unpack (expected 2)<\/code><\/div>", "walk": [["3", "Unpack three items into three names."], ["10", "Pack (b, a) then unpack into a, b."], ["13", "first gets 1, rest gets [2, 3, 4, 5]."]], "trace": [[1, "Pack three values into a tuple.", null], [3, "Unpack: name='Rahul', age=25, city='Pune'.", null], [4, "", "Rahul"], [5, "", "25"], [6, "", "Pune"], [8, "a = 10", null], [9, "b = 20", null], [10, "Right side packs (20, 10); left side unpacks → a=20, b=10.", null], [11, "", "a = 20 b = 10"], [13, "first = 1, *rest collects the remaining items into a list.", null], [14, "", "1 [2, 3, 4, 5]"]], "tip": "Pack with commas, unpack with name1, name2 = tuple.", "tryit": [], "file": null, "expected": {"out": "Rahul\n25\nPune\na = 20 b = 10\n1 [2, 3, 4, 5]", "err": null, "line": null}}, {"title": "Tuple methods and tuples as keys", "code": "nums = (1, 2, 2, 3, 2)\nprint(nums.count(2))\nprint(nums.index(3))\n\ndistance = {\n    (\"Pune\", \"Mumbai\"): 150,\n    (\"Delhi\", \"Agra\"): 230,\n}\nprint(distance[(\"Pune\", \"Mumbai\")])\n\nas_list = list(nums)\nas_list.append(9)\nprint(tuple(as_list))", "explain": "<p>Tuples have only two methods: <code>count(x)<\/code> and <code>index(x)<\/code>.<\/p>\n<p><b>Tuples as dictionary keys:<\/b> a dict key must be <b>hashable<\/b> (unchangeable). A tuple of fixed values qualifies, so <code>(\"Pune\", \"Mumbai\")<\/code> can be a key. A list can't: <code>{[1, 2]: \"x\"}<\/code> raises <code>TypeError: unhashable type: 'list'<\/code>.<\/p>\n<p><b>Converting:<\/b> <code>list(t)<\/code> and <code>tuple(l)<\/code> switch between the two. Convert to a list when you need to modify, then back.<\/p>", "walk": [["2", "How many 2s → 3."], ["3", "Position of 3 → 3."], ["5-8", "Tuples as dict keys."], ["11-13", "Convert, modify, convert back."]], "trace": null, "tip": "Tuples can be dictionary keys; lists cannot.", "tryit": [], "file": null, "expected": {"out": "3\n3\n150\n(1, 2, 2, 3, 2, 9)", "err": null, "line": null}}]}, {"title": "Sets", "level": "Beginner → Intermediate", "summary": "Unordered collections of unique items.", "lessons": [{"title": "What is a set?", "code": "nums = {3, 1, 2, 3, 1}\nprint(nums)\nprint(type(nums))\nprint(len(nums))\n\nmarks = [90, 85, 90, 70, 85]\nunique = set(marks)\nprint(unique)\n\nempty_set = set()\nempty_dict = {}\nprint(type(empty_set), type(empty_dict))", "explain": "<p>A <b>set<\/b> is a collection of <b>unique<\/b> items written with <b>curly braces<\/b> <code>{ }<\/code>. Duplicates are removed automatically.<\/p>\n<table class=\"tbl\"><tr><th>Property<\/th><th>Set<\/th><\/tr>\n<tr><td>Brackets<\/td><td><code>{ }<\/code><\/td><\/tr><tr><td>Ordered?<\/td><td><b>No<\/b> — no indexes<\/td><\/tr>\n<tr><td>Changeable?<\/td><td>Yes (add/remove items)<\/td><\/tr><tr><td>Duplicates?<\/td><td><b>No<\/b><\/td><\/tr>\n<tr><td>Items must be<\/td><td>Hashable (numbers, strings, tuples — not lists)<\/td><\/tr><\/table>\n<p>The most common use: <b>remove duplicates<\/b> from a list with <code>set(my_list)<\/code> (line 7).<\/p>\n<div class=\"warn\"><b>Gotcha:<\/b> <code>{}<\/code> creates an empty <b>dictionary<\/b>, not a set. For an empty set write <code>set()<\/code>.<\/div>", "walk": [["1", "Duplicates 3 and 1 are dropped."], ["7", "Remove duplicates from a list."], ["10-11", "set() vs {}."]], "trace": null, "tip": "A set holds only unique items. Empty set = set(), not {}.", "tryit": [], "file": null, "expected": {"out": "{1, 2, 3}\n<class 'set'>\n3\n{90, 85, 70}\n<class 'set'> <class 'dict'>", "err": null, "line": null}}, {"title": "Sets have no order or index", "code": "langs = {\"python\", \"java\", \"c\"}\n\nprint(sorted(langs))\nprint(\"python\" in langs)\nprint(\"ruby\" in langs)\n\nfor lang in sorted(langs):\n    print(lang)\n\nprint(langs[0])", "explain": "<p>Sets are <b>unordered<\/b>: Python stores items in whatever order is fastest for lookups. That's why <code>langs[0]<\/code> fails with <code>TypeError: 'set' object is not subscriptable<\/code>.<\/p>\n<div class=\"note\"><b>Why <code>sorted()<\/code> here?<\/b> The printed order of a set of strings can differ every time you run the program. Wrapping it in <code>sorted()<\/code> gives a predictable list. Press Run a few times with <code>print(langs)<\/code> to see the order change.<\/div>\n<p>What sets <b>are<\/b> great at is <b>membership testing<\/b>: <code>\"python\" in langs<\/code> is extremely fast, even for millions of items, because sets use hashing (like dictionaries). For lists, Python has to check item by item.<\/p>", "walk": [["3", "sorted() turns the set into an ordered list."], ["4-5", "Fast membership checks."], ["10", "No indexes → TypeError."]], "trace": null, "tip": "No order, no index — but very fast 'in' checks.", "tryit": ["Add <code>print(langs)<\/code> and press Run several times. Does the order change?"], "file": null, "expected": {"out": "['c', 'java', 'python']\nTrue\nFalse\nc\njava\npython", "err": "TypeError: 'set' object is not subscriptable", "line": 10}}, {"title": "Adding and removing", "code": "s = {1, 2, 3}\n\ns.add(4)\ns.add(2)\nprint(\"add       :\", s)\n\ns.update([5, 6, 7])\nprint(\"update    :\", s)\n\ns.remove(7)\nprint(\"remove(7) :\", s)\n\ns.discard(100)\nprint(\"discard   :\", s)\n\nx = s.pop()\nprint(\"pop       :\", s, \"-> removed\", x)\n\ns.remove(100)", "explain": "<table class=\"tbl\"><tr><th>Method<\/th><th>What it does<\/th><th>If item missing<\/th><\/tr>\n<tr><td><code>add(x)<\/code><\/td><td>Add one item (ignored if already there)<\/td><td>—<\/td><\/tr>\n<tr><td><code>update(iterable)<\/code><\/td><td>Add many items<\/td><td>—<\/td><\/tr>\n<tr><td><code>remove(x)<\/code><\/td><td>Remove x<\/td><td><b>KeyError<\/b><\/td><\/tr>\n<tr><td><code>discard(x)<\/code><\/td><td>Remove x<\/td><td>Does nothing (safe)<\/td><\/tr>\n<tr><td><code>pop()<\/code><\/td><td>Remove and return an <b>arbitrary<\/b> item<\/td><td>KeyError if empty<\/td><\/tr><\/table>\n<p>Line 4 shows that adding a duplicate is silently ignored. The last line deliberately shows the <code>KeyError<\/code> from <code>remove<\/code>.<\/p>", "walk": [["4", "2 is already present → no change."], ["13", "discard on a missing item is safe."], ["19", "remove on a missing item → KeyError."]], "trace": null, "tip": "Use discard() when you're not sure the item exists.", "tryit": [], "file": null, "expected": {"out": "add       : {1, 2, 3, 4}\nupdate    : {1, 2, 3, 4, 5, 6, 7}\nremove(7) : {1, 2, 3, 4, 5, 6}\ndiscard   : {1, 2, 3, 4, 5, 6}\npop       : {2, 3, 4, 5, 6} -> removed 1", "err": "KeyError: 100", "line": 19}}, {"title": "Set operations", "code": "python_students = {\"Rahul\", \"Amit\", \"Priya\", \"Neha\"}\njava_students = {\"Amit\", \"Neha\", \"Karan\"}\n\nboth = python_students & java_students\neither = python_students | java_students\nonly_python = python_students - java_students\nonly_one = python_students ^ java_students\n\nprint(\"Both (intersection)      :\", sorted(both))\nprint(\"Either (union)           :\", sorted(either))\nprint(\"Only Python (difference) :\", sorted(only_python))\nprint(\"Exactly one (symmetric)  :\", sorted(only_one))\n\nprint({\"Amit\"} <= python_students)", "explain": "<p>Sets support the operations from school maths (Venn diagrams):<\/p>\n<table class=\"tbl\"><tr><th>Operation<\/th><th>Symbol<\/th><th>Method<\/th><th>Result<\/th><\/tr>\n<tr><td>Union<\/td><td><code>a | b<\/code><\/td><td><code>a.union(b)<\/code><\/td><td>Everything in either<\/td><\/tr>\n<tr><td>Intersection<\/td><td><code>a &amp; b<\/code><\/td><td><code>a.intersection(b)<\/code><\/td><td>Only in both<\/td><\/tr>\n<tr><td>Difference<\/td><td><code>a - b<\/code><\/td><td><code>a.difference(b)<\/code><\/td><td>In a but not b<\/td><\/tr>\n<tr><td>Symmetric difference<\/td><td><code>a ^ b<\/code><\/td><td><code>a.symmetric_difference(b)<\/code><\/td><td>In exactly one<\/td><\/tr>\n<tr><td>Subset<\/td><td><code>a &lt;= b<\/code><\/td><td><code>a.issubset(b)<\/code><\/td><td>Is every item of a in b?<\/td><\/tr><\/table>\n<p>Real‑world use: \"which students take both courses?\", \"which tags are new?\", \"which permissions are missing?\"<\/p>", "walk": [["4", "In both sets."], ["5", "In either set."], ["6", "In Python but not Java."], ["7", "In exactly one of them."], ["14", "Is {'Amit'} a subset?"]], "trace": null, "tip": "| union, & intersection, - difference, ^ symmetric difference.", "tryit": [], "file": null, "expected": {"out": "Both (intersection)      : ['Amit', 'Neha']\nEither (union)           : ['Amit', 'Karan', 'Neha', 'Priya', 'Rahul']\nOnly Python (difference) : ['Priya', 'Rahul']\nExactly one (symmetric)  : ['Karan', 'Priya', 'Rahul']\nTrue", "err": null, "line": null}}]}, {"title": "Dictionaries", "level": "Beginner → Intermediate", "summary": "Key → value pairs for fast lookup by name.", "lessons": [{"title": "What is a dictionary?", "code": "student = {\n    \"name\": \"Rahul\",\n    \"age\": 25,\n    \"city\": \"Pune\"\n}\n\nprint(student)\nprint(type(student))\nprint(len(student))\n\nprint(student[\"name\"])\nprint(student[\"age\"])", "explain": "<p>A <b>dictionary<\/b> stores data as <b>key: value<\/b> pairs. Instead of looking items up by position (like a list), you look them up by a meaningful <b>key<\/b>.<\/p>\n<p>Think of a real dictionary: you look up a <b>word<\/b> (key) to find its <b>meaning<\/b> (value).<\/p>\n<table class=\"tbl\"><tr><th>Property<\/th><th>Dictionary<\/th><\/tr>\n<tr><td>Brackets<\/td><td><code>{key: value}<\/code><\/td><\/tr><tr><td>Ordered?<\/td><td>Yes — keeps insertion order (Python 3.7+)<\/td><\/tr>\n<tr><td>Changeable?<\/td><td>Yes<\/td><\/tr><tr><td>Duplicate keys?<\/td><td><b>No<\/b> — a repeated key overwrites the old value<\/td><\/tr>\n<tr><td>Keys must be<\/td><td>Hashable (str, int, tuple…)<\/td><\/tr><tr><td>Values can be<\/td><td>Anything<\/td><\/tr><\/table>", "walk": [["1-5", "Three key: value pairs."], ["9", "3 pairs."], ["11-12", "Look up a value by its key."]], "trace": null, "tip": "A dictionary maps keys to values: d[key] → value.", "tryit": [], "file": null, "expected": {"out": "{'name': 'Rahul', 'age': 25, 'city': 'Pune'}\n<class 'dict'>\n3\nRahul\n25", "err": null, "line": null}}, {"title": "Accessing safely: [] vs get()", "code": "student = {\"name\": \"Rahul\", \"age\": 25}\n\nprint(student.get(\"name\"))\nprint(student.get(\"email\"))\nprint(student.get(\"email\", \"Not provided\"))\n\nprint(\"email\" in student)\nprint(student[\"email\"])", "explain": "<table class=\"tbl\"><tr><th>Way<\/th><th>If key exists<\/th><th>If key is missing<\/th><\/tr>\n<tr><td><code>d[\"key\"]<\/code><\/td><td>Returns value<\/td><td><b>KeyError<\/b><\/td><\/tr>\n<tr><td><code>d.get(\"key\")<\/code><\/td><td>Returns value<\/td><td>Returns <code>None<\/code><\/td><\/tr>\n<tr><td><code>d.get(\"key\", default)<\/code><\/td><td>Returns value<\/td><td>Returns <code>default<\/code><\/td><\/tr><\/table>\n<p><code>\"email\" in student<\/code> checks whether a <b>key<\/b> exists (not a value).<\/p>\n<p>Use <code>[]<\/code> when the key must be there (a missing key is a real bug); use <code>get()<\/code> for optional data.<\/p>", "walk": [["4", "Missing → None."], ["5", "Missing → your default."], ["7", "Key membership test."], ["8", "Missing with [] → KeyError."]], "trace": null, "tip": "d.get(key, default) never crashes; d[key] does if the key is missing.", "tryit": [], "file": null, "expected": {"out": "Rahul\nNone\nNot provided\nFalse", "err": "KeyError: 'email'", "line": 8}}, {"title": "Add, update and delete", "code": "student = {\"name\": \"Rahul\", \"age\": 25}\n\nstudent[\"city\"] = \"Pune\"\nprint(\"add    :\", student)\n\nstudent[\"age\"] = 26\nprint(\"update :\", student)\n\nstudent.update({\"age\": 27, \"course\": \"Python\"})\nprint(\"update():\", student)\n\nremoved = student.pop(\"city\")\nprint(\"pop    :\", student, \"-> removed\", removed)\n\ndel student[\"course\"]\nprint(\"del    :\", student)\n\nlast = student.popitem()\nprint(\"popitem:\", student, \"-> removed\", last)", "explain": "<p>The same syntax <code>d[key] = value<\/code> <b>adds<\/b> a new key or <b>updates<\/b> an existing one.<\/p>\n<table class=\"tbl\"><tr><th>Operation<\/th><th>Code<\/th><\/tr>\n<tr><td>Add / update one<\/td><td><code>d[\"key\"] = value<\/code><\/td><\/tr>\n<tr><td>Add / update many<\/td><td><code>d.update({...})<\/code><\/td><\/tr>\n<tr><td>Remove &amp; return value<\/td><td><code>d.pop(\"key\")<\/code><\/td><\/tr>\n<tr><td>Remove<\/td><td><code>del d[\"key\"]<\/code><\/td><\/tr>\n<tr><td>Remove &amp; return last pair<\/td><td><code>d.popitem()<\/code> → a <b>tuple<\/b> <code>(key, value)<\/code><\/td><\/tr>\n<tr><td>Empty it<\/td><td><code>d.clear()<\/code><\/td><\/tr><\/table>", "walk": [["3", "New key → added."], ["6", "Existing key → overwritten."], ["9", "Update several at once."], ["12", "Remove 'city' and get its value back."], ["18", "popitem returns a (key, value) tuple."]], "trace": null, "tip": "d[key] = value adds or updates — whichever applies.", "tryit": [], "file": null, "expected": {"out": "add    : {'name': 'Rahul', 'age': 25, 'city': 'Pune'}\nupdate : {'name': 'Rahul', 'age': 26, 'city': 'Pune'}\nupdate(): {'name': 'Rahul', 'age': 27, 'city': 'Pune', 'course': 'Python'}\npop    : {'name': 'Rahul', 'age': 27, 'course': 'Python'} -> removed Pune\ndel    : {'name': 'Rahul', 'age': 27}\npopitem: {'name': 'Rahul'} -> removed ('age', 27)", "err": null, "line": null}}, {"title": "Looping: keys, values, items", "code": "prices = {\"pen\": 10, \"book\": 120, \"bag\": 850}\n\nfor item in prices:\n    print(item)\n\nfor price in prices.values():\n    print(price)\n\nfor item, price in prices.items():\n    print(item, \"costs\", price)\n\nprint(list(prices.keys()))\nprint(list(prices.items()))\nprint(\"Total:\", sum(prices.values()))", "explain": "<table class=\"tbl\"><tr><th>Loop over<\/th><th>Gives you<\/th><\/tr>\n<tr><td><code>d<\/code> or <code>d.keys()<\/code><\/td><td>Keys<\/td><\/tr>\n<tr><td><code>d.values()<\/code><\/td><td>Values<\/td><\/tr>\n<tr><td><code>d.items()<\/code><\/td><td><b>(key, value) tuples<\/b> — unpacked into two loop variables<\/td><\/tr><\/table>\n<p>Line 13 shows that <code>items()<\/code> really gives <b>tuples<\/b>. Line 9 unpacks each tuple into <code>item, price<\/code> — tuple unpacking again!<\/p>", "walk": [["3-4", "Looping a dict gives keys."], ["6-7", "Just the values."], ["9-10", "Key and value together."], ["13", "items() are tuples."], ["14", "sum() of values."]], "trace": null, "tip": "Use .items() to get key and value together.", "tryit": [], "file": null, "expected": {"out": "pen\nbook\nbag\n10\n120\n850\npen costs 10\nbook costs 120\nbag costs 850\n['pen', 'book', 'bag']\n[('pen', 10), ('book', 120), ('bag', 850)]\nTotal: 980", "err": null, "line": null}}, {"title": "Nested dictionaries & comprehension", "code": "students = {\n    \"Rahul\": {\"age\": 25, \"marks\": [78, 85]},\n    \"Priya\": {\"age\": 23, \"marks\": [92, 95]},\n}\n\nprint(students[\"Priya\"][\"age\"])\nprint(students[\"Rahul\"][\"marks\"][1])\n\nfor name, info in students.items():\n    avg = sum(info[\"marks\"]) / len(info[\"marks\"])\n    print(name, \"average:\", avg)\n\nsquares = {n: n * n for n in range(1, 6)}\nprint(squares)", "explain": "<p>Values can be anything — including other dictionaries and lists. This is how real data (JSON from web APIs, configuration files) is usually shaped.<\/p>\n<p>Chain the lookups from left to right: <code>students[\"Rahul\"]<\/code> gives Rahul's dict, then <code>[\"marks\"]<\/code> gives his list, then <code>[1]<\/code> gives the second mark.<\/p>\n<p><b>Dict comprehension<\/b> (line 13) works like a list comprehension but with <code>key: value<\/code>:<\/p>\n<pre class=\"snippet\">{key_expr: value_expr  for item in collection}<\/pre>", "walk": [["1-4", "A dict of dicts, each with a list inside."], ["6", "Two levels deep."], ["7", "Three levels deep."], ["9-11", "Loop the outer dict; work with each inner dict."], ["13", "Dict comprehension: n → n²."]], "trace": null, "tip": "Chain lookups left to right: data[key1][key2][index].", "tryit": [], "file": null, "expected": {"out": "23\n85\nRahul average: 81.5\nPriya average: 93.5\n{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}", "err": null, "line": null}}, {"title": "Practical: counting words", "code": "text = \"python is easy and python is powerful\"\n\ncounts = {}\nfor word in text.split():\n    counts[word] = counts.get(word, 0) + 1\n\nprint(counts)\n\nfor word, n in counts.items():\n    print(word.ljust(9), \"*\" * n)", "explain": "<p>A classic dictionary pattern: <b>counting<\/b>. For each word:<\/p>\n<ol><li><code>counts.get(word, 0)<\/code> — the current count, or 0 if we haven't seen the word yet.<\/li>\n<li><code>+ 1<\/code> — add one.<\/li><li>Store it back under the same key.<\/li><\/ol>\n<p>The result is a frequency table, printed as a tiny bar chart. <code>ljust(9)<\/code> pads each word to 9 characters so the bars line up.<\/p>", "walk": [["4", "split() turns the sentence into a list of words."], ["5", "get with default 0 → no KeyError for new words."], ["9-10", "Print a simple bar chart."]], "trace": [[1, "The sentence to analyse.", null], [3, "counts = {}", null], [4, "word = 'python'", null], [5, "New word → counts['python'] = 0 + 1 = 1", null], [4, "word = 'is'", null], [5, "counts['is'] = 1", null], [4, "'easy', 'and' are added the same way…", null], [4, "word = 'python' again", null], [5, "Seen before → counts['python'] = 1 + 1 = 2", null], [4, "'is' → 2, 'powerful' → 1. Loop ends.", null], [7, "", "{'python': 2, 'is': 2, 'easy': 1, 'and': 1, 'powerful': 1}"], [10, "Bar chart rows.", "python    **\nis        **\neasy      *\nand       *\npowerful  *"]], "tip": "counts[k] = counts.get(k, 0) + 1 is the counting pattern.", "tryit": [], "file": null, "expected": {"out": "{'python': 2, 'is': 2, 'easy': 1, 'and': 1, 'powerful': 1}\npython    **\nis        **\neasy      *\nand       *\npowerful  *", "err": null, "line": null}}]}, {"title": "Does return capture a tuple?", "level": "Intermediate", "summary": "How return relates to tuples — and when it doesn't.", "lessons": [{"title": "The question", "code": "def one():\n    return 42\n\ndef many():\n    return 1, 2, 3\n\nprint(type(one()))\nprint(type(many()))", "explain": "<p><b>Does <code>return<\/code> capture values into a tuple?<\/b><\/p>\n<p><b>Yes, but not always.<\/b> Python's <code>return<\/code> statement does <b>not<\/b> automatically wrap everything into a tuple. Python returns values based on <b>what you specify<\/b>:<\/p>\n<ul><li><b>One<\/b> value → that value, with its own type (here <code>int<\/code>).<\/li>\n<li><b>Several<\/b> values separated by commas → they are packed into a <b>tuple<\/b>.<\/li><\/ul>\n<p>The next lessons look at each case, then compare <code>return<\/code> with <code>*args<\/code>, and finally show how to return a list or dictionary instead.<\/p>", "walk": [["2", "One value → returned as is."], ["5", "Commas → packed into a tuple."], ["7-8", "Compare the types."]], "trace": null, "tip": "One value comes back as itself; comma-separated values come back as a tuple.", "tryit": [], "file": null, "expected": {"out": "<class 'int'>\n<class 'tuple'>", "err": null, "line": null}}, {"title": "Returning a single value", "code": "def add(a, b):\n    return a + b\n\nresult = add(10, 20)\n\nprint(result)\nprint(type(result))", "explain": "<p>When you return <b>one<\/b> value, you get exactly that value back — here an <code>int<\/code>.<\/p>\n<p><b>No tuple here.<\/b> Python does not wrap a single return value in anything.<\/p>", "walk": [["2", "A single expression → an int."], ["4", "result = 30."], ["7", "<class 'int'> — not a tuple."]], "trace": null, "tip": "return x gives you x itself, not (x,).", "tryit": [], "file": null, "expected": {"out": "30\n<class 'int'>", "err": null, "line": null}}, {"title": "Returning multiple values", "code": "def calculate(a, b):\n    return a + b, a - b, a * b\n\nresult = calculate(10, 5)\n\nprint(result)\nprint(type(result))", "explain": "<p><b>Important concept:<\/b> Python <b>automatically packs<\/b> multiple returned values into a tuple.<\/p>\n<p>Internally, this is equivalent to:<\/p>\n<pre class=\"snippet\">return (a + b, a - b, a * b)<\/pre>\n<p>It's the same rule from the Tuples module: <b>commas make a tuple<\/b>. <code>return a, b, c<\/code> is just tuple packing on the <code>return<\/code> line. The function still returns <b>one object<\/b> — a tuple holding three values.<\/p>", "walk": [["2", "Three expressions separated by commas → one tuple."], ["4", "result = (15, 5, 50)."], ["7", "<class 'tuple'>."]], "trace": [[1, "Define calculate(a, b).", null], [4, "Call calculate(10, 5): a = 10, b = 5.", null], [2, "Compute 15, 5, 50 → commas pack them into the tuple (15, 5, 50) and return it.", null], [4, "result = (15, 5, 50) — one object.", null], [6, "", "(15, 5, 50)"], [7, "", "<class 'tuple'>"]], "tip": "return a, b, c is the same as return (a, b, c).", "tryit": [], "file": null, "expected": {"out": "(15, 5, 50)\n<class 'tuple'>", "err": null, "line": null}}, {"title": "Unpacking the returned tuple", "code": "def calculate(a, b):\n    return a + b, a - b, a * b\n\naddition, subtraction, multiplication = calculate(10, 5)\n\nprint(addition)\nprint(subtraction)\nprint(multiplication)", "explain": "<p>Because the function returns a tuple, you can <b>unpack<\/b> it straight into separate variables (line 4). This is why it <em>feels<\/em> like the function returns three things.<\/p>\n<p>What really happens:<\/p>\n<ol><li>The function returns one tuple: <code>(15, 5, 50)<\/code>.<\/li>\n<li>Tuple unpacking assigns 15 → <code>addition<\/code>, 5 → <code>subtraction<\/code>, 50 → <code>multiplication<\/code>.<\/li><\/ol>\n<div class=\"warn\">The count must match: <code>x, y = calculate(10, 5)<\/code> → <code>ValueError: too many values to unpack (expected 2)<\/code>.<\/div>\n<div class=\"note\">Don't need one of the values? The convention is an underscore: <code>total, _, product = calculate(10, 5)<\/code>.<\/div>", "walk": [["4", "Returned tuple is unpacked into three names."], ["6-8", "Each holds one value."]], "trace": null, "tip": "Returning a tuple + unpacking = the 'return multiple values' pattern.", "tryit": ["Change line 4 to <code>x, y = calculate(10, 5)<\/code> and read the error."], "file": null, "expected": {"out": "15\n5\n50", "err": null, "line": null}}, {"title": "*args vs multiple-value return", "code": "def show_args(*args):\n    print(\"args inside :\", args, type(args))\n\ndef give_back():\n    return 1, 2, 3\n\nshow_args(1, 2, 3)\n\nresult = give_back()\nprint(\"returned    :\", result, type(result))", "explain": "<p>Both produce a tuple, which is why students often mix them up. They work in <b>opposite directions<\/b>:<\/p>\n<table class=\"tbl\"><tr><th>Feature<\/th><th><code>*args<\/code><\/th><th>Multiple‑value return<\/th><\/tr>\n<tr><td>Purpose<\/td><td>Collect arguments<\/td><td>Send multiple values back<\/td><\/tr>\n<tr><td>Python type<\/td><td>Tuple<\/td><td>Tuple<\/td><\/tr>\n<tr><td>Direction<\/td><td>Caller → Function<\/td><td>Function → Caller<\/td><\/tr>\n<tr><td>Where it's written<\/td><td>In the <code>def<\/code> line<\/td><td>On the <code>return<\/code> line<\/td><\/tr><\/table>\n<div class=\"dir\"><div><b>*args<\/b><span>caller<\/span><i>→ (1, 2, 3) →<\/i><span>function<\/span><\/div><div><b>return a, b, c<\/b><span>function<\/span><i>→ (1, 2, 3) →<\/i><span>caller<\/span><\/div><\/div>\n<div class=\"note\"><b>Remember this teaching point:<\/b><br><code>*args<\/code> packs multiple positional <b>arguments<\/b> into a tuple.<br><code>return a, b, c<\/code> packs multiple <b>returned values<\/b> into a tuple.<br>Both use tuples, but they serve different purposes.<\/div>", "walk": [["1-2", "*args packs incoming arguments."], ["5", "return packs outgoing values."], ["7", "Data flows into the function."], ["9", "Data flows out of the function."]], "trace": null, "tip": "*args: tuple coming in. return a, b: tuple going out.", "tryit": [], "file": null, "expected": {"out": "args inside : (1, 2, 3) <class 'tuple'>\nreturned    : (1, 2, 3) <class 'tuple'>", "err": null, "line": null}}, {"title": "Returning a list, dict or set instead", "code": "def as_tuple():\n    return 10, 20, 30\n\ndef as_list():\n    return [10, 20, 30]\n\ndef as_dict():\n    return {\"sum\": 15, \"diff\": 5, \"product\": 50}\n\ndef as_set():\n    return {10, 20, 30}\n\nfor f in (as_tuple, as_list, as_dict, as_set):\n    value = f()\n    print(f.__name__.ljust(9), value, type(value))\n\nstats = as_dict()\nprint(\"Product is\", stats[\"product\"])", "explain": "<p>Python can return a <b>list, dictionary, set or any other object<\/b> — if you <b>explicitly<\/b> return one. The tuple only appears automatically when you use bare commas.<\/p>\n<table class=\"tbl\"><tr><th>You write<\/th><th>Caller receives<\/th><\/tr>\n<tr><td><code>return 10, 20, 30<\/code><\/td><td>tuple<\/td><\/tr>\n<tr><td><code>return [10, 20, 30]<\/code><\/td><td>list<\/td><\/tr>\n<tr><td><code>return {\"sum\": 15, ...}<\/code><\/td><td>dict<\/td><\/tr>\n<tr><td><code>return {10, 20, 30}<\/code><\/td><td>set<\/td><\/tr>\n<tr><td><code>return 42<\/code><\/td><td>int (no wrapping)<\/td><\/tr>\n<tr><td>no return<\/td><td><code>None<\/code><\/td><\/tr><\/table>\n<h4>Which should you return?<\/h4>\n<ul><li><b>Tuple<\/b> — a small, fixed group of values the caller will unpack (<code>min, max<\/code>).<\/li>\n<li><b>List<\/b> — a variable number of items the caller may change or loop over.<\/li>\n<li><b>Dict<\/b> — several values where <b>names<\/b> make the result clearer (<code>stats[\"product\"]<\/code> beats <code>result[2]<\/code>).<\/li>\n<li><b>Set<\/b> — unique items, e.g. \"all tags used\".<\/li><\/ul>\n<p>Line 13 also shows that functions are objects: we loop over four functions and call each one.<\/p>", "walk": [["2", "Bare commas → tuple."], ["5", "Explicit list."], ["8", "Explicit dict."], ["11", "Explicit set."], ["13-15", "Call each function and print what came back."], ["17-18", "Dict results read by name."]], "trace": null, "tip": "You get a tuple only from bare commas; return any other type explicitly.", "tryit": [], "file": null, "expected": {"out": "as_tuple  (10, 20, 30) <class 'tuple'>\nas_list   [10, 20, 30] <class 'list'>\nas_dict   {'sum': 15, 'diff': 5, 'product': 50} <class 'dict'>\nas_set    {10, 20, 30} <class 'set'>\nProduct is 50", "err": null, "line": null}}]}, {"title": "Comparing & Combining", "level": "Project", "summary": "Choosing the right collection and using all four together.", "lessons": [{"title": "List vs Tuple vs Set vs Dict", "code": "my_list = [3, 1, 3, 2]\nmy_tuple = (3, 1, 3, 2)\nmy_set = {3, 1, 3, 2}\nmy_dict = {\"a\": 3, \"b\": 1, \"a\": 2}\n\nprint(\"list :\", my_list)\nprint(\"tuple:\", my_tuple)\nprint(\"set  :\", my_set)\nprint(\"dict :\", my_dict)\n\nmy_list.append(9)\nprint(\"list after append:\", my_list)", "explain": "<table class=\"tbl\"><tr><th><\/th><th>List<\/th><th>Tuple<\/th><th>Set<\/th><th>Dict<\/th><\/tr>\n<tr><td>Syntax<\/td><td><code>[1, 2]<\/code><\/td><td><code>(1, 2)<\/code><\/td><td><code>{1, 2}<\/code><\/td><td><code>{\"k\": 1}<\/code><\/td><\/tr>\n<tr><td>Ordered<\/td><td>Yes<\/td><td>Yes<\/td><td>No<\/td><td>Yes (insertion)<\/td><\/tr>\n<tr><td>Changeable<\/td><td>Yes<\/td><td>No<\/td><td>Yes<\/td><td>Yes<\/td><\/tr>\n<tr><td>Duplicates<\/td><td>Yes<\/td><td>Yes<\/td><td>No<\/td><td>Keys: no<\/td><\/tr>\n<tr><td>Access by<\/td><td>Index<\/td><td>Index<\/td><td><code>in<\/code> only<\/td><td>Key<\/td><\/tr>\n<tr><td>Empty<\/td><td><code>[]<\/code><\/td><td><code>()<\/code><\/td><td><code>set()<\/code><\/td><td><code>{}<\/code><\/td><\/tr><\/table>\n<p>Run it and compare: the list and tuple keep duplicates; the set drops them; the dict keeps only the <b>last<\/b> value for the repeated key <code>\"a\"<\/code>.<\/p>\n<h4>Which one should I use?<\/h4>\n<ul><li>A sequence you'll add to or change → <b>list<\/b><\/li>\n<li>A fixed record or multiple return values → <b>tuple<\/b><\/li>\n<li>Unique items or fast \"is it there?\" checks → <b>set<\/b><\/li>\n<li>Look things up by a name or ID → <b>dict<\/b><\/li><\/ul>", "walk": [["1", "List keeps everything."], ["2", "Tuple keeps everything."], ["3", "Set drops duplicates."], ["4", "Repeated key 'a' → last value wins."]], "trace": null, "tip": "Change it → list. Fix it → tuple. Unique → set. Look up by name → dict.", "tryit": [], "file": null, "expected": {"out": "list : [3, 1, 3, 2]\ntuple: (3, 1, 3, 2)\nset  : {1, 2, 3}\ndict : {'a': 2, 'b': 1}\nlist after append: [3, 1, 3, 2, 9]", "err": null, "line": null}}, {"title": "Project: Student marks manager", "code": "def add_student(db, name, *marks, **info):\n    db[name] = {\"marks\": list(marks), **info}\n\ndef stats(marks):\n    return min(marks), max(marks), sum(marks) / len(marks)\n\ndef summary(db):\n    report = {}\n    for name, data in db.items():\n        low, high, avg = stats(data[\"marks\"])\n        report[name] = round(avg, 1)\n    return report\n\ndb = {}\nadd_student(db, \"Rahul\", 78, 85, 90, city=\"Pune\")\nadd_student(db, \"Priya\", 92, 95, 88, city=\"Delhi\")\nadd_student(db, \"Amit\", 60, 72, 68, city=\"Pune\")\n\nprint(summary(db))\n\ncities = {data[\"city\"] for data in db.values()}\nprint(\"Cities:\", sorted(cities))\n\ntoppers = [name for name, avg in summary(db).items() if avg >= 80]\nprint(\"Toppers:\", toppers)\n\nlow, high, avg = stats(db[\"Priya\"][\"marks\"])\nprint(\"Priya -> low:\", low, \"high:\", high, \"avg:\", round(avg, 1))", "explain": "<p>A small program that uses all four collections plus functions:<\/p>\n<table class=\"tbl\"><tr><th>Concept<\/th><th>Where<\/th><\/tr>\n<tr><td><b>Dict<\/b><\/td><td><code>db<\/code> maps each name to that student's data<\/td><\/tr>\n<tr><td><b>Nested dict + list<\/b><\/td><td><code>{\"marks\": [...], \"city\": ...}<\/code><\/td><\/tr>\n<tr><td><b>*args → tuple → list<\/b><\/td><td><code>*marks<\/code> arrives as a tuple; <code>list(marks)<\/code> stores it as a list<\/td><\/tr>\n<tr><td><b>**kwargs into a dict<\/b><\/td><td><code>**info<\/code> merges extra details into the record<\/td><\/tr>\n<tr><td><b>Return a tuple<\/b><\/td><td><code>stats()<\/code> returns <code>min, max, avg<\/code>; unpacked on lines 10 and 27<\/td><\/tr>\n<tr><td><b>Return a dict<\/b><\/td><td><code>summary()<\/code> explicitly returns a dictionary<\/td><\/tr>\n<tr><td><b>Set comprehension<\/b><\/td><td>line 21: unique cities (Pune appears once)<\/td><\/tr>\n<tr><td><b>List comprehension<\/b><\/td><td>line 24: students averaging 80+<\/td><\/tr><\/table>\n<p>Notice the dictionary passed into <code>add_student<\/code> is changed by the function — dicts are mutable, just like the list‑copy gotcha.<\/p>", "walk": [["1-2", "*marks is a tuple; stored as a list. **info merged into the dict."], ["4-5", "Returns a tuple of three values."], ["10", "Unpack the returned tuple."], ["12", "Returns a dict explicitly."], ["21", "Set comprehension removes duplicate cities."], ["24", "List comprehension filters toppers."], ["27", "Unpack again for one student."]], "trace": null, "tip": "Real programs mix all four collections; functions tie them together.", "tryit": ["Add a fourth student from Mumbai and rerun.", "Change <code>summary<\/code> to return a list of <code>(name, avg)<\/code> tuples sorted by average."], "file": null, "expected": {"out": "{'Rahul': 84.3, 'Priya': 91.7, 'Amit': 66.7}\nCities: ['Delhi', 'Pune']\nToppers: ['Rahul', 'Priya']\nPriya -> low: 88 high: 95 avg: 91.7", "err": null, "line": null}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, step = -1, walkSel = -1, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pycol-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0) hlLines.add(tr[step][0]);
+  if (walkSel >= 0) {
+    const r = L().walk[walkSel][0].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === errLine ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (errLine) mk += `<div class="mark err" style="${at(errLine)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  edits[key(mi, li)] = ta.value; errLine = null;
+  if (step >= 0) step = -1;
+  renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+const isEdited = () => ta.value !== L().code;
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+
+/* ---------- output console ---------- */
+function showOutput(out, err, line, pill, meta, pillCls) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) h += `<span class="errl">${esc(err)}<small>${line ? "Raised on line " + line + " (highlighted in red)" : ""}</small></span>`;
+  o.innerHTML = h;
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  errLine = line || null; paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const cur = step >= 0 ? tr[step] : null;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${cur ? `<span class="ln">line ${cur[0]}</span>${cur[1]}` : "Watch Python move through the code one line at a time. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[2] !== null).map(t => t[2]);
+  const isNew = tr[step][2] !== null;
+  errLine = null;
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderStepper(); paintEditor(); scrollToLine(tr[step][0]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker, so a runaway loop can be stopped) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = `
+import sys, traceback, json
+def __run(src):
+    g = {"__name__": "__main__"}
+    try:
+        exec(compile(src, "<exec>", "exec"), g)
+        return ""
+    except BaseException as e:
+        line = None
+        for fr in traceback.extract_tb(e.__traceback__):
+            if fr.filename == "<exec>": line = fr.lineno
+        if isinstance(e, SyntaxError):
+            line, msg = e.lineno, e.msg
+        else:
+            msg = str(e)
+        return json.dumps({"err": type(e).__name__ + ": " + msg, "line": line})
+`;
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.code); } catch (x) { r = JSON.stringify({err:String(x), line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); pending = null; setBusy(false);
+      let err = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; }
+      showOutput(d.out, err, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live");
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run() {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  pending = { id: ++runId, code: ta.value };
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? 8000 : 60000);
+}
+$("runBtn").onclick = run;
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = L().code; step = -1; errLine = null; renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pycol-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${md.title}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${x.title}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("fname").textContent = l.file || `module${mi + 1}_lesson${li + 1}.py`;
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errLine = null;
+  ta.value = edits[key(mi, li)] ?? l.code; ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${w[0].includes("-") ? "lines " : "line "}${w[0]}</span><span>${w[1]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][0].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Functions Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Python <b>Functions</b> Lab</h1><span>Beginner → Intermediate · edit, run and step through every example</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore the original example">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Real Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "Introduction to Functions", "level": "Beginner", "summary": "What a function is, why we need one, and how to create your first function.", "lessons": [{"title": "The problem: repeated logic", "code": "a = 10\nb = 20\nprint(a + b)\n\nx = 50\ny = 60\nprint(x + y)\n\np = 100\nq = 200\nprint(p + q)", "explain": "<p>Imagine you are teaching students how to calculate the sum of two numbers. Without a function, you write the <em>same idea<\/em> — \"take two numbers and print their sum\" — three separate times.<\/p>\n<p>The program works, but look closely: <b>only the numbers change<\/b>. The logic <code>print(something + something)<\/code> is copy‑pasted. That causes real problems:<\/p>\n<ul>\n<li><b>Hard to change.<\/b> If you later want to print <code>\"Sum: 30\"<\/code> instead of <code>30<\/code>, you must edit every copy.<\/li>\n<li><b>Easy to break.<\/b> Fix a bug in one copy and forget another, and your program now behaves inconsistently.<\/li>\n<li><b>Hard to read.<\/b> A reader has to inspect each block to see that they all do the same thing.<\/li>\n<\/ul>\n<div class=\"note\"><b>Definition.<\/b> A <b>function<\/b> is a named, reusable block of code that performs one particular task. We write the logic <em>once<\/em> and use it (call it) whenever we need it.<\/div>\n<p>The next lesson shows the same program rewritten with a function.<\/p>", "walk": [["1-3", "Two variables are created and their sum (30) is printed."], ["5-7", "Exactly the same pattern again, with different numbers (110)."], ["9-11", "And a third time (300). Three copies of one idea — the signal that we need a function."]], "trace": null, "tip": "Whenever you notice yourself copy‑pasting logic and only changing the values, that logic wants to become a function.", "tryit": ["Change all three blocks so they print the <b>difference<\/b> instead of the sum. Notice how many places you had to edit."], "file": null, "expected": {"out": "30\n110\n300", "err": null, "line": null}}, {"title": "The fix: write it once", "code": "def add(a, b):\n    print(a + b)\n\nadd(10, 20)\nadd(50, 60)\nadd(100, 200)", "explain": "<p>Here is the same program with a function. The logic lives in <b>one place<\/b> (lines 1–2). Lines 4–6 simply <em>use<\/em> it with different values.<\/p>\n<p>Now if you want to change how the result looks, you edit <b>one line<\/b> and all three calls update automatically.<\/p>\n<div class=\"note\">Don't worry about <code>a<\/code> and <code>b<\/code> inside the parentheses yet — they are <b>parameters<\/b>, covered in Module 4. For now, just notice how much cleaner the code is.<\/div>", "walk": [["1", "<code>def<\/code> creates a function named <code>add<\/code> that expects two values."], ["2", "The function body: the logic we used to repeat."], ["4-6", "Three <b>calls<\/b>. Each one runs the body with different numbers."]], "trace": null, "tip": "Write the logic once, call it many times.", "tryit": ["Change line 2 to <code>print(\"Sum:\", a + b)<\/code> and press Run. One edit, three updated results."], "file": null, "expected": {"out": "30\n110\n300", "err": null, "line": null}}, {"title": "Creating your first function", "code": "def greet():\n    print(\"Welcome to Python!\")\n    print(\"Let's learn functions.\")", "explain": "<p>Every function definition follows the same shape:<\/p>\n<pre class=\"snippet\">def function_name():\n    # statements<\/pre>\n<table class=\"tbl\"><tr><th>Part<\/th><th>Meaning<\/th><\/tr>\n<tr><td><code>def<\/code><\/td><td>Keyword that <b>defines<\/b> a function<\/td><\/tr>\n<tr><td><code>greet<\/code><\/td><td>The function's <b>name<\/b> (use lowercase_with_underscores)<\/td><\/tr>\n<tr><td><code>()<\/code><\/td><td>Parentheses — later they will hold parameters<\/td><\/tr>\n<tr><td><code>:<\/code><\/td><td>Colon starts the function <b>body<\/b><\/td><\/tr>\n<tr><td>Indentation<\/td><td>The indented lines (4 spaces) <b>belong to<\/b> the function<\/td><\/tr><\/table>\n<div class=\"warn\"><b>Press Run — nothing is printed!<\/b> Defining a function does <b>not<\/b> execute it. Python just remembers \"there is a function called <code>greet<\/code>, and here are its instructions\". To run the body you must <b>call<\/b> it — see the next lesson.<\/div>", "walk": [["1", "Header line: keyword, name, parentheses, colon."], ["2-3", "The body. Indented by 4 spaces, so both lines belong to <code>greet<\/code>. They are stored, not executed."]], "trace": null, "tip": "Defining ≠ running. A definition is a recipe written down; it isn't cooked until you call it.", "tryit": ["Add a new line at the bottom, with <b>no<\/b> indentation: <code>greet()<\/code>. Press Run again.", "Remove the indentation from line 3 and run. What error do you get?"], "file": null, "expected": {"out": "", "err": null, "line": null}}, {"title": "Complete working example", "code": "# STEP 1: Define a function\ndef greet():\n    print(\"Welcome to Python!\")\n    print(\"We are learning functions.\")\n    print(\"Functions make code reusable.\")\n\n# STEP 2: Call the function\ngreet()", "explain": "<p>A complete program always has two parts:<\/p>\n<ol><li><b>Define<\/b> the function (lines 2–5).<\/li><li><b>Call<\/b> the function (line 8) by writing its name followed by <code>()<\/code>.<\/li><\/ol>\n<p>When Python reaches <code>greet()<\/code>, it jumps into the body and runs the three <code>print<\/code> statements in order, producing the three lines of output.<\/p>\n<div class=\"note\">The parentheses are what make it a call. Writing just <code>greet<\/code> (without <code>()<\/code>) refers to the function object but does not run it.<\/div>", "walk": [["1", "A comment — Python ignores lines starting with <code>#<\/code>."], ["2-5", "Definition. Python stores the function; nothing printed yet."], ["8", "The call. Control jumps to line 3 and runs lines 3, 4, 5."]], "trace": null, "tip": "Function = definition + call.", "tryit": ["Call <code>greet()<\/code> twice. How many lines of output now?", "Replace line 8 with <code>print(greet)<\/code> to see what the function object itself looks like."], "file": "01_basic_function.py", "expected": {"out": "Welcome to Python!\nWe are learning functions.\nFunctions make code reusable.", "err": null, "line": null}}, {"title": "Why do we need functions?", "code": "def calculate_bill():\n    price = 1000\n    tax = 180\n    total = price + tax\n    print(\"Total Bill:\", total)\n\ncalculate_bill()\ncalculate_bill()\ncalculate_bill()", "explain": "<p>We defined the billing logic <b>once<\/b> but executed it <b>three times<\/b>. Each call runs the whole body from the top.<\/p>\n<h4>Real‑world analogy: a vending machine<\/h4>\n<div class=\"analogy\"><div><span>1<\/span>You press a button<small>= call the function<\/small><\/div><div><span>2<\/span>The machine works inside<small>= the body runs<\/small><\/div><div><span>3<\/span>You receive a result<small>= output / return value<\/small><\/div><\/div>\n<p>You don't need to know how the machine works internally — you just press the button. Functions give the same benefit: once written, anyone can use <code>calculate_bill()<\/code> without re‑reading its details.<\/p>\n<h4>Benefits of functions<\/h4>\n<ul><li><b>Reusability<\/b> – write once, use many times.<\/li><li><b>Readability<\/b> – a good name explains what code does.<\/li><li><b>Maintainability<\/b> – fix bugs in one place.<\/li><li><b>Testing<\/b> – small functions are easy to test separately.<\/li><\/ul>\n<div class=\"note\">This function always produces 1180 because the price is fixed inside it. In Module 4 we'll pass the price in so the same function can bill any amount.<\/div>", "walk": [["1-5", "Definition: computes 1000 + 180 and prints it."], ["7", "First call → prints <code>Total Bill: 1180<\/code>."], ["8", "Second call → runs the whole body again."], ["9", "Third call → and again."]], "trace": null, "tip": "A function call is like pressing a button: same instructions, run on demand.", "tryit": ["Change <code>tax = 180<\/code> to <code>tax = price * 0.18<\/code>. What changes in the output and why is it a float?"], "file": null, "expected": {"out": "Total Bill: 1180\nTotal Bill: 1180\nTotal Bill: 1180", "err": null, "line": null}}]}, {"title": "Calling Functions & Execution Flow", "level": "Beginner", "summary": "How Python moves through a program when it meets a definition and a call.", "lessons": [{"title": "Execution flow, step by step", "code": "print(\"Program started\")\n\ndef hello():\n    print(\"Inside function\")\n\nprint(\"Before function call\")\nhello()\nprint(\"Program ended\")", "explain": "<p>This is one of the most important ideas for beginners: <b>Python reads top to bottom, but a call makes it jump.<\/b><\/p>\n<p>Use the <b>Step<\/b> button above to watch the yellow bar move. Notice that line 4 is <b>skipped<\/b> the first time Python passes it, and only runs when line 7 calls the function.<\/p>\n<h4>How Python executes a function<\/h4>\n<ol>\n<li>Python starts executing the program (line 1).<\/li>\n<li>It meets <code>def hello():<\/code> — the function is <b>defined<\/b>, its body is <b>not<\/b> executed.<\/li>\n<li>It meets <code>hello()<\/code> — the function is <b>called<\/b>.<\/li>\n<li>Control jumps into the body and runs it.<\/li>\n<li>When the body finishes, control <b>returns to the calling location<\/b> and continues with the next line.<\/li>\n<\/ol>\n<div class=\"note\"><b>Teaching point.<\/b> A function call transfers control to the function. After execution, Python continues from exactly where the function was called.<\/div>", "walk": [["1", "Runs first → prints <code>Program started<\/code>."], ["3-4", "Definition only. Python records <code>hello<\/code>; line 4 does not run now."], ["6", "Prints <code>Before function call<\/code>."], ["7", "The call: jump to line 4, print <code>Inside function<\/code>, then come back here."], ["8", "Continue after the call → <code>Program ended<\/code>."]], "trace": [[1, "Python starts at the top and runs line 1.", "Program started"], [3, "def hello(): — the function is <b>defined<\/b> and stored. Its body (line 4) is skipped.", null], [6, "Next statement at the top level runs.", "Before function call"], [7, "hello() — a <b>call<\/b>! Control jumps into the function body.", null], [4, "Inside the function body.", "Inside function"], [7, "Body finished → control <b>returns<\/b> to the place it was called from.", null], [8, "Execution continues with the next line.", "Program ended"]], "tip": "Definition is skipped; a call jumps in; the end of the function jumps back.", "tryit": ["Move <code>hello()<\/code> to line 2 (above the <code>def<\/code>). Run it. Why does Python complain that <code>hello<\/code> is not defined?", "Call <code>hello()<\/code> twice and predict the output before running."], "file": null, "expected": {"out": "Program started\nBefore function call\nInside function\nProgram ended", "err": null, "line": null}}, {"title": "Functions calling functions", "code": "def step_one():\n    print(\"  step one\")\n\ndef step_two():\n    print(\"  step two\")\n\ndef run_all():\n    print(\"run_all started\")\n    step_one()\n    step_two()\n    print(\"run_all finished\")\n\nrun_all()\nprint(\"Back in main program\")", "explain": "<p>Functions can call other functions. Python keeps track of <b>where to return to<\/b> at each level — like a stack of bookmarks.<\/p>\n<p>Step through it: <code>run_all<\/code> calls <code>step_one<\/code>, which returns to <code>run_all<\/code>, which then calls <code>step_two<\/code>, and so on. Finally <code>run_all<\/code> itself returns to the main program.<\/p>\n<div class=\"note\">This \"stack of bookmarks\" is called the <b>call stack<\/b>. When you see an error traceback, Python is printing that stack for you.<\/div>", "walk": [["1-11", "Three definitions — nothing runs yet."], ["13", "Main program calls <code>run_all<\/code>."], ["9", "Inside <code>run_all<\/code>: jump to <code>step_one<\/code>, then return here."], ["10", "Jump to <code>step_two<\/code>, then return here."], ["14", "After <code>run_all<\/code> finishes, the main program continues."]], "trace": [[1, "Define step_one (body skipped).", null], [4, "Define step_two (body skipped).", null], [7, "Define run_all (body skipped).", null], [13, "Call run_all() → jump in.", null], [8, "First line of run_all.", "run_all started"], [9, "Call step_one() → jump in.", null], [2, "Inside step_one.", "  step one"], [9, "step_one finished → return to run_all.", null], [10, "Call step_two() → jump in.", null], [5, "Inside step_two.", "  step two"], [10, "step_two finished → return to run_all.", null], [11, "Last line of run_all.", "run_all finished"], [13, "run_all finished → return to main program.", null], [14, "Main program continues.", "Back in main program"]], "tip": "Every call remembers its return address; Python always comes back.", "tryit": [], "file": null, "expected": {"out": "run_all started\n  step one\n  step two\nrun_all finished\nBack in main program", "err": null, "line": null}}]}, {"title": "Scope of Variables", "level": "Beginner → Intermediate", "summary": "Where a variable can be used: local, global, the LEGB rule, global and nonlocal.", "lessons": [{"title": "What is variable scope?", "code": "def show():\n    name = \"Ashutosh\"\n    print(name)\n\nshow()\nprint(name)", "explain": "<p><b>Scope<\/b> means <em>where<\/em> in a program a variable can be accessed.<\/p>\n<p>The first <code>print(name)<\/code> (inside the function) works. The second one (outside, line 6) fails with a <code>NameError<\/code>.<\/p>\n<p><b>Why?<\/b> <code>name<\/code> was created <b>inside<\/b> <code>show()<\/code>, so it is a <b>local variable<\/b>. It exists only while the function is running. As soon as <code>show()<\/code> finishes, its local variables are thrown away — the outside world never knew about them.<\/p>\n<div class=\"note\">Think of a function as a room. Variables created inside the room stay in the room. People outside can't see them.<\/div>", "walk": [["2", "<code>name<\/code> is created inside the function → local."], ["3", "Works: we're inside the same function."], ["5", "Call runs lines 2–3 and prints <code>Ashutosh<\/code>. Then local <code>name<\/code> is discarded."], ["6", "Outside the function, <code>name<\/code> doesn't exist → <code>NameError<\/code>."]], "trace": null, "tip": "A variable created inside a function is invisible outside it.", "tryit": ["Add <code>name = \"Outside\"<\/code> as the very first line and run again. What does line 6 print now?"], "file": null, "expected": {"out": "Ashutosh", "err": "NameError: name 'name' is not defined", "line": 6}}, {"title": "Local variables", "code": "def student():\n    name = \"Rahul\"\n    age = 25\n    print(name)\n    print(age)\n\nstudent()", "explain": "<p>A variable created <b>inside<\/b> a function is a <b>local variable<\/b>. Here <code>name<\/code> and <code>age<\/code> are both local to <code>student()<\/code>.<\/p>\n<ul><li>They are <b>created<\/b> each time the function is called.<\/li>\n<li>They are <b>usable<\/b> anywhere inside that function.<\/li>\n<li>They are <b>destroyed<\/b> when the function finishes.<\/li><\/ul>\n<p>Because local variables are private, two different functions can each have a variable called <code>name<\/code> without interfering with each other. This is a big reason functions make large programs manageable.<\/p>", "walk": [["2-3", "Two local variables created inside the function."], ["4-5", "Used inside the same function — allowed."], ["7", "Calling the function creates and prints them."]], "trace": null, "tip": "Local = born inside the function, dies when it returns.", "tryit": ["Add <code>print(age)<\/code> at the very end (no indentation). Predict the error before running."], "file": null, "expected": {"out": "Rahul\n25", "err": null, "line": null}}, {"title": "Global variables", "code": "college = \"PanamaTechAcademy\"\n\ndef show_college():\n    print(college)\n\nshow_college()\nprint(college)", "explain": "<p>A variable created <b>outside<\/b> any function (at the top level of the file) is a <b>global variable<\/b>. It can be read from anywhere in the file — including inside functions.<\/p>\n<p>Inside <code>show_college()<\/code> there is no local variable named <code>college<\/code>, so Python looks outward, finds the global one, and prints it.<\/p>\n<div class=\"note\">The function can <b>read<\/b> a global variable freely. <b>Changing<\/b> one from inside a function is different — see the next two lessons.<\/div>", "walk": [["1", "Global variable — defined at module level."], ["4", "No local <code>college<\/code>, so Python uses the global."], ["6", "Prints <code>PanamaTechAcademy<\/code> from inside the function."], ["7", "Prints it again from outside."]], "trace": null, "tip": "Globals are readable everywhere in the file.", "tryit": [], "file": null, "expected": {"out": "PanamaTechAcademy\nPanamaTechAcademy", "err": null, "line": null}}, {"title": "Local vs Global — same name", "code": "x = 100\n\ndef test():\n    x = 50\n    print(\"Inside:\", x)\n\ntest()\nprint(\"Outside:\", x)", "explain": "<p>This is the practical every student should run at least once.<\/p>\n<p>Line 4 <code>x = 50<\/code> does <b>not<\/b> change the global <code>x<\/code>. Because there is an <b>assignment<\/b> inside the function, Python creates a brand‑new <b>local<\/b> <code>x<\/code> that just happens to share the name. The local one <em>shadows<\/em> the global one inside the function.<\/p>\n<p>When the function ends, the local <code>x<\/code> disappears, and the global <code>x<\/code> is still <code>100<\/code>.<\/p>\n<table class=\"tbl\"><tr><th><\/th><th>Global <code>x<\/code><\/th><th>Local <code>x<\/code> (in test)<\/th><\/tr>\n<tr><td>After line 1<\/td><td>100<\/td><td>—<\/td><\/tr>\n<tr><td>During line 4–5<\/td><td>100<\/td><td>50<\/td><\/tr>\n<tr><td>After test() returns<\/td><td>100<\/td><td>— (gone)<\/td><\/tr><\/table>", "walk": [["1", "Global <code>x = 100<\/code>."], ["4", "Assignment inside a function → creates a <b>new local<\/b> <code>x<\/code>."], ["5", "Uses the local one → 50."], ["8", "Back outside: the global was never touched → 100."]], "trace": [[1, "Global x is created with value 100.", null], [3, "Define test (body skipped).", null], [7, "Call test().", null], [4, "Assignment creates a <b>local<\/b> x = 50. Global x is still 100.", null], [5, "Python finds the local x first.", "Inside: 50"], [7, "Function returns; local x is destroyed.", null], [8, "Only the global x exists here.", "Outside: 100"]], "tip": "Assigning to a name inside a function makes it local — unless you say otherwise.", "tryit": [], "file": null, "expected": {"out": "Inside: 50\nOutside: 100", "err": null, "line": null}}, {"title": "The global keyword", "code": "balance = 1000\n\ndef deposit():\n    global balance\n    balance = balance + 500\n    print(\"Inside:\", balance)\n\ndeposit()\nprint(\"Outside:\", balance)", "explain": "<p>What if we actually <b>want<\/b> the function to modify the global variable? We tell Python explicitly with <code>global<\/code>.<\/p>\n<p><code>global balance<\/code> means: <em>\"inside this function, the name <code>balance<\/code> refers to the global variable — don't create a local one.\"<\/em> Now the assignment on line 5 updates the real, global balance.<\/p>\n<div class=\"warn\"><b>Teaching gotcha.<\/b> Reading a global does <b>not<\/b> require <code>global<\/code>. Re‑assigning it <b>does<\/b>. Try removing line 4 and running — you'll get an <code>UnboundLocalError<\/code>, because Python sees the assignment, decides <code>balance<\/code> is local, and then finds you're reading it before giving it a value.<\/div>\n<div class=\"note\"><b>Good practice:<\/b> use <code>global<\/code> sparingly. Functions that change hidden global state are harder to understand and test. Prefer passing values in and <code>return<\/code>‑ing results (Module 5).<\/div>", "walk": [["1", "Global balance = 1000."], ["4", "Declares that <code>balance<\/code> here means the global one."], ["5", "Updates the <b>global<\/b> → 1500."], ["9", "Outside also sees 1500, because the global itself changed."]], "trace": null, "tip": "Read a global: fine. Reassign a global: needs the global keyword.", "tryit": ["Delete line 4 and run. Read the error message carefully.", "Call <code>deposit()<\/code> three times. What is the final balance?"], "file": null, "expected": {"out": "Inside: 1500\nOutside: 1500", "err": null, "line": null}}, {"title": "The LEGB rule", "code": "name = \"Global\"\n\ndef outer():\n    name = \"Enclosing\"\n\n    def inner():\n        name = \"Local\"\n        print(name)\n\n    inner()\n\nouter()", "explain": "<p>When Python sees a variable name, it searches four places <b>in this order<\/b> and stops at the first match:<\/p>\n<table class=\"tbl\"><tr><th>Letter<\/th><th>Scope<\/th><th>Meaning<\/th><\/tr>\n<tr><td><b>L<\/b><\/td><td>Local<\/td><td>Inside the current function<\/td><\/tr>\n<tr><td><b>E<\/b><\/td><td>Enclosing<\/td><td>Inside the outer (enclosing) function<\/td><\/tr>\n<tr><td><b>G<\/b><\/td><td>Global<\/td><td>At module (file) level<\/td><\/tr>\n<tr><td><b>B<\/b><\/td><td>Built‑in<\/td><td>Python's built‑in names like <code>print<\/code>, <code>len<\/code><\/td><\/tr><\/table>\n<p>Here there are three variables named <code>name<\/code>. When <code>inner()<\/code> prints, Python finds a <b>Local<\/b> one first, so it prints <code>Local<\/code>.<\/p>\n<div class=\"lgb\"><div class=\"b\">B — Built-in<div class=\"g\">G — Global: name = \"Global\"<div class=\"e\">E — Enclosing (outer): name = \"Enclosing\"<div class=\"l\">L — Local (inner): name = \"Local\" ← found first<\/div><\/div><\/div><\/div><\/div>\n<p>Use the <b>Try it<\/b> experiments below to watch Python fall back through each level.<\/p>", "walk": [["1", "<b>G<\/b>lobal <code>name<\/code>."], ["4", "<b>E<\/b>nclosing <code>name<\/code> — local to <code>outer<\/code>, enclosing for <code>inner<\/code>."], ["6-8", "A function defined inside another function (a nested function)."], ["7", "<b>L<\/b>ocal <code>name<\/code> inside <code>inner<\/code>."], ["8", "Lookup: L ✓ found → prints <code>Local<\/code>."], ["10", "<code>outer<\/code> calls <code>inner<\/code>."], ["12", "Program starts by calling <code>outer<\/code>."]], "trace": null, "tip": "Python looks up names Local → Enclosing → Global → Built-in.", "tryit": ["Delete line 7 and run → Python skips L and finds E: <code>Enclosing<\/code>.", "Also delete line 4 → it falls through to G: <code>Global<\/code>.", "Also delete line 1 → nothing in L, E, G or B → <code>NameError<\/code>.", "Built‑in demo: add <code>print(len)<\/code> inside <code>inner<\/code>. <code>len<\/code> is found in B."], "file": null, "expected": {"out": "Local", "err": null, "line": null}}, {"title": "nonlocal — modifying the enclosing scope", "code": "def outer():\n    count = 10\n\n    def inner():\n        nonlocal count\n        count = count + 1\n\n    inner()\n    print(count)\n\nouter()", "explain": "<p><code>global<\/code> lets a function change a <b>global<\/b> variable. <code>nonlocal<\/code> is its cousin for <b>nested<\/b> functions: it lets <code>inner()<\/code> change a variable that belongs to the <b>enclosing<\/b> function <code>outer()<\/code>.<\/p>\n<p>Without <code>nonlocal<\/code>, line 6 would create a new local <code>count<\/code> inside <code>inner<\/code> (and fail, because it's read before assignment). With it, <code>inner<\/code> updates <code>outer<\/code>'s <code>count<\/code> from 10 to 11.<\/p>\n<table class=\"tbl\"><tr><th>Keyword<\/th><th>Lets you reassign a variable in…<\/th><\/tr>\n<tr><td><code>global<\/code><\/td><td>the module (file) level<\/td><\/tr>\n<tr><td><code>nonlocal<\/code><\/td><td>the nearest enclosing function<\/td><\/tr><\/table>", "walk": [["2", "<code>count<\/code> is local to <code>outer<\/code> (enclosing for <code>inner<\/code>)."], ["5", "Points <code>count<\/code> at the enclosing variable."], ["6", "Updates <code>outer<\/code>'s count → 11."], ["9", "<code>outer<\/code> sees the updated value."]], "trace": null, "tip": "nonlocal = 'use the variable from the function around me'.", "tryit": ["Remove line 5 and run. Compare the error with the one from the global‑keyword lesson.", "Call <code>inner()<\/code> three times on line 8. What is printed?"], "file": null, "expected": {"out": "11", "err": null, "line": null}}]}, {"title": "Parameters and Arguments", "level": "Beginner", "summary": "Making functions flexible by passing data in.", "lessons": [{"title": "Non‑parameterized function", "code": "def greet():\n    print(\"Welcome to Python\")\n\ngreet()", "explain": "<p>A <b>non‑parameterized<\/b> function has empty parentheses — it accepts no input. Every call does exactly the same thing.<\/p>\n<p>That's fine for fixed tasks (printing a banner, a menu, a separator line), but limiting when the work should depend on data. You can't use this <code>greet()<\/code> to greet a specific person.<\/p>", "walk": [["1", "Empty parentheses → no parameters."], ["4", "Always prints the same message."]], "trace": null, "tip": "No parameters → same behaviour every time.", "tryit": [], "file": null, "expected": {"out": "Welcome to Python", "err": null, "line": null}}, {"title": "Parameterized function", "code": "def greet(name):\n    print(\"Welcome\", name)\n\ngreet(\"Rahul\")\ngreet(\"Amit\")\ngreet(\"Priya\")", "explain": "<p>A <b>parameterized<\/b> function accepts data. Now the same function produces a different greeting for each call.<\/p>\n<p>When you call <code>greet(\"Rahul\")<\/code>, Python effectively does <code>name = \"Rahul\"<\/code> at the start of the function body, then runs it.<\/p>\n<div class=\"def2\"><div><b>Parameter<\/b><span>The variable declared in the function <em>definition<\/em>.<\/span><code>def greet(<u>name<\/u>):<\/code><\/div>\n<div><b>Argument<\/b><span>The actual value supplied in the function <em>call<\/em>.<\/span><code>greet(<u>\"Rahul\"<\/u>)<\/code><\/div><\/div>\n<p>Here <code>name<\/code> is the parameter; <code>\"Rahul\"<\/code>, <code>\"Amit\"<\/code> and <code>\"Priya\"<\/code> are arguments.<\/p>", "walk": [["1", "<code>name<\/code> is a parameter — a placeholder."], ["2", "Uses whatever value <code>name<\/code> holds for this call."], ["4", "Argument <code>\"Rahul\"<\/code> is assigned to <code>name<\/code>."], ["5-6", "Same function, different arguments."]], "trace": [[1, "Define greet(name).", null], [4, "Call with argument \"Rahul\" → name = \"Rahul\".", null], [2, "Body runs with name = \"Rahul\".", "Welcome Rahul"], [5, "Call with \"Amit\" → name = \"Amit\".", null], [2, "Body runs with name = \"Amit\".", "Welcome Amit"], [6, "Call with \"Priya\".", null], [2, "Body runs with name = \"Priya\".", "Welcome Priya"]], "tip": "Parameter = the variable in def. Argument = the value in the call.", "tryit": ["Call <code>greet()<\/code> with no argument. Read the TypeError: Python tells you exactly which parameter is missing."], "file": null, "expected": {"out": "Welcome Rahul\nWelcome Amit\nWelcome Priya", "err": null, "line": null}}, {"title": "Multiple parameters", "code": "def add(a, b):\n    print(\"Sum:\", a + b)\n\nadd(10, 20)\nadd(100, 200)", "explain": "<p>Separate parameters with commas. Each call must supply one argument per parameter (unless defaults are used — see later).<\/p>\n<p><code>add(10, 20)<\/code> → <code>a = 10<\/code>, <code>b = 20<\/code>. <code>add(100, 200)<\/code> → <code>a = 100<\/code>, <code>b = 200<\/code>.<\/p>", "walk": [["1", "Two parameters: <code>a<\/code> and <code>b<\/code>."], ["4", "a=10, b=20 → 30."], ["5", "a=100, b=200 → 300."]], "trace": null, "tip": "One argument per parameter, separated by commas.", "tryit": ["Call <code>add(1, 2, 3)<\/code>. The error message is exactly what motivates *args in Module 6."], "file": null, "expected": {"out": "Sum: 30\nSum: 300", "err": null, "line": null}}, {"title": "Positional arguments", "code": "def student(name, age):\n    print(\"Name:\", name)\n    print(\"Age:\", age)\n\nstudent(\"Rahul\", 25)\n\nprint(\"--- wrong order ---\")\nstudent(25, \"Rahul\")", "explain": "<p>With <b>positional arguments<\/b>, values are matched to parameters <b>by position<\/b>: first argument → first parameter, second → second.<\/p>\n<ul><li><code>student(\"Rahul\", 25)<\/code> → <code>name = \"Rahul\"<\/code>, <code>age = 25<\/code> ✓<\/li>\n<li><code>student(25, \"Rahul\")<\/code> → <code>name = 25<\/code>, <code>age = \"Rahul\"<\/code> ✗<\/li><\/ul>\n<div class=\"warn\"><b>Be careful!<\/b> Python will <b>not<\/b> realise the values are in the wrong order. There is no error — just wrong output (\"Name: 25\"). These silent bugs are the reason keyword arguments exist.<\/div>", "walk": [["5", "Correct order → correct output."], ["8", "Swapped order → no error, but nonsense output."]], "trace": null, "tip": "Positional = matched by order. Wrong order → wrong data, silently.", "tryit": [], "file": null, "expected": {"out": "Name: Rahul\nAge: 25\n--- wrong order ---\nName: 25\nAge: Rahul", "err": null, "line": null}}, {"title": "Keyword arguments", "code": "def student(name, age):\n    print(\"Name:\", name)\n    print(\"Age:\", age)\n\nstudent(age=25, name=\"Rahul\")", "explain": "<p>With <b>keyword arguments<\/b> you name the parameter in the call: <code>parameter=value<\/code>. Now the <b>order doesn't matter<\/b> — Python matches by name.<\/p>\n<p>Keyword arguments also make calls self‑documenting: <code>student(age=25, name=\"Rahul\")<\/code> is clearer than <code>student(\"Rahul\", 25)<\/code> when there are many parameters.<\/p>\n<div class=\"note\"><b>Rule:<\/b> you can mix them, but positional arguments must come <b>before<\/b> keyword arguments: <code>student(\"Rahul\", age=25)<\/code> ✓ &nbsp; <code>student(name=\"Rahul\", 25)<\/code> ✗ SyntaxError.<\/div>", "walk": [["5", "Order reversed, but each value is labelled → matched correctly."]], "trace": null, "tip": "Keyword arguments are matched by name, so order doesn't matter.", "tryit": ["Try <code>student(\"Rahul\", age=25)<\/code> — mixed, valid.", "Try <code>student(name=\"Rahul\", 25)<\/code> — see the SyntaxError."], "file": null, "expected": {"out": "Name: Rahul\nAge: 25", "err": null, "line": null}}, {"title": "Default parameters", "code": "def greet(name=\"Student\"):\n    print(\"Welcome\", name)\n\ngreet()\ngreet(\"Rahul\")", "explain": "<p>A parameter can have a <b>default value<\/b>. If the caller doesn't supply an argument, Python uses the default.<\/p>\n<ul><li><code>greet()<\/code> → no argument → <code>name = \"Student\"<\/code><\/li>\n<li><code>greet(\"Rahul\")<\/code> → argument given → overrides the default<\/li><\/ul>\n<div class=\"note\"><b>Rule:<\/b> parameters with defaults must come <b>after<\/b> those without: <code>def f(a, b=10)<\/code> ✓ &nbsp; <code>def f(a=10, b)<\/code> ✗.<\/div>", "walk": [["1", "<code>name<\/code> has the default <code>\"Student\"<\/code>."], ["4", "Default used."], ["5", "Default overridden."]], "trace": null, "tip": "Defaults make parameters optional.", "tryit": ["Write <code>def power(base, exp=2): print(base ** exp)<\/code> and call it with <code>power(5)<\/code> and <code>power(2, 10)<\/code>."], "file": null, "expected": {"out": "Welcome Student\nWelcome Rahul", "err": null, "line": null}}, {"title": "Practical comparison", "code": "# Non-parameterized: fixed behaviour\ndef greet_fixed():\n    print(\"Welcome Student\")\n\n# Parameterized: dynamic behaviour\ndef greet(name):\n    print(\"Welcome\", name)\n\ngreet_fixed()\ngreet(\"Rahul\")\ngreet(\"Priya\")", "explain": "<table class=\"tbl\"><tr><th>Feature<\/th><th>Non‑parameterized<\/th><th>Parameterized<\/th><\/tr>\n<tr><td>Input<\/td><td>No input parameters<\/td><td>Accepts parameters<\/td><\/tr>\n<tr><td>Flexibility<\/td><td>Usually a fixed operation<\/td><td>Dynamic operation<\/td><\/tr>\n<tr><td>Example<\/td><td><code>greet()<\/code><\/td><td><code>greet(\"Rahul\")<\/code><\/td><\/tr><\/table>\n<h4>Summary of argument styles<\/h4>\n<table class=\"tbl\"><tr><th>Style<\/th><th>Example call<\/th><th>Matched by<\/th><\/tr>\n<tr><td>Positional<\/td><td><code>student(\"Rahul\", 25)<\/code><\/td><td>Order<\/td><\/tr>\n<tr><td>Keyword<\/td><td><code>student(age=25, name=\"Rahul\")<\/code><\/td><td>Name<\/td><\/tr>\n<tr><td>Default<\/td><td><code>greet()<\/code><\/td><td>Falls back to default value<\/td><\/tr><\/table>", "walk": [["2-3", "Same output every call."], ["6-7", "Output depends on the argument."]], "trace": null, "tip": "Parameters turn a fixed routine into a reusable tool.", "tryit": [], "file": null, "expected": {"out": "Welcome Student\nWelcome Rahul\nWelcome Priya", "err": null, "line": null}}]}, {"title": "Return Statement", "level": "Beginner → Intermediate", "summary": "Sending results back to the caller — and why print() is not the same thing.", "lessons": [{"title": "print() vs return — the surprise", "code": "def add(a, b):\n    print(a + b)\n\nresult = add(10, 20)\nprint(\"Result:\", result)", "explain": "<p>Most beginners expect <code>result<\/code> to be 30. It isn't — it's <code>None<\/code>.<\/p>\n<p><b>Why?<\/b> <code>print()<\/code> only <b>displays<\/b> a value on the screen. It does not send anything back to the caller. When a function finishes without a <code>return<\/code> statement, Python automatically returns <code>None<\/code>, and that is what gets stored in <code>result<\/code>.<\/p>\n<p>So the <code>30<\/code> you see comes from <code>print<\/code> <b>inside<\/b> the function, and <code>Result: None<\/code> is what the caller actually received.<\/p>", "walk": [["2", "Displays 30 on screen — but hands nothing back."], ["4", "<code>add<\/code> returns <code>None<\/code> implicitly → <code>result = None<\/code>."], ["5", "Prints <code>Result: None<\/code>."]], "trace": null, "tip": "print() shows a value to a human. It does not give it to your program.", "tryit": [], "file": null, "expected": {"out": "30\nResult: None", "err": null, "line": null}}, {"title": "Using return", "code": "def add(a, b):\n    return a + b\n\nresult = add(10, 20)\nprint(\"Result:\", result)", "explain": "<p><code>return<\/code> <b>sends a value back<\/b> to wherever the function was called. The call expression <code>add(10, 20)<\/code> is then <em>replaced<\/em> by that value, as if you had written <code>result = 30<\/code>.<\/p>\n<p>Notice the function itself prints nothing. It just computes and hands back the answer; the caller decides what to do with it.<\/p>", "walk": [["2", "Computes 30 and sends it back to the caller."], ["4", "<code>add(10, 20)<\/code> evaluates to 30 → stored in <code>result<\/code>."], ["5", "Now we can print, store or reuse it."]], "trace": [[1, "Define add(a, b).", null], [4, "Call add(10, 20): a = 10, b = 20.", null], [2, "return 30 → the function ends and hands 30 back.", null], [4, "add(10, 20) is replaced by 30 → result = 30.", null], [5, "Print the stored value.", "Result: 30"]], "tip": "return hands a value back; the call becomes that value.", "tryit": [], "file": null, "expected": {"out": "Result: 30", "err": null, "line": null}}, {"title": "print vs return — side by side", "code": "def show_square(n):\n    print(n * n)        # displays only\n\ndef get_square(n):\n    return n * n        # sends back\n\na = show_square(4)\nb = get_square(4)\n\nprint(\"a =\", a)\nprint(\"b =\", b)\nprint(\"b + 1 =\", b + 1)", "explain": "<div class=\"cmp\"><div><h5>print()<\/h5><ul><li>Displays information on the screen<\/li><li>Returns <code>None<\/code> by default<\/li><li>Value can't be reused by the program<\/li><\/ul><\/div>\n<div><h5>return<\/h5><ul><li>Sends a value back to the caller<\/li><li>Value can be stored in a variable<\/li><li>Reusable in further calculations<\/li><\/ul><\/div><\/div>\n<p>Run it: <code>show_square(4)<\/code> prints <code>16<\/code> but <code>a<\/code> is <code>None<\/code>. <code>get_square(4)<\/code> prints nothing, but <code>b<\/code> holds <code>16<\/code> and we can do maths with it.<\/p>\n<div class=\"note\">Try <code>a + 1<\/code> — you'll get <code>TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'<\/code>. That error message almost always means \"you used print where you meant return\".<\/div>", "walk": [["7", "Prints 16 immediately, but <code>a<\/code> becomes <code>None<\/code>."], ["8", "Prints nothing; <code>b<\/code> becomes 16."], ["12", "Returned values can be used in further maths."]], "trace": null, "tip": "If you need the value later, return it.", "tryit": ["Add <code>print(a + 1)<\/code> at the end and read the error."], "file": null, "expected": {"out": "16\na = None\nb = 16\nb + 1 = 17", "err": null, "line": null}}, {"title": "Reusing returned values", "code": "def calculate_total(price, quantity):\n    return price * quantity\n\ntotal = calculate_total(500, 3)\ndiscount = total * 0.10\nfinal_amount = total - discount\n\nprint(\"Total:\", total)\nprint(\"Discount:\", discount)\nprint(\"Final Amount:\", final_amount)", "explain": "<p>Because <code>calculate_total<\/code> <b>returns<\/b> its result, we can feed that result into more calculations — a discount, then a final amount.<\/p>\n<p>Notice <code>discount<\/code> is <code>150.0<\/code> (a <b>float<\/b>), because multiplying an int by <code>0.10<\/code> gives a float. Anything computed from a float stays a float, so <code>final_amount<\/code> is <code>1350.0<\/code>.<\/p>\n<div class=\"note\">This is the real power of <code>return<\/code>: small functions produce values, and those values flow into the rest of your program like building blocks.<\/div>", "walk": [["4", "500 × 3 = 1500 returned and stored."], ["5", "10% of 1500 → 150.0."], ["6", "1500 − 150.0 → 1350.0."]], "trace": null, "tip": "Returned values are building blocks for further calculation.", "tryit": ["Write a <code>calculate_discount(total, percent)<\/code> function that returns the discount, and use it on line 5."], "file": null, "expected": {"out": "Total: 1500\nDiscount: 150.0\nFinal Amount: 1350.0", "err": null, "line": null}}, {"title": "Returning multiple values", "code": "def calculate(a, b):\n    addition = a + b\n    subtraction = a - b\n    multiplication = a * b\n    return addition, subtraction, multiplication\n\nx, y, z = calculate(20, 10)\nprint(x)\nprint(y)\nprint(z)\n\nresult = calculate(20, 10)\nprint(result, type(result))", "explain": "<p>Python lets a function return several values separated by commas.<\/p>\n<p>Technically, Python <b>packs<\/b> them into a single <b>tuple<\/b>: <code>(30, 10, 200)<\/code>. On line 7, <code>x, y, z = ...<\/code> <b>unpacks<\/b> that tuple into three variables.<\/p>\n<p>Lines 12–13 show what really comes back when you don't unpack: a tuple.<\/p>\n<div class=\"warn\">The number of variables on the left must match the number of values returned. <code>x, y = calculate(20, 10)<\/code> raises <code>ValueError: too many values to unpack<\/code>.<\/div>", "walk": [["5", "Returns three values → packed into a tuple."], ["7", "Tuple unpacked into x, y, z."], ["12-13", "Without unpacking you get the tuple itself."]], "trace": null, "tip": "return a, b, c → returns one tuple; unpack it with x, y, z = …", "tryit": [], "file": null, "expected": {"out": "30\n10\n200\n(30, 10, 200) <class 'tuple'>", "err": null, "line": null}}, {"title": "return stops execution", "code": "def check():\n    print(\"Step 1\")\n    return \"Finished\"\n    print(\"Step 2\")\n\nresult = check()\nprint(result)", "explain": "<p><code>return<\/code> immediately <b>exits<\/b> the function. Any lines after it in the same block are never reached.<\/p>\n<p>So <code>Step 2<\/code> never prints. Step through to see the yellow bar jump straight from line 3 back to line 6.<\/p>\n<div class=\"note\"><b>Important interview question:<\/b> <em>What happens if a function does not contain a return statement?<\/em><br><b>Answer:<\/b> Python implicitly returns <code>None<\/code>.<\/div>\n<p>This \"early exit\" behaviour is very useful — e.g. returning as soon as invalid input is detected (you'll see it in Module 8).<\/p>", "walk": [["2", "Runs → <code>Step 1<\/code>."], ["3", "Exits immediately, sending back <code>\"Finished\"<\/code>."], ["4", "Dead code — never runs."], ["7", "Prints the returned value."]], "trace": [[1, "Define check().", null], [6, "Call check().", null], [2, "First line of the body.", "Step 1"], [3, "return \"Finished\" → the function exits <b>right now<\/b>.", null], [6, "Back in the caller: result = \"Finished\". Line 4 was never executed.", null], [7, "Print the returned value.", "Finished"]], "tip": "return = hand back a value AND leave the function immediately.", "tryit": [], "file": null, "expected": {"out": "Step 1\nFinished", "err": null, "line": null}}, {"title": "No return → None", "code": "def say_hi():\n    print(\"Hi!\")\n\ndef nothing():\n    pass\n\nprint(say_hi())\nprint(nothing())", "explain": "<p>Every function returns <b>something<\/b>. If there's no <code>return<\/code> (or a bare <code>return<\/code> with no value), it returns <code>None<\/code>.<\/p>\n<p>Line 7 is tricky: <code>say_hi()<\/code> runs first and prints <code>Hi!<\/code>; then its return value (<code>None<\/code>) is passed to the outer <code>print<\/code>, which prints <code>None<\/code>.<\/p>\n<p><code>pass<\/code> is a placeholder statement meaning \"do nothing\" — useful for an empty body.<\/p>", "walk": [["7", "Inner call prints <code>Hi!<\/code>, outer print shows its return value <code>None<\/code>."], ["8", "Empty function → returns <code>None<\/code>."]], "trace": null, "tip": "No return statement means the function returns None.", "tryit": [], "file": null, "expected": {"out": "Hi!\nNone\nNone", "err": null, "line": null}}]}, {"title": "*args", "level": "Intermediate", "summary": "Accepting any number of positional arguments.", "lessons": [{"title": "Why do we need *args?", "code": "def add(a, b):\n    print(a + b)\n\nadd(10, 20)\nadd(10, 20, 30)", "explain": "<p>Our <code>add<\/code> function accepts exactly two numbers. Adding three numbers fails:<\/p>\n<p><code>TypeError: add() takes 2 positional arguments but 3 were given<\/code><\/p>\n<p>What about 10 numbers? We could keep adding parameters (<code>a, b, c, d…<\/code>), but that is not flexible — we never know how many the caller will send.<\/p>\n<p>This is exactly where <code>*args<\/code> comes into the picture.<\/p>", "walk": [["4", "Two arguments → works, prints 30."], ["5", "Three arguments → TypeError."]], "trace": null, "tip": "Fixed parameter lists can't handle 'any number of values'.", "tryit": [], "file": null, "expected": {"out": "30", "err": "TypeError: add() takes 2 positional arguments but 3 were given", "line": 5}}, {"title": "What is *args?", "code": "def add(*args):\n    print(args)\n\nadd(10, 20)\nadd(10, 20, 30)\nadd(10, 20, 30, 40, 50)", "explain": "<p><code>*args<\/code> allows a function to accept a <b>variable number of positional arguments<\/b>.<\/p>\n<p>The asterisk <code>*<\/code> <b>packs<\/b> all the positional arguments into a single <b>tuple<\/b>. Inside the function, <code>args<\/code> is just a normal tuple — you can loop over it, index it, check its <code>len()<\/code>.<\/p>\n<div class=\"note\">The name <code>args<\/code> is only a convention — the <code>*<\/code> is what matters. <code>def add(*numbers)<\/code> works identically and is often more readable.<\/div>\n<div class=\"pack\"><code>add(10, 20, 30)<\/code><span>→ * packs →<\/span><code>args = (10, 20, 30)<\/code><\/div>", "walk": [["1", "<code>*args<\/code> collects every positional argument."], ["2", "Shows the tuple."], ["4-6", "2, 3 and 5 arguments — all accepted."]], "trace": null, "tip": "*args = a tuple of all extra positional arguments.", "tryit": ["Call <code>add()<\/code> with no arguments. What does <code>args<\/code> look like?", "Add <code>print(len(args))<\/code> inside the function."], "file": null, "expected": {"out": "(10, 20)\n(10, 20, 30)\n(10, 20, 30, 40, 50)", "err": null, "line": null}}, {"title": "Practical: sum of any number of values", "code": "def add(*args):\n    total = 0\n    for number in args:\n        total = total + number\n    return total\n\nprint(add(10, 20))\nprint(add(10, 20, 30))\nprint(add(10, 20, 30, 40, 50))", "explain": "<p>Now we put the tuple to work. We start a running <code>total<\/code> at 0, loop over every number in <code>args<\/code>, add each one, and <b>return<\/b> the final total.<\/p>\n<p>One function now handles 2, 3 or 50 numbers.<\/p>\n<div class=\"note\">Python's built‑in <code>sum()<\/code> does the same: <code>return sum(args)<\/code>. Writing the loop yourself is great practice for understanding what's happening.<\/div>", "walk": [["2", "Running total starts at 0."], ["3-4", "Add each value from the args tuple."], ["5", "Send the final total back."], ["7-9", "Different numbers of arguments, same function."]], "trace": [[1, "Define add(*args).", null], [7, "Call add(10, 20) → args = (10, 20).", null], [2, "total = 0", null], [3, "Loop: number = 10", null], [4, "total = 0 + 10 = 10", null], [3, "Loop: number = 20", null], [4, "total = 10 + 20 = 30", null], [3, "No more items — loop ends.", null], [5, "return 30", null], [7, "print(30)", "30"], [8, "add(10, 20, 30) → same loop, returns 60.", "60"], [9, "add(10, 20, 30, 40, 50) → returns 150.", "150"]], "tip": "Loop over args to process every value, however many there are.", "tryit": [], "file": null, "expected": {"out": "30\n60\n150", "err": null, "line": null}}, {"title": "*args with normal parameters", "code": "def student(course, *args):\n    print(\"Course:\", course)\n    for name in args:\n        print(\"Student:\", name)\n\nstudent(\n    \"Python\",\n    \"Rahul\",\n    \"Amit\",\n    \"Priya\"\n)", "explain": "<p>You can combine normal parameters with <code>*args<\/code>. Python fills the normal parameters <b>first<\/b>, then packs whatever is left into <code>args<\/code>.<\/p>\n<ul><li><code>course<\/code> receives the first positional argument: <code>\"Python\"<\/code>.<\/li>\n<li><code>args<\/code> receives the remaining ones: <code>(\"Rahul\", \"Amit\", \"Priya\")<\/code>.<\/li><\/ul>\n<div class=\"note\">The call is split across several lines just for readability — Python allows line breaks inside parentheses.<\/div>", "walk": [["1", "<code>course<\/code> is required; <code>*args<\/code> takes the rest."], ["7", "\"Python\" → <code>course<\/code>."], ["8-10", "Packed into <code>args<\/code>."]], "trace": null, "tip": "Normal parameters are filled first; *args gets the leftovers.", "tryit": [], "file": null, "expected": {"out": "Course: Python\nStudent: Rahul\nStudent: Amit\nStudent: Priya", "err": null, "line": null}}, {"title": "Gotcha: unpacking with * in a call", "code": "def add(a, b, c):\n    return a + b + c\n\nnumbers = [10, 20, 30]\nprint(add(*numbers))", "explain": "<p>The <code>*<\/code> works in <b>both directions<\/b>:<\/p>\n<table class=\"tbl\"><tr><th>Where<\/th><th>What * does<\/th><\/tr>\n<tr><td>In a <b>definition<\/b>: <code>def f(*args)<\/code><\/td><td><b>Packs<\/b> many arguments into a tuple<\/td><\/tr>\n<tr><td>In a <b>call<\/b>: <code>f(*numbers)<\/code><\/td><td><b>Unpacks<\/b> an iterable into separate arguments<\/td><\/tr><\/table>\n<p><code>add(*numbers)<\/code> is the same as writing <code>add(10, 20, 30)<\/code>. Without the star, <code>add(numbers)<\/code> would pass one list as <code>a<\/code> and fail because <code>b<\/code> and <code>c<\/code> are missing.<\/p>", "walk": [["4", "A list of three values."], ["5", "<code>*numbers<\/code> spreads them into a, b, c."]], "trace": null, "tip": "* in def packs; * in a call unpacks.", "tryit": ["Change line 5 to <code>add(numbers)<\/code> and read the error.", "Make the list 4 items long. What happens?"], "file": null, "expected": {"out": "60", "err": null, "line": null}}]}, {"title": "**kwargs", "level": "Intermediate", "summary": "Accepting any number of keyword arguments.", "lessons": [{"title": "Why do we need **kwargs?", "code": "def student(name, age, city):\n    print(name, age, city)\n\nstudent(\"Rahul\", 25, \"Pune\")\nstudent(\"Amit\", 22, \"Delhi\", course=\"Python\")", "explain": "<p>This function works for exactly three details. But real students may have extra details: course, email, college, phone…<\/p>\n<p>Passing an extra detail (line 5) fails with <code>TypeError: student() got an unexpected keyword argument 'course'<\/code>. We'd have to keep modifying the function every time a new field appears.<\/p>\n<p><code>**kwargs<\/code> solves this problem.<\/p>", "walk": [["4", "Exactly three values → works."], ["5", "Extra keyword <code>course<\/code> → TypeError."]], "trace": null, "tip": "Fixed parameters can't accept unexpected named details.", "tryit": [], "file": null, "expected": {"out": "Rahul 25 Pune", "err": "TypeError: student() got an unexpected keyword argument 'course'", "line": 5}}, {"title": "What is **kwargs?", "code": "def student(**kwargs):\n    print(kwargs)\n\nstudent(\n    name=\"Rahul\",\n    age=25,\n    city=\"Pune\"\n)", "explain": "<p><code>**kwargs<\/code> allows a function to accept a <b>variable number of keyword arguments<\/b>.<\/p>\n<p>The double asterisk <code>**<\/code> packs every <code>key=value<\/code> argument into a <b>dictionary<\/b>. The parameter names become string keys.<\/p>\n<div class=\"pack\"><code>name=\"Rahul\", age=25, city=\"Pune\"<\/code><span>→ ** packs →<\/span><code>{'name': 'Rahul', 'age': 25, 'city': 'Pune'}<\/code><\/div>\n<div class=\"note\">As with <code>args<\/code>, the name <code>kwargs<\/code> (\"keyword arguments\") is just convention; the <code>**<\/code> is what matters.<\/div>", "walk": [["1", "<code>**kwargs<\/code> collects all keyword arguments."], ["2", "Shows the dictionary."], ["5-7", "Three keyword arguments → three dictionary entries."]], "trace": null, "tip": "**kwargs = a dictionary of all extra keyword arguments.", "tryit": [], "file": null, "expected": {"out": "{'name': 'Rahul', 'age': 25, 'city': 'Pune'}", "err": null, "line": null}}, {"title": "Accessing dictionary values", "code": "def student(**kwargs):\n    print(\"Name:\", kwargs[\"name\"])\n    print(\"Age:\", kwargs[\"age\"])\n    print(\"City:\", kwargs[\"city\"])\n\nstudent(\n    name=\"Rahul\",\n    age=25,\n    city=\"Pune\"\n)", "explain": "<p>Since <code>kwargs<\/code> is a dictionary, you read values with <code>kwargs[\"key\"]<\/code>.<\/p>\n<div class=\"warn\">If a key is missing, <code>kwargs[\"city\"]<\/code> raises <code>KeyError<\/code>. For optional details use <code>kwargs.get(\"city\", \"Unknown\")<\/code>, which returns a default instead.<\/div>", "walk": [["2-4", "Read each value by its key."]], "trace": null, "tip": "kwargs['key'] reads a value; kwargs.get('key', default) is safer.", "tryit": ["Remove <code>city=\"Pune\"<\/code> from the call and see the KeyError.", "Then fix line 4 with <code>kwargs.get(\"city\", \"Unknown\")<\/code>."], "file": null, "expected": {"out": "Name: Rahul\nAge: 25\nCity: Pune", "err": null, "line": null}}, {"title": "Looping through kwargs", "code": "def student_details(**kwargs):\n    for key, value in kwargs.items():\n        print(key, \":\", value)\n\nstudent_details(\n    name=\"Rahul\",\n    age=25,\n    course=\"Python\",\n    city=\"Pune\",\n    college=\"ABC College\"\n)", "explain": "<p><code>kwargs.items()<\/code> gives each <code>(key, value)<\/code> pair, so one loop prints every detail — no matter how many the caller provides.<\/p>\n<p>Items come out in the <b>same order<\/b> they were passed (dictionaries keep insertion order since Python 3.7).<\/p>", "walk": [["2", "<code>.items()<\/code> yields key/value pairs."], ["3", "Prints each pair."], ["5-11", "Five details — the function handles them all."]], "trace": null, "tip": "Loop with .items() to handle any number of named details.", "tryit": [], "file": null, "expected": {"out": "name : Rahul\nage : 25\ncourse : Python\ncity : Pune\ncollege : ABC College", "err": null, "line": null}}, {"title": "Normal parameters + **kwargs", "code": "def employee(name, **kwargs):\n    print(\"Employee Name:\", name)\n    for key, value in kwargs.items():\n        print(key, \":\", value)\n\nemployee(\n    \"Rahul\",\n    age=28,\n    department=\"IT\",\n    salary=50000,\n    city=\"Pune\"\n)", "explain": "<p>A required parameter (<code>name<\/code>) plus a flexible <code>**kwargs<\/code> for everything else. This pattern is very common: the essentials are required, extras are optional.<\/p>\n<p><code>\"Rahul\"<\/code> goes to <code>name<\/code>; the four keyword arguments are packed into <code>kwargs<\/code>.<\/p>", "walk": [["1", "<code>name<\/code> required, everything else optional."], ["7", "→ <code>name<\/code>."], ["8-11", "→ packed into <code>kwargs<\/code>."]], "trace": null, "tip": "Required essentials first, flexible extras in **kwargs.", "tryit": [], "file": null, "expected": {"out": "Employee Name: Rahul\nage : 28\ndepartment : IT\nsalary : 50000\ncity : Pune", "err": null, "line": null}}, {"title": "*args vs **kwargs together", "code": "def demo(*args, **kwargs):\n    print(args)\n    print(kwargs)\n\ndemo(\n    10, 20, 30,\n    name=\"Rahul\",\n    age=25\n)", "explain": "<div class=\"cmp\"><div><h5>*args<\/h5><ul><li>Positional arguments<\/li><li>Variable number of them<\/li><li>Packed into a <b>tuple<\/b><\/li><\/ul><\/div>\n<div><h5>**kwargs<\/h5><ul><li>Keyword arguments<\/li><li>Variable number of them<\/li><li>Packed into a <b>dictionary<\/b><\/li><\/ul><\/div><\/div>\n<p>A function can accept both. Python sends un‑named values to <code>args<\/code> and <code>name=value<\/code> pairs to <code>kwargs<\/code>.<\/p>", "walk": [["6", "Positional → tuple <code>args<\/code>."], ["7-8", "Keyword → dict <code>kwargs<\/code>."]], "trace": null, "tip": "One star → tuple of positionals. Two stars → dict of keywords.", "tryit": [], "file": null, "expected": {"out": "(10, 20, 30)\n{'name': 'Rahul', 'age': 25}", "err": null, "line": null}}, {"title": "Function argument order", "code": "def example(a, b=10, *args, **kwargs):\n    print(\"a =\", a, \"| b =\", b, \"| args =\", args, \"| kwargs =\", kwargs)\n\nexample(1)\nexample(1, 2, 3, 4, x=5)\n\ndef example2(a, *args, city=\"Pune\", **kwargs):\n    print(a, args, city, kwargs)\n\nexample2(10, 20, 30, city=\"Delhi\", age=25)\nexample2(10, 20, 30, age=25)", "explain": "<p>When combining argument types, the general order in a definition is:<\/p>\n<div class=\"order\"><span>normal<\/span>→<span>default<\/span>→<span>*args<\/span>→<span>keyword‑only<\/span>→<span>**kwargs<\/span><\/div>\n<p><b>Keyword‑only parameters:<\/b> in <code>example2<\/code>, <code>city<\/code> comes <b>after<\/b> <code>*args<\/code>. Because <code>*args<\/code> swallows all remaining positional values, the only way to give <code>city<\/code> a value is by name: <code>city=\"Delhi\"<\/code>. If you don't pass it, its default <code>\"Pune\"<\/code> is used (line 11).<\/p>\n<table class=\"tbl\"><tr><th>Call<\/th><th>a<\/th><th>args<\/th><th>city<\/th><th>kwargs<\/th><\/tr>\n<tr><td>line 10<\/td><td>10<\/td><td>(20, 30)<\/td><td>Delhi<\/td><td>{'age': 25}<\/td><\/tr>\n<tr><td>line 11<\/td><td>10<\/td><td>(20, 30)<\/td><td>Pune<\/td><td>{'age': 25}<\/td><\/tr><\/table>", "walk": [["1", "The general order: normal, default, *args, **kwargs."], ["4", "Only <code>a<\/code> given → b uses default, args/kwargs empty."], ["5", "1→a, 2→b, (3, 4)→args, x=5→kwargs."], ["7", "<code>city<\/code> after *args → keyword‑only."], ["10", "city passed by name."], ["11", "city omitted → default \"Pune\"."]], "trace": null, "tip": "Order: normal → default → *args → keyword-only → **kwargs.", "tryit": ["Try defining <code>def bad(**kwargs, *args):<\/code> — Python refuses with a SyntaxError."], "file": null, "expected": {"out": "a = 1 | b = 10 | args = () | kwargs = {}\na = 1 | b = 2 | args = (3, 4) | kwargs = {'x': 5}\n10 (20, 30) Delhi {'age': 25}\n10 (20, 30) Pune {'age': 25}", "err": null, "line": null}}]}, {"title": "Combining Everything", "level": "Project", "summary": "Practical mini‑projects that use every concept from Modules 1–7.", "lessons": [{"title": "Project 1: Shopping bill", "code": "def calculate_bill(*prices, tax_rate=0.18, **discounts):\n    subtotal = sum(prices)\n    discount = sum(discounts.values())\n    taxable = subtotal - discount\n    tax = taxable * tax_rate\n    return subtotal, discount, tax, taxable + tax\n\ndef print_receipt(customer, subtotal, discount, tax, total):\n    print(\"=\" * 28)\n    print(\"Customer :\", customer)\n    print(\"Subtotal :\", subtotal)\n    print(\"Discount :\", discount)\n    print(\"Tax      :\", round(tax, 2))\n    print(\"TOTAL    :\", round(total, 2))\n    print(\"=\" * 28)\n\nsub, disc, tax, total = calculate_bill(120, 30, 850, festival=100, coupon=50)\nprint_receipt(\"Rahul\", sub, disc, tax, total)\n\nsub, disc, tax, total = calculate_bill(499, tax_rate=0.05)\nprint_receipt(\"Priya\", sub, disc, tax, total)", "explain": "<p>A small billing system using almost every concept:<\/p>\n<table class=\"tbl\"><tr><th>Concept<\/th><th>Where<\/th><\/tr>\n<tr><td><code>*args<\/code><\/td><td><code>*prices<\/code> — any number of item prices<\/td><\/tr>\n<tr><td>Keyword‑only + default<\/td><td><code>tax_rate=0.18<\/code> after <code>*prices<\/code><\/td><\/tr>\n<tr><td><code>**kwargs<\/code><\/td><td><code>**discounts<\/code> — any number of named discounts<\/td><\/tr>\n<tr><td>Return multiple values<\/td><td>line 6 returns a 4‑tuple; line 17 unpacks it<\/td><\/tr>\n<tr><td>Separation of concerns<\/td><td><code>calculate_bill<\/code> <b>returns<\/b> data; <code>print_receipt<\/code> <b>prints<\/b> it<\/td><\/tr><\/table>\n<p>Notice the design: calculation and display are separate functions. That means you could reuse <code>calculate_bill<\/code> in a web app or a test without any printing.<\/p>", "walk": [["1", "Any prices, optional tax rate, any named discounts."], ["2-3", "<code>sum()<\/code> on the args tuple and on the kwargs values."], ["6", "Return four values as a tuple."], ["8-15", "A display‑only function — no return needed."], ["17", "120+30+850 = 1000, discounts 150 → taxable 850, tax 153."], ["20", "One item, no discounts, 5% tax."]], "trace": null, "tip": "Functions that return data + functions that display it = clean, reusable design.", "tryit": ["Add a third customer with 5 items and a <code>loyalty=75<\/code> discount.", "Add validation: if the discount is bigger than the subtotal, <code>return<\/code> early with zeros."], "file": null, "expected": {"out": "============================\nCustomer : Rahul\nSubtotal : 1000\nDiscount : 150\nTax      : 153.0\nTOTAL    : 1003.0\n============================\n============================\nCustomer : Priya\nSubtotal : 499\nDiscount : 0\nTax      : 24.95\nTOTAL    : 523.95\n============================", "err": null, "line": null}}, {"title": "Project 2: Student report card", "code": "def average(*marks):\n    return sum(marks) / len(marks)\n\ndef grade(avg):\n    if avg >= 90:\n        return \"A\"\n    if avg >= 75:\n        return \"B\"\n    if avg >= 60:\n        return \"C\"\n    return \"F\"\n\ndef report(name, *marks, **info):\n    avg = average(*marks)\n    print(f\"{name}: marks={marks} avg={avg:.1f} grade={grade(avg)}\")\n    for key, value in info.items():\n        print(\"   \", key, \"->\", value)\n    return avg\n\nclass_avgs = []\nclass_avgs.append(report(\"Priya\", 92, 88, 95, city=\"Pune\"))\nclass_avgs.append(report(\"Rahul\", 70, 65, 81, course=\"Python\"))\nclass_avgs.append(report(\"Amit\", 50, 62, 58))\n\nprint(\"Class average:\", round(average(*class_avgs), 1))", "explain": "<p>A report‑card generator built from three small functions:<\/p>\n<ul><li><b><code>average(*marks)<\/code><\/b> – takes any number of marks and returns their mean.<\/li>\n<li><b><code>grade(avg)<\/code><\/b> – uses <b>early returns<\/b>: the first matching <code>return<\/code> exits the function, so no <code>elif<\/code> chain is needed.<\/li>\n<li><b><code>report(name, *marks, **info)<\/code><\/b> – combines a normal parameter, <code>*args<\/code> and <code>**kwargs<\/code>; it prints the report <em>and<\/em> returns the average.<\/li><\/ul>\n<p>Line 14 shows <b>unpacking in a call<\/b>: <code>marks<\/code> is a tuple, and <code>average(*marks)<\/code> spreads it back into separate arguments. Line 25 does the same with a list.<\/p>\n<p>The f‑string <code>{avg:.1f}<\/code> formats the average to one decimal place.<\/p>", "walk": [["1-2", "Average of any number of marks."], ["4-11", "Early returns choose a grade."], ["13", "Required name, any marks, any extra info."], ["14", "Re‑unpack the marks tuple into average()."], ["18", "Return the average so the caller can collect it."], ["21-23", "Collect each student's average in a list."], ["25", "Unpack the list into average() for the class average."]], "trace": null, "tip": "Small functions, each doing one job, combine into a complete program.", "tryit": ["Add a grade <code>\"A+\"<\/code> for 95 and above. Where must the new check go, and why?", "Call <code>report(\"Zara\")<\/code> with no marks. What breaks? Guard against it with an early return."], "file": null, "expected": {"out": "Priya: marks=(92, 88, 95) avg=91.7 grade=A\n    city -> Pune\nRahul: marks=(70, 65, 81) avg=72.0 grade=C\n    course -> Python\nAmit: marks=(50, 62, 58) avg=56.7 grade=F\nClass average: 73.4", "err": null, "line": null}}, {"title": "Project 3: Bank account (scope in action)", "code": "balance = 1000\ntransactions = 0\n\ndef deposit(*amounts):\n    global balance, transactions\n    for amount in amounts:\n        balance = balance + amount\n        transactions = transactions + 1\n    return balance\n\ndef withdraw(amount):\n    global balance, transactions\n    if amount > balance:\n        return \"Insufficient funds\"\n    balance = balance - amount\n    transactions = transactions + 1\n    return balance\n\ndef statement(**extra):\n    print(\"Balance:\", balance, \"| Transactions:\", transactions)\n    for key, value in extra.items():\n        print(\"  \", key, \":\", value)\n\nprint(\"After deposits:\", deposit(500, 250))\nprint(\"Withdraw 300:\", withdraw(300))\nprint(\"Withdraw 5000:\", withdraw(5000))\nstatement(owner=\"Rahul\", branch=\"Pune\")", "explain": "<p>This project brings <b>scope<\/b> into a real situation.<\/p>\n<ul><li><code>balance<\/code> and <code>transactions<\/code> are <b>globals<\/b>. <code>deposit<\/code> and <code>withdraw<\/code> <b>reassign<\/b> them, so they need <code>global<\/code> (line 5, 12).<\/li>\n<li><code>statement<\/code> only <b>reads<\/b> the globals, so it doesn't need <code>global<\/code>.<\/li>\n<li><code>deposit(*amounts)<\/code> accepts one or many amounts in a single call.<\/li>\n<li><code>withdraw<\/code> uses an <b>early return<\/b> to refuse overdrafts — the lines after it never run, so the balance is untouched.<\/li>\n<li><code>statement(**extra)<\/code> prints any additional labelled info.<\/li><\/ul>\n<div class=\"note\"><b>Going further:<\/b> real programs avoid globals by grouping data and functions into a <b>class<\/b>. That's the natural next topic after functions.<\/div>", "walk": [["1-2", "Global state."], ["5", "Needed because we reassign globals."], ["6-8", "Handle every deposited amount."], ["13-14", "Guard clause: exit early if not enough money."], ["19-22", "Read‑only access to globals — no keyword needed."], ["24", "1000 + 500 + 250 = 1750."], ["25", "1750 − 300 = 1450."], ["26", "Refused; balance stays 1450."]], "trace": null, "tip": "Use global only when you must reassign; reading needs nothing.", "tryit": ["Remove <code>global balance, transactions<\/code> from <code>withdraw<\/code>. Which call fails, and why?", "Add a <code>transfer(amount, to)<\/code> function that reuses <code>withdraw<\/code>."], "file": null, "expected": {"out": "After deposits: 1750\nWithdraw 300: 1450\nWithdraw 5000: Insufficient funds\nBalance: 1450 | Transactions: 3\n   owner : Rahul\n   branch : Pune", "err": null, "line": null}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, step = -1, walkSel = -1, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pyfn-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0) hlLines.add(tr[step][0]);
+  if (walkSel >= 0) {
+    const r = L().walk[walkSel][0].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === errLine ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (errLine) mk += `<div class="mark err" style="${at(errLine)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  edits[key(mi, li)] = ta.value; errLine = null;
+  if (step >= 0) step = -1;
+  renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+const isEdited = () => ta.value !== L().code;
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+
+/* ---------- output console ---------- */
+function showOutput(out, err, line, pill, meta, pillCls) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) h += `<span class="errl">${esc(err)}<small>${line ? "Raised on line " + line + " (highlighted in red)" : ""}</small></span>`;
+  o.innerHTML = h;
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  errLine = line || null; paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const cur = step >= 0 ? tr[step] : null;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${cur ? `<span class="ln">line ${cur[0]}</span>${cur[1]}` : "Watch Python move through the code one line at a time. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[2] !== null).map(t => t[2]);
+  const isNew = tr[step][2] !== null;
+  errLine = null;
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderStepper(); paintEditor(); scrollToLine(tr[step][0]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker, so a runaway loop can be stopped) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = `
+import sys, traceback, json
+def __run(src):
+    g = {"__name__": "__main__"}
+    try:
+        exec(compile(src, "<exec>", "exec"), g)
+        return ""
+    except BaseException as e:
+        line = None
+        for fr in traceback.extract_tb(e.__traceback__):
+            if fr.filename == "<exec>": line = fr.lineno
+        if isinstance(e, SyntaxError):
+            line, msg = e.lineno, e.msg
+        else:
+            msg = str(e)
+        return json.dumps({"err": type(e).__name__ + ": " + msg, "line": line})
+`;
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.code); } catch (x) { r = JSON.stringify({err:String(x), line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); pending = null; setBusy(false);
+      let err = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; }
+      showOutput(d.out, err, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live");
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run() {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  pending = { id: ++runId, code: ta.value };
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? 8000 : 60000);
+}
+$("runBtn").onclick = run;
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = L().code; step = -1; errLine = null; renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pyfn-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${md.title}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${x.title}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("fname").textContent = l.file || `module${mi + 1}_lesson${li + 1}.py`;
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errLine = null;
+  ta.value = edits[key(mi, li)] ?? l.code; ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${w[0].includes("-") ? "lines " : "line "}${w[0]}</span><span>${w[1]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][0].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
