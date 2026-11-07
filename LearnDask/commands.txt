@@ -1,0 +1,88 @@
+# =====================================================================
+#  DASK 20 PRACTICAL LABS - COPY & PASTE COMMAND SHEET
+#  Paste ONE command at a time after the >>> prompt in Python Shell.
+#  Lines starting with # are notes - do not paste them.
+# =====================================================================
+
+# ---------- STEP 1: in your SYSTEM TERMINAL (not Python) ----------
+pip install "dask[dataframe]"
+python
+
+# ---------- STEP 2: inside Python Shell, run these once ----------
+import dask
+import dask.dataframe as dd
+import pandas as pd
+
+# LAB 1 - Check Dask version
+dask.__version__
+
+# LAB 2 - Create a Dask DataFrame
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Age":[25,30,28]}), npartitions=2).compute()
+
+# LAB 3 - Check number of partitions
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"]}), npartitions=2).npartitions
+
+# LAB 4 - Display first two records
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Age":[25,30,28]}), npartitions=2).head(2)
+
+# LAB 5 - Display last two records
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Age":[25,30,28]}), npartitions=1).tail(2)
+
+# LAB 5 (gotcha demo) - with 2 partitions, tail() returns only Priya
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Age":[25,30,28]}), npartitions=2).tail(2)
+
+# LAB 6 - Display only the Name column
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Age":[25,30,28]}), npartitions=2)["Name"].compute()
+
+# LAB 7 - Filter Age greater than 25
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Age":[25,30,28]}), npartitions=2).query("Age > 25").compute()
+
+# LAB 8 - Filter Age less than 30
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Age":[25,30,28]}), npartitions=2).query("Age < 30").compute()
+
+# LAB 9 - Total salary
+dd.from_pandas(pd.DataFrame({"Salary":[30000,40000,50000]}), npartitions=2)["Salary"].sum().compute()
+
+# LAB 10 - Average salary
+dd.from_pandas(pd.DataFrame({"Salary":[30000,40000,50000]}), npartitions=2)["Salary"].mean().compute()
+
+# LAB 11 - Maximum salary
+dd.from_pandas(pd.DataFrame({"Salary":[30000,40000,50000]}), npartitions=2)["Salary"].max().compute()
+
+# LAB 12 - Minimum salary
+dd.from_pandas(pd.DataFrame({"Salary":[30000,40000,50000]}), npartitions=2)["Salary"].min().compute()
+
+# LAB 13 - Count employee names
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya","Neha"]}), npartitions=2)["Name"].count().compute()
+
+# LAB 14 - Sort employees by salary
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Salary":[30000,50000,40000]}), npartitions=2).sort_values("Salary").compute()
+
+# LAB 15 - Group employees by department
+dd.from_pandas(pd.DataFrame({"Department":["IT","HR","IT","HR"],"Salary":[30000,20000,40000,25000]}), npartitions=2).groupby("Department")["Salary"].sum().compute()
+
+# LAB 16 - Create a CSV file
+pd.DataFrame({"Name":["Rahul","Amit","Priya"],"Age":[25,30,28]}).to_csv("employees.csv", index=False)
+
+# LAB 17 - Read CSV using Dask
+dd.read_csv("employees.csv").compute()
+
+# LAB 18 - Check partitions in the CSV
+dd.read_csv("employees.csv").npartitions
+
+# LAB 19 - Save Dask DataFrame into CSV
+dd.read_csv("employees.csv").to_csv("dask_output/employee-*.csv", index=False)
+
+# LAB 20 - Employee salary report
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya","Neha"],"Salary":[30000,40000,35000,45000]}), npartitions=2)["Name"].count().compute()
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya","Neha"],"Salary":[30000,40000,35000,45000]}), npartitions=2)["Salary"].sum().compute()
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya","Neha"],"Salary":[30000,40000,35000,45000]}), npartitions=2)["Salary"].mean().compute()
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya","Neha"],"Salary":[30000,40000,35000,45000]}), npartitions=2)["Salary"].max().compute()
+dd.from_pandas(pd.DataFrame({"Name":["Rahul","Amit","Priya","Neha"],"Salary":[30000,40000,35000,45000]}), npartitions=2)["Salary"].min().compute()
+
+# BONUS - Lazy execution: without compute() you get a task, not a number
+dd.from_pandas(pd.DataFrame({"Salary":[30000,40000,50000]}), npartitions=2)["Salary"].sum()
+dd.from_pandas(pd.DataFrame({"Salary":[30000,40000,50000]}), npartitions=2)["Salary"].sum().compute()
+
+# Exit Python Shell
+exit()
