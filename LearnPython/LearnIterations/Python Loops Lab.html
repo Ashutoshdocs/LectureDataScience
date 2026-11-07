@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Loops Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.dir{display:grid;gap:8px;margin:.6em 0 1em}
+.dir div{display:grid;grid-template-columns:150px 70px 1fr 70px;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.dir b{font-family:var(--f-mono);color:var(--accent)}
+.dir span{font-weight:600;text-align:center;background:var(--accent-soft);border-radius:6px;padding:3px 6px}
+.dir i{font:normal 13px var(--f-mono);text-align:center;color:var(--muted)}
+@media (max-width:600px){.dir div{grid-template-columns:1fr}}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Python <b>Loops</b> Lab</h1><span>Lists · Tuples · Sets · Dictionaries · keys and values · edit, run and step through every example</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore the original example">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Real Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "for Loop Basics", "level": "Beginner", "summary": "Repeating code once for every item.", "lessons": [{"title": "What is a loop?", "code": "print(\"Welcome Rahul\")\nprint(\"Welcome Amit\")\nprint(\"Welcome Priya\")\n\nprint(\"--- with a loop ---\")\n\nfor name in [\"Rahul\", \"Amit\", \"Priya\"]:\n    print(\"Welcome\", name)", "explain": "<p>A <b>loop<\/b> repeats a block of code. A <b>for loop<\/b> repeats it <b>once for every item<\/b> in a collection.<\/p>\n<p>Lines 1–3 repeat the same idea by hand. Lines 7–8 do the same with a loop, and would still be two lines for 3 names or 3,000.<\/p>\n<pre class=\"snippet\">for variable in collection:\n    # body: runs once per item<\/pre>\n<table class=\"tbl\"><tr><th>Part<\/th><th>Meaning<\/th><\/tr>\n<tr><td><code>for<\/code><\/td><td>Starts the loop<\/td><\/tr>\n<tr><td><code>name<\/code><\/td><td>Loop variable: holds the <b>current<\/b> item, a new one each time round<\/td><\/tr>\n<tr><td><code>in<\/code><\/td><td>Separates the variable from the collection<\/td><\/tr>\n<tr><td><code>[...]<\/code><\/td><td>The collection to walk through (an <b>iterable<\/b>)<\/td><\/tr>\n<tr><td><code>:<\/code> + indentation<\/td><td>The body that repeats<\/td><\/tr><\/table>\n<p>Each pass through the body is called an <b>iteration<\/b>. Use <b>Step through<\/b> to watch <code>name<\/code> change.<\/p>", "walk": [["1-3", "Repetition by hand."], ["7", "Loop header: name takes each item in turn."], ["8", "The body runs once per item."]], "trace": [[1, "", "Welcome Rahul"], [2, "", "Welcome Amit"], [3, "", "Welcome Priya"], [5, "", "--- with a loop ---"], [7, "Iteration 1: name = 'Rahul'", null], [8, "", "Welcome Rahul"], [7, "Iteration 2: name = 'Amit'", null], [8, "", "Welcome Amit"], [7, "Iteration 3: name = 'Priya'", null], [8, "", "Welcome Priya"], [7, "No items left, so the loop ends.", null]], "tip": "for item in collection: runs the body once per item.", "tryit": [], "file": null, "expected": {"out": "Welcome Rahul\nWelcome Amit\nWelcome Priya\n--- with a loop ---\nWelcome Rahul\nWelcome Amit\nWelcome Priya", "err": null, "line": null}}, {"title": "Looping with range()", "code": "for i in range(5):\n    print(\"i =\", i)\n\nprint(\"---\")\nfor i in range(1, 6):\n    print(i, end=\" \")\nprint()\n\nfor i in range(0, 20, 5):\n    print(i, end=\" \")\nprint()\n\nfor i in range(5, 0, -1):\n    print(i, end=\" \")\nprint(\"Lift off!\")", "explain": "<p><code>range()<\/code> produces a sequence of numbers, which is perfect for \"repeat N times\" or counting.<\/p>\n<table class=\"tbl\"><tr><th>Call<\/th><th>Numbers<\/th><th>Rule<\/th><\/tr>\n<tr><td><code>range(5)<\/code><\/td><td>0 1 2 3 4<\/td><td>Starts at 0, stops <b>before<\/b> 5<\/td><\/tr>\n<tr><td><code>range(1, 6)<\/code><\/td><td>1 2 3 4 5<\/td><td>start, stop (stop excluded)<\/td><\/tr>\n<tr><td><code>range(0, 20, 5)<\/code><\/td><td>0 5 10 15<\/td><td>start, stop, step<\/td><\/tr>\n<tr><td><code>range(5, 0, -1)<\/code><\/td><td>5 4 3 2 1<\/td><td>Negative step counts down<\/td><\/tr><\/table>\n<p><code>print(..., end=\" \")<\/code> ends with a space instead of a new line, so the numbers stay on one line. The empty <code>print()<\/code> then moves to the next line.<\/p>", "walk": [["1", "0 to 4."], ["5", "1 to 5."], ["6", "end=' ' keeps the output on one line."], ["9", "Step of 5."], ["13", "Counting down."]], "trace": null, "tip": "range(start, stop, step): stop is never included.", "tryit": [], "file": null, "expected": {"out": "i = 0\ni = 1\ni = 2\ni = 3\ni = 4\n---\n1 2 3 4 5 \n0 5 10 15 \n5 4 3 2 1 Lift off!", "err": null, "line": null}}, {"title": "Looping over a string", "code": "word = \"Python\"\n\nfor ch in word:\n    print(ch)\n\nvowels = 0\nfor ch in \"programming\":\n    if ch in \"aeiou\":\n        vowels = vowels + 1\nprint(\"Vowels:\", vowels)", "explain": "<p>A string is a sequence of characters, so a for loop visits <b>each character<\/b>.<\/p>\n<p>Lines 6–10 show the most common loop pattern, the <b>accumulator<\/b>:<\/p>\n<ol><li>Start a counter before the loop (<code>vowels = 0<\/code>).<\/li>\n<li>Update it inside the loop when a condition is true.<\/li>\n<li>Use the result after the loop.<\/li><\/ol>", "walk": [["3-4", "One character per iteration."], ["6", "Counter starts at 0."], ["8-9", "Count only vowels."], ["10", "After the loop: 3 vowels (o, a, i)."]], "trace": null, "tip": "Start a variable before the loop, update it inside, use it after.", "tryit": [], "file": null, "expected": {"out": "P\ny\nt\nh\no\nn\nVowels: 3", "err": null, "line": null}}]}, {"title": "Looping over Lists", "level": "Beginner", "summary": "Values, indexes, and both together.", "lessons": [{"title": "Print every value", "code": "fruits = [\"apple\", \"banana\", \"cherry\"]\n\nfor fruit in fruits:\n    print(fruit)\n\nfor fruit in fruits:\n    print(fruit.upper(), len(fruit))", "explain": "<p>This is the simplest and most common loop: <b>for each value in the list<\/b>.<\/p>\n<p>The loop variable (<code>fruit<\/code>) holds the <b>value<\/b> itself, not its position. You can use it like any variable: call methods on it, pass it to functions, and so on.<\/p>\n<div class=\"note\"><b>Naming tip:<\/b> use a plural for the list and the singular for the loop variable: <code>for fruit in fruits<\/code>, <code>for student in students<\/code>.<\/div>", "walk": [["3-4", "Print each value."], ["6-7", "Use each value in an expression."]], "trace": null, "tip": "for value in my_list: gives you each value directly.", "tryit": [], "file": null, "expected": {"out": "apple\nbanana\ncherry\nAPPLE 5\nBANANA 6\nCHERRY 6", "err": null, "line": null}}, {"title": "Index and value: range(len) vs enumerate", "code": "fruits = [\"apple\", \"banana\", \"cherry\"]\n\nfor i in range(len(fruits)):\n    print(i, fruits[i])\n\nprint(\"---\")\nfor i, fruit in enumerate(fruits):\n    print(i, fruit)\n\nprint(\"---\")\nfor position, fruit in enumerate(fruits, start=1):\n    print(f\"{position}. {fruit}\")", "explain": "<p>Sometimes you need the <b>position<\/b> as well as the value.<\/p>\n<table class=\"tbl\"><tr><th>Style<\/th><th>Code<\/th><th>Verdict<\/th><\/tr>\n<tr><td>Index only<\/td><td><code>for i in range(len(fruits))<\/code> then <code>fruits[i]<\/code><\/td><td>Works, but clumsy<\/td><\/tr>\n<tr><td><b>enumerate<\/b><\/td><td><code>for i, fruit in enumerate(fruits)<\/code><\/td><td><b>Preferred<\/b>: clear and safe<\/td><\/tr><\/table>\n<p><code>enumerate()<\/code> gives <code>(index, value)<\/code> pairs, which we unpack into <code>i, fruit<\/code>. <code>start=1<\/code> starts counting at 1, which is handy for numbered lists people will read.<\/p>", "walk": [["3-4", "Loop over positions, then look the value up."], ["7-8", "enumerate gives index and value together."], ["11-12", "Count from 1 for a numbered list."]], "trace": null, "tip": "Need index and value? Use enumerate().", "tryit": [], "file": null, "expected": {"out": "0 apple\n1 banana\n2 cherry\n---\n0 apple\n1 banana\n2 cherry\n---\n1. apple\n2. banana\n3. cherry", "err": null, "line": null}}, {"title": "Changing list items in a loop", "code": "prices = [100, 250, 80]\n\nfor p in prices:\n    p = p * 2\nprint(\"After loop 1:\", prices)\n\nfor i in range(len(prices)):\n    prices[i] = prices[i] * 2\nprint(\"After loop 2:\", prices)\n\ndoubled = [p * 2 for p in prices]\nprint(\"New list    :\", doubled)", "explain": "<div class=\"warn\"><b>Gotcha:<\/b> the first loop does <b>not<\/b> change the list. <code>p<\/code> is just a variable holding a copy of each number; reassigning <code>p<\/code> doesn't touch the list.<\/div>\n<p>To change the list itself, assign through the <b>index<\/b>: <code>prices[i] = ...<\/code> (line 8).<\/p>\n<p>Often the cleanest option is to build a <b>new<\/b> list instead (line 11, a list comprehension).<\/p>", "walk": [["4", "Rebinds p only; the list is unchanged."], ["8", "Writes back into the list by index."], ["11", "Builds a new list instead."]], "trace": null, "tip": "Reassigning the loop variable doesn't change the list; use the index.", "tryit": [], "file": null, "expected": {"out": "After loop 1: [100, 250, 80]\nAfter loop 2: [200, 500, 160]\nNew list    : [400, 1000, 320]", "err": null, "line": null}}, {"title": "Building results: sum, max, filter", "code": "marks = [78, 92, 45, 88, 61]\n\ntotal = 0\nhighest = marks[0]\npassed = []\n\nfor m in marks:\n    total = total + m\n    if m > highest:\n        highest = m\n    if m >= 60:\n        passed.append(m)\n\nprint(\"Total  :\", total)\nprint(\"Average:\", total / len(marks))\nprint(\"Highest:\", highest)\nprint(\"Passed :\", passed)\nprint(\"Check  :\", sum(marks), max(marks))", "explain": "<p>One loop can build several results at once:<\/p>\n<ul><li><b>Total:<\/b> accumulate with <code>total = total + m<\/code>.<\/li>\n<li><b>Highest:<\/b> keep the best seen so far, and replace it when a bigger one appears.<\/li>\n<li><b>Filter:<\/b> start with an empty list and <code>append<\/code> the items that pass a test.<\/li><\/ul>\n<p>Line 18 checks the answers with Python's built‑ins <code>sum()<\/code> and <code>max()<\/code>. In real code you'd usually use those, but writing the loop yourself shows how they work.<\/p>", "walk": [["3-5", "Set up the results before the loop."], ["8", "Running total."], ["9-10", "Track the highest so far."], ["11-12", "Keep passing marks."], ["18", "Built-ins give the same answers."]], "trace": null, "tip": "Set up before, update inside, report after.", "tryit": [], "file": null, "expected": {"out": "Total  : 364\nAverage: 72.8\nHighest: 92\nPassed : [78, 92, 88, 61]\nCheck  : 364 92", "err": null, "line": null}}, {"title": "Nested lists", "code": "classroom = [\n    [\"Rahul\", 78, 85],\n    [\"Priya\", 92, 95],\n    [\"Amit\", 60, 72],\n]\n\nfor row in classroom:\n    print(row)\n\nfor name, m1, m2 in classroom:\n    print(name, \"average:\", (m1 + m2) / 2)\n\nfor row in classroom:\n    for value in row:\n        print(value, end=\" | \")\n    print()", "explain": "<p>A list can hold other lists, like a table with rows. There are three ways to loop over it:<\/p>\n<ol><li><b>Row by row<\/b> (line 7): each <code>row<\/code> is an inner list.<\/li>\n<li><b>Unpack each row<\/b> (line 10): give every column a name.<\/li>\n<li><b>Nested loop<\/b> (lines 13–15): the outer loop picks a row, and the inner loop walks across its values. The inner loop runs completely for <b>each<\/b> outer iteration.<\/li><\/ol>", "walk": [["7-8", "Each row is a list."], ["10-11", "Unpack columns into names."], ["13", "Outer loop: rows."], ["14-15", "Inner loop: values in that row."], ["16", "New line after each row."]], "trace": null, "tip": "Outer loop = rows, inner loop = values in that row.", "tryit": [], "file": null, "expected": {"out": "['Rahul', 78, 85]\n['Priya', 92, 95]\n['Amit', 60, 72]\nRahul average: 81.5\nPriya average: 93.5\nAmit average: 66.0\nRahul | 78 | 85 | \nPriya | 92 | 95 | \nAmit | 60 | 72 | ", "err": null, "line": null}}]}, {"title": "Looping over Tuples", "level": "Beginner", "summary": "Exactly like lists, plus unpacking records.", "lessons": [{"title": "Print every value of a tuple", "code": "days = (\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\")\n\nfor day in days:\n    print(day)\n\nfor i, day in enumerate(days, start=1):\n    print(\"Day\", i, \"is\", day)\n\nfor day in reversed(days):\n    print(day, end=\" \")\nprint()", "explain": "<p>Looping over a tuple works <b>exactly<\/b> like looping over a list: values come out in order. <code>enumerate<\/code> and <code>reversed<\/code> work too.<\/p>\n<p>The only difference is that you can't change a tuple's items inside the loop, because tuples are immutable.<\/p>", "walk": [["3-4", "Each value in order."], ["6-7", "Index and value."], ["9", "reversed() walks backwards."]], "trace": null, "tip": "Tuples loop exactly like lists.", "tryit": [], "file": null, "expected": {"out": "Mon\nTue\nWed\nThu\nFri\nDay 1 is Mon\nDay 2 is Tue\nDay 3 is Wed\nDay 4 is Thu\nDay 5 is Fri\nFri Thu Wed Tue Mon ", "err": null, "line": null}}, {"title": "List of tuples (records)", "code": "students = [\n    (\"Rahul\", 25, \"Pune\"),\n    (\"Priya\", 23, \"Delhi\"),\n    (\"Amit\", 27, \"Mumbai\"),\n]\n\nfor student in students:\n    print(student)\n\nfor name, age, city in students:\n    print(f\"{name} ({age}) lives in {city}\")\n\nfor name, _, city in students:\n    print(name, \"-\", city)", "explain": "<p>A very common data shape is a <b>list of tuples<\/b>, where each tuple is one record (a row).<\/p>\n<p>Unpacking in the loop header (line 10) gives each field a meaningful name. Use <code>_<\/code> for fields you don't need (line 13).<\/p>", "walk": [["7-8", "Each item is a whole tuple."], ["10", "Unpack each record into named fields."], ["13", "Skip the age with _."]], "trace": null, "tip": "for a, b, c in records: unpacks each tuple.", "tryit": [], "file": null, "expected": {"out": "('Rahul', 25, 'Pune')\n('Priya', 23, 'Delhi')\n('Amit', 27, 'Mumbai')\nRahul (25) lives in Pune\nPriya (23) lives in Delhi\nAmit (27) lives in Mumbai\nRahul - Pune\nPriya - Delhi\nAmit - Mumbai", "err": null, "line": null}}]}, {"title": "Looping over Sets", "level": "Beginner", "summary": "Every item, but in no guaranteed order.", "lessons": [{"title": "Print every value of a set", "code": "nums = {40, 10, 30, 20, 10}\n\nfor n in nums:\n    print(n)\n\ntotal = 0\nfor n in nums:\n    total += n\nprint(\"Total:\", total)", "explain": "<p>A for loop visits every item in a set exactly once. Duplicates were already removed when the set was created, so 10 appears once.<\/p>\n<div class=\"warn\"><b>Order is not guaranteed.<\/b> Sets are unordered. Small integers often come out sorted, but you must never rely on that, and strings usually come out in a different order each time you run the program.<\/div>\n<p>When the order doesn't matter (totals, counts, checks), looping directly is fine.<\/p>", "walk": [["1", "The duplicate 10 is dropped."], ["3-4", "Each unique item once."], ["7-8", "Order doesn't matter for a total."]], "trace": null, "tip": "Loop a set when order doesn't matter.", "tryit": [], "file": null, "expected": {"out": "40\n10\n20\n30\nTotal: 100", "err": null, "line": null}}, {"title": "Sorted order and membership", "code": "langs = {\"python\", \"java\", \"c\", \"go\"}\n\nfor lang in sorted(langs):\n    print(lang)\n\nfor lang in sorted(langs, key=len):\n    print(lang, len(lang))\n\nwanted = [\"python\", \"rust\", \"go\"]\nfor w in wanted:\n    if w in langs:\n        print(w, \"-> available\")\n    else:\n        print(w, \"-> not available\")", "explain": "<p>To get a <b>predictable order<\/b>, loop over <code>sorted(the_set)<\/code>. That returns a sorted <b>list<\/b>; the set itself is unchanged.<\/p>\n<p><code>key=len<\/code> sorts by length instead of alphabetically.<\/p>\n<p>Sets are best for <b>membership checks<\/b> (<code>w in langs<\/code>, line 11), which are very fast.<\/p>\n<div class=\"note\">Add <code>print(langs)<\/code> and press Run several times: the printed order may change between runs. That's exactly why we use <code>sorted()<\/code>.<\/div>", "walk": [["3-4", "Alphabetical order."], ["6-7", "Shortest first."], ["10-14", "Loop a list, check each item against the set."]], "trace": null, "tip": "for x in sorted(my_set): gives a predictable order.", "tryit": [], "file": null, "expected": {"out": "c\ngo\njava\npython\nc 1\ngo 2\njava 4\npython 6\npython -> available\nrust -> not available\ngo -> available", "err": null, "line": null}}]}, {"title": "Looping over Dictionaries", "level": "Beginner → Intermediate", "summary": "Keys, values, and both together.", "lessons": [{"title": "The three ways at a glance", "code": "student = {\"name\": \"Rahul\", \"age\": 25, \"city\": \"Pune\"}\n\nprint(\"KEYS:\")\nfor key in student.keys():\n    print(\" \", key)\n\nprint(\"VALUES:\")\nfor value in student.values():\n    print(\" \", value)\n\nprint(\"KEYS AND VALUES:\")\nfor key, value in student.items():\n    print(\" \", key, \"->\", value)", "explain": "<p>A dictionary stores <b>key → value<\/b> pairs, so there are three things you might want to loop over:<\/p>\n<table class=\"tbl\"><tr><th>You want<\/th><th>Loop over<\/th><th>Each iteration gives<\/th><\/tr>\n<tr><td>Keys<\/td><td><code>d<\/code> or <code>d.keys()<\/code><\/td><td><code>\"name\"<\/code><\/td><\/tr>\n<tr><td>Values<\/td><td><code>d.values()<\/code><\/td><td><code>\"Rahul\"<\/code><\/td><\/tr>\n<tr><td>Both<\/td><td><code>d.items()<\/code><\/td><td><code>(\"name\", \"Rahul\")<\/code>, unpacked into <code>key, value<\/code><\/td><\/tr><\/table>\n<p>Items come out in the order they were inserted (guaranteed since Python 3.7).<\/p>\n<p>The next lessons look at each of these in detail.<\/p>", "walk": [["4-5", "Loop over keys."], ["8-9", "Loop over values."], ["12-13", "Loop over key/value pairs."]], "trace": [[1, "A dict with 3 key→value pairs.", null], [3, "", "KEYS:"], [4, "key = 'name'", null], [5, "", "  name"], [4, "key = 'age'", null], [5, "", "  age"], [4, "key = 'city'", null], [5, "", "  city"], [7, "", "VALUES:"], [8, "value = 'Rahul'", null], [9, "", "  Rahul"], [8, "value = 25", null], [9, "", "  25"], [8, "value = 'Pune'", null], [9, "", "  Pune"], [11, "", "KEYS AND VALUES:"], [12, "items() gives ('name', 'Rahul') → key='name', value='Rahul'", null], [13, "", "  name -> Rahul"], [12, "('age', 25) → key='age', value=25", null], [13, "", "  age -> 25"], [12, "('city', 'Pune') → key='city', value='Pune'", null], [13, "", "  city -> Pune"]], "tip": ".keys() → keys, .values() → values, .items() → both.", "tryit": [], "file": null, "expected": {"out": "KEYS:\n  name\n  age\n  city\nVALUES:\n  Rahul\n  25\n  Pune\nKEYS AND VALUES:\n  name -> Rahul\n  age -> 25\n  city -> Pune", "err": null, "line": null}}, {"title": "Print the keys", "code": "prices = {\"pen\": 10, \"book\": 120, \"bag\": 850}\n\nfor item in prices:\n    print(item)\n\nprint(\"---\")\nfor item in prices.keys():\n    print(item)\n\nprint(\"---\")\nprint(list(prices.keys()))\nprint(\", \".join(prices))\nprint(\"Number of keys:\", len(prices))", "explain": "<p>Looping over a dictionary <b>directly<\/b> gives you its <b>keys<\/b>. <code>for item in prices<\/code> and <code>for item in prices.keys()<\/code> do the same thing.<\/p>\n<p>Many people write <code>.keys()<\/code> anyway because it makes the intent obvious to the reader.<\/p>\n<h4>Printing keys without a loop<\/h4>\n<ul><li><code>list(prices.keys())<\/code> gives a list of keys.<\/li>\n<li><code>\", \".join(prices)<\/code> joins the keys into one string. This only works when the keys are strings.<\/li><\/ul>", "walk": [["3-4", "Looping a dict gives keys."], ["7-8", "Same thing, more explicit."], ["11", "Keys as a list."], ["12", "Keys joined into one string."]], "trace": null, "tip": "for key in d: and for key in d.keys(): both give keys.", "tryit": [], "file": null, "expected": {"out": "pen\nbook\nbag\n---\npen\nbook\nbag\n---\n['pen', 'book', 'bag']\npen, book, bag\nNumber of keys: 3", "err": null, "line": null}}, {"title": "Print the values", "code": "prices = {\"pen\": 10, \"book\": 120, \"bag\": 850}\n\nfor price in prices.values():\n    print(price)\n\nprint(\"---\")\nfor item in prices:\n    print(prices[item])\n\nprint(\"---\")\nprint(list(prices.values()))\nprint(\"Total:\", sum(prices.values()))\nprint(\"Most expensive:\", max(prices.values()))", "explain": "<p><code>.values()<\/code> gives just the values, without the keys.<\/p>\n<p>Lines 7–8 show the other way: loop over keys and <b>look each value up<\/b> with <code>prices[item]<\/code>. It works, but <code>.values()<\/code> or <code>.items()<\/code> is cleaner.<\/p>\n<p>Built‑ins work directly on values: <code>sum()<\/code>, <code>max()<\/code>, <code>min()<\/code>, <code>sorted()<\/code>.<\/p>\n<div class=\"note\">With <code>.values()<\/code> alone you can't tell <b>which<\/b> key a value belongs to. If you need that (e.g. \"which item is most expensive?\"), use <code>.items()<\/code>.<\/div>", "walk": [["3-4", "Each value directly."], ["7-8", "Key, then look up its value."], ["12", "Add up all values."], ["13", "Largest value."]], "trace": null, "tip": "for value in d.values(): gives values only.", "tryit": [], "file": null, "expected": {"out": "10\n120\n850\n---\n10\n120\n850\n---\n[10, 120, 850]\nTotal: 980\nMost expensive: 850", "err": null, "line": null}}, {"title": "Print keys and values together", "code": "prices = {\"pen\": 10, \"book\": 120, \"bag\": 850}\n\nfor item, price in prices.items():\n    print(item, \"costs\", price)\n\nprint(\"---\")\nfor pair in prices.items():\n    print(pair, type(pair))\n\nprint(\"---\")\nfor item, price in prices.items():\n    print(f\"{item:<6}: Rs {price:>4}\")\n\nprint(\"---\")\nfor i, (item, price) in enumerate(prices.items(), start=1):\n    print(i, item, price)", "explain": "<p><code>.items()<\/code> is the one you'll use most. Each iteration gives a <b>(key, value) tuple<\/b> (lines 7–8 prove it), and the loop header unpacks it into two names.<\/p>\n<h4>Formatting tip<\/h4>\n<p>Line 12 uses an f‑string to line things up: <code>:&lt;6<\/code> pads the key to 6 characters, left‑aligned; <code>:&gt;4<\/code> right‑aligns the price.<\/p>\n<h4>Numbered<\/h4>\n<p>Line 15 combines <code>enumerate<\/code> with <code>.items()<\/code>. Each item is <code>(1, (\"pen\", 10))<\/code>, so the unpacking mirrors that shape: <code>i, (item, price)<\/code>.<\/p>", "walk": [["3-4", "Unpack each pair into key and value."], ["7-8", "Each pair really is a tuple."], ["11-12", "Aligned output with f-strings."], ["15-16", "Numbered key/value list."]], "trace": null, "tip": "for key, value in d.items(): the standard way.", "tryit": [], "file": null, "expected": {"out": "pen costs 10\nbook costs 120\nbag costs 850\n---\n('pen', 10) <class 'tuple'>\n('book', 120) <class 'tuple'>\n('bag', 850) <class 'tuple'>\n---\npen   : Rs   10\nbook  : Rs  120\nbag   : Rs  850\n---\n1 pen 10\n2 book 120\n3 bag 850", "err": null, "line": null}}, {"title": "Sorting while looping", "code": "marks = {\"Rahul\": 78, \"Priya\": 92, \"Amit\": 85, \"Neha\": 92}\n\nprint(\"By name:\")\nfor name in sorted(marks):\n    print(\" \", name, marks[name])\n\nprint(\"By marks (high to low):\")\nfor name, m in sorted(marks.items(), key=lambda pair: pair[1], reverse=True):\n    print(\" \", name, m)\n\nprint(\"Top scorer:\", max(marks, key=marks.get))", "explain": "<p>A dictionary keeps insertion order, but you often want a different order for display.<\/p>\n<ul><li><code>sorted(marks)<\/code> sorts the <b>keys<\/b> alphabetically.<\/li>\n<li><code>sorted(marks.items(), key=lambda pair: pair[1])<\/code> sorts the pairs by <b>value<\/b>. <code>pair[1]<\/code> is the value part of each <code>(key, value)<\/code> tuple. <code>reverse=True<\/code> puts the highest first.<\/li>\n<li><code>max(marks, key=marks.get)<\/code> gives the <b>key<\/b> with the highest value.<\/li><\/ul>\n<div class=\"note\"><code>lambda pair: pair[1]<\/code> is a tiny one‑line function. Read it as \"given a pair, use its second item for sorting\".<\/div>\n<p>Priya and Neha both have 92. <code>sorted<\/code> keeps them in their original order, and <code>max<\/code> returns the first one it finds.<\/p>", "walk": [["4-5", "Keys alphabetically, look up each value."], ["8-9", "Pairs sorted by value, highest first."], ["11", "Key with the highest value."]], "trace": null, "tip": "sorted(d) sorts keys; sorted(d.items(), key=lambda p: p[1]) sorts by value.", "tryit": [], "file": null, "expected": {"out": "By name:\n  Amit 85\n  Neha 92\n  Priya 92\n  Rahul 78\nBy marks (high to low):\n  Priya 92\n  Neha 92\n  Amit 85\n  Rahul 78\nTop scorer: Priya", "err": null, "line": null}}, {"title": "Nested dictionaries", "code": "students = {\n    \"Rahul\": {\"age\": 25, \"city\": \"Pune\", \"marks\": [78, 85]},\n    \"Priya\": {\"age\": 23, \"city\": \"Delhi\", \"marks\": [92, 95]},\n}\n\nfor name, info in students.items():\n    print(name)\n    for key, value in info.items():\n        print(\"   \", key, \":\", value)\n\nprint(\"---\")\nfor name, info in students.items():\n    avg = sum(info[\"marks\"]) / len(info[\"marks\"])\n    print(f\"{name} from {info['city']}: average {avg}\")", "explain": "<p>When values are dictionaries themselves, use a <b>nested loop<\/b>:<\/p>\n<ul><li>The outer loop gives each student's name and their inner dict (<code>info<\/code>).<\/li>\n<li>The inner loop walks the keys and values of <code>info<\/code>.<\/li><\/ul>\n<p>Often you don't need the inner loop at all. Just read the fields you want by key (line 13–14).<\/p>", "walk": [["6", "Outer: each student and their info dict."], ["8-9", "Inner: each field of that student."], ["13", "Read specific fields directly."]], "trace": null, "tip": "Outer loop for the outer dict, inner loop (or direct keys) for the inner one.", "tryit": [], "file": null, "expected": {"out": "Rahul\n    age : 25\n    city : Pune\n    marks : [78, 85]\nPriya\n    age : 23\n    city : Delhi\n    marks : [92, 95]\n---\nRahul from Pune: average 81.5\nPriya from Delhi: average 93.5", "err": null, "line": null}}, {"title": "Gotcha: changing a dict while looping", "code": "stock = {\"pen\": 0, \"book\": 5, \"bag\": 0, \"ruler\": 3}\n\nfor item in list(stock):\n    if stock[item] == 0:\n        del stock[item]\nprint(\"In stock:\", stock)\n\nfor item in stock:\n    stock[item] = stock[item] + 10\nprint(\"Restocked:\", stock)\n\nstock2 = {\"pen\": 0, \"book\": 5}\nfor item in stock2:\n    del stock2[item]", "explain": "<p>You <b>can<\/b> change values while looping (lines 8–9), because the set of keys stays the same.<\/p>\n<p>You <b>can't<\/b> add or delete keys while looping over the dict itself. Lines 13–14 fail with:<\/p>\n<p><code>RuntimeError: dictionary changed size during iteration<\/code><\/p>\n<p><b>The fix<\/b> (line 3): loop over a <b>copy of the keys<\/b>, <code>list(stock)<\/code>. Then deleting from the real dict is safe.<\/p>\n<div class=\"note\">A cleaner alternative is a dict comprehension that builds a new dict:<br><code>stock = {k: v for k, v in stock.items() if v &gt; 0}<\/code><\/div>", "walk": [["3", "Loop over a copy of the keys."], ["5", "Safe to delete now."], ["8-9", "Changing values is fine."], ["13-14", "Deleting while looping the dict itself → RuntimeError."]], "trace": null, "tip": "To delete while looping, loop over list(d).", "tryit": [], "file": null, "expected": {"out": "In stock: {'book': 5, 'ruler': 3}\nRestocked: {'book': 15, 'ruler': 13}", "err": "RuntimeError: dictionary changed size during iteration", "line": 13}}, {"title": "Building a dict in a loop", "code": "words = \"red blue red green blue red\".split()\n\ncounts = {}\nfor w in words:\n    counts[w] = counts.get(w, 0) + 1\nprint(counts)\n\nsquares = {}\nfor n in range(1, 6):\n    squares[n] = n * n\nprint(squares)\n\nnames = [\"Rahul\", \"Priya\"]\nages = [25, 23]\npeople = {}\nfor name, age in zip(names, ages):\n    people[name] = age\nprint(people)", "explain": "<p>Three common patterns for <b>creating<\/b> a dictionary with a loop:<\/p>\n<ol><li><b>Counting<\/b> (lines 3–5): <code>counts.get(w, 0)<\/code> returns the current count, or 0 for a new word, then we add 1.<\/li>\n<li><b>Computed values<\/b> (lines 8–10): key → some calculation.<\/li>\n<li><b>Pairing two lists<\/b> (lines 13–17): <code>zip<\/code> walks both lists together. (Shortcut: <code>dict(zip(names, ages))<\/code>.)<\/li><\/ol>", "walk": [["5", "Count each word."], ["10", "Key n, value n²."], ["16-17", "Pair names with ages."]], "trace": null, "tip": "Start with {}, then d[key] = value inside the loop.", "tryit": [], "file": null, "expected": {"out": "{'red': 3, 'blue': 2, 'green': 1}\n{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}\n{'Rahul': 25, 'Priya': 23}", "err": null, "line": null}}]}, {"title": "while, break, continue", "level": "Intermediate", "summary": "Loops that run on a condition, and controlling a loop's flow.", "lessons": [{"title": "The while loop", "code": "count = 1\nwhile count <= 5:\n    print(\"Count:\", count)\n    count = count + 1\nprint(\"Done, count is\", count)\n\nbalance = 1000\nmonths = 0\nwhile balance < 2000:\n    balance = balance * 1.10\n    months = months + 1\nprint(\"Doubled after\", months, \"months:\", round(balance, 2))", "explain": "<p>A <b>while<\/b> loop repeats <b>as long as a condition is true<\/b>. Use it when you don't know in advance how many times to loop.<\/p>\n<table class=\"tbl\"><tr><th><\/th><th>for<\/th><th>while<\/th><\/tr>\n<tr><td>Repeats<\/td><td>Once per item<\/td><td>While a condition is true<\/td><\/tr>\n<tr><td>Best for<\/td><td>Walking through collections<\/td><td>\"Keep going until…\"<\/td><\/tr><\/table>\n<div class=\"warn\"><b>Infinite loop danger:<\/b> something inside the loop must eventually make the condition false. Forget <code>count = count + 1<\/code> and the loop never ends. (This page stops code after 8 seconds.)<\/div>", "walk": [["2", "Check the condition before every iteration."], ["4", "Moves toward stopping."], ["5", "After the loop, count is 6."], ["9-11", "Repeat until the balance doubles."]], "trace": [[1, "count = 1", null], [2, "1 <= 5 is True → enter the body.", null], [3, "", "Count: 1"], [4, "count = 2", null], [2, "2 <= 5 True", null], [3, "", "Count: 2"], [4, "count = 3", null], [2, "3 <= 5 True", null], [3, "", "Count: 3"], [4, "count = 4", null], [2, "4 <= 5 True", null], [3, "", "Count: 4"], [4, "count = 5", null], [2, "5 <= 5 True", null], [3, "", "Count: 5"], [4, "count = 6", null], [2, "6 <= 5 is False → exit the loop.", null], [5, "", "Done, count is 6"], [9, "The second loop repeats until balance >= 2000 …", null], [12, "", "Doubled after 8 months: 2143.59"]], "tip": "while condition: repeats until the condition becomes false.", "tryit": [], "file": null, "expected": {"out": "Count: 1\nCount: 2\nCount: 3\nCount: 4\nCount: 5\nDone, count is 6\nDoubled after 8 months: 2143.59", "err": null, "line": null}}, {"title": "break and continue", "code": "numbers = [4, 7, -1, 9, 0, 12]\n\nfor n in numbers:\n    if n < 0:\n        continue\n    if n == 0:\n        print(\"Found 0, stopping\")\n        break\n    print(\"Processing\", n)\n\nstudents = {\"Rahul\": 45, \"Priya\": 92, \"Amit\": 30}\nfor name, marks in students.items():\n    if marks >= 90:\n        print(\"First topper:\", name)\n        break", "explain": "<table class=\"tbl\"><tr><th>Statement<\/th><th>Effect<\/th><\/tr>\n<tr><td><code>continue<\/code><\/td><td>Skip the <b>rest of this iteration<\/b> and go to the next item<\/td><\/tr>\n<tr><td><code>break<\/code><\/td><td>Stop the <b>whole loop<\/b> immediately<\/td><\/tr><\/table>\n<p>In the first loop: 4 and 7 are processed, −1 is skipped by <code>continue<\/code>, 9 is processed, and 0 triggers <code>break<\/code>, so 12 is never reached.<\/p>\n<p>Both work in <code>for<\/code> and <code>while<\/code> loops, and with dictionaries too (lines 12–15).<\/p>", "walk": [["5", "Skip negatives."], ["8", "Stop the loop entirely."], ["9", "Only reached for items that weren't skipped."], ["15", "Stop as soon as the first topper is found."]], "trace": [[3, "n = 4", null], [4, "4 < 0? No.", null], [6, "4 == 0? No.", null], [9, "", "Processing 4"], [3, "n = 7", null], [9, "", "Processing 7"], [3, "n = -1", null], [4, "-1 < 0? Yes.", null], [5, "continue → skip to the next item.", null], [3, "n = 9", null], [9, "", "Processing 9"], [3, "n = 0", null], [6, "0 == 0? Yes.", null], [7, "", "Found 0, stopping"], [8, "break → leave the loop. 12 is never processed.", null], [12, "Rahul: 45, not a topper.", null], [12, "Priya: 92 >= 90", null], [14, "", "First topper: Priya"], [15, "break → Amit is never checked.", null]], "tip": "continue skips one item; break ends the loop.", "tryit": [], "file": null, "expected": {"out": "Processing 4\nProcessing 7\nProcessing 9\nFound 0, stopping\nFirst topper: Priya", "err": null, "line": null}}, {"title": "Loop else: searching", "code": "inventory = {\"pen\": 10, \"book\": 0, \"bag\": 4}\nwanted = \"lamp\"\n\nfor item in inventory:\n    if item == wanted:\n        print(\"Found\", wanted)\n        break\nelse:\n    print(wanted, \"is not in the inventory\")\n\nfor n in range(2, 6):\n    print(n, end=\" \")\nelse:\n    print(\"<- loop finished normally\")", "explain": "<p>A <code>for<\/code> (or <code>while<\/code>) loop can have an <code>else<\/code> block. It runs only if the loop finished <b>without hitting <code>break<\/code><\/b>.<\/p>\n<p>That makes it perfect for searching: <code>break<\/code> when found, and use <code>else<\/code> for \"not found\".<\/p>\n<div class=\"note\">The name is confusing. Read loop‑<code>else<\/code> as \"<b>no break<\/b>\".<\/div>", "walk": [["4-7", "Search; break if found."], ["8-9", "Runs only when no break happened."], ["13-14", "No break here, so else runs."]], "trace": null, "tip": "Loop else runs only when the loop didn't break.", "tryit": [], "file": null, "expected": {"out": "lamp is not in the inventory\n2 3 4 5 <- loop finished normally", "err": null, "line": null}}]}, {"title": "Summary & Project", "level": "Project", "summary": "All collections side by side, then a complete program.", "lessons": [{"title": "Cheat sheet: every collection", "code": "my_list = [\"a\", \"b\", \"c\"]\nmy_tuple = (\"a\", \"b\", \"c\")\nmy_set = {3, 1, 2}\nmy_dict = {\"x\": 10, \"y\": 20}\nmy_str = \"abc\"\n\nfor v in my_list: print(\"list  \", v)\nfor v in my_tuple: print(\"tuple \", v)\nfor v in sorted(my_set): print(\"set   \", v)\nfor k in my_dict: print(\"dict key  \", k)\nfor v in my_dict.values(): print(\"dict value\", v)\nfor k, v in my_dict.items(): print(\"dict pair \", k, v)\nfor ch in my_str: print(\"string\", ch)\nfor i, v in enumerate(my_list): print(\"index\", i, v)", "explain": "<table class=\"tbl\"><tr><th>Collection<\/th><th>Loop<\/th><th>Gives<\/th><th>Ordered?<\/th><\/tr>\n<tr><td>List<\/td><td><code>for v in lst<\/code><\/td><td>values<\/td><td>Yes<\/td><\/tr>\n<tr><td>Tuple<\/td><td><code>for v in tup<\/code><\/td><td>values<\/td><td>Yes<\/td><\/tr>\n<tr><td>Set<\/td><td><code>for v in s<\/code><\/td><td>values<\/td><td><b>No<\/b>, so use <code>sorted(s)<\/code><\/td><\/tr>\n<tr><td>String<\/td><td><code>for ch in text<\/code><\/td><td>characters<\/td><td>Yes<\/td><\/tr>\n<tr><td>Dict keys<\/td><td><code>for k in d<\/code> / <code>d.keys()<\/code><\/td><td>keys<\/td><td>Insertion order<\/td><\/tr>\n<tr><td>Dict values<\/td><td><code>for v in d.values()<\/code><\/td><td>values<\/td><td>Insertion order<\/td><\/tr>\n<tr><td>Dict both<\/td><td><code>for k, v in d.items()<\/code><\/td><td>(key, value)<\/td><td>Insertion order<\/td><\/tr>\n<tr><td>Any + index<\/td><td><code>for i, v in enumerate(x)<\/code><\/td><td>(index, value)<\/td><td>As the collection<\/td><\/tr>\n<tr><td>Two together<\/td><td><code>for a, b in zip(x, y)<\/code><\/td><td>(x item, y item)<\/td><td>As the collections<\/td><\/tr><\/table>\n<div class=\"note\">A one‑line loop body can sit on the same line as the header (as here), which is fine for a cheat sheet. In normal code, put the body on its own indented line.<\/div>", "walk": [["7", "List values."], ["8", "Tuple values."], ["9", "Set values in sorted order."], ["10", "Dict keys."], ["11", "Dict values."], ["12", "Dict keys and values."], ["13", "String characters."], ["14", "Index + value."]], "trace": null, "tip": "Same for loop everywhere; only what each iteration gives you changes.", "tryit": [], "file": null, "expected": {"out": "list   a\nlist   b\nlist   c\ntuple  a\ntuple  b\ntuple  c\nset    1\nset    2\nset    3\ndict key   x\ndict key   y\ndict value 10\ndict value 20\ndict pair  x 10\ndict pair  y 20\nstring a\nstring b\nstring c\nindex 0 a\nindex 1 b\nindex 2 c", "err": null, "line": null}}, {"title": "Project: Shop inventory report", "code": "inventory = {\n    \"pen\":      {\"price\": 10,  \"qty\": 120, \"tags\": {\"stationery\"}},\n    \"notebook\": {\"price\": 60,  \"qty\": 0,   \"tags\": {\"stationery\", \"paper\"}},\n    \"bag\":      {\"price\": 850, \"qty\": 7,   \"tags\": {\"travel\"}},\n    \"ruler\":    {\"price\": 25,  \"qty\": 40,  \"tags\": {\"stationery\"}},\n}\n\nprint(\"ITEMS (keys):\", \", \".join(inventory))\n\nprint(f\"\\n{'Item':<10}{'Price':>7}{'Qty':>6}{'Value':>8}\")\ntotal_value = 0\nout_of_stock = []\nall_tags = set()\n\nfor i, (item, info) in enumerate(inventory.items(), start=1):\n    value = info[\"price\"] * info[\"qty\"]\n    total_value += value\n    all_tags.update(info[\"tags\"])\n    if info[\"qty\"] == 0:\n        out_of_stock.append(item)\n        continue\n    print(f\"{item:<10}{info['price']:>7}{info['qty']:>6}{value:>8}\")\n\nprint(\"\\nTotal stock value:\", total_value)\nprint(\"Out of stock     :\", out_of_stock)\nprint(\"All tags         :\", sorted(all_tags))\n\nprices = [info[\"price\"] for info in inventory.values()]\nprint(\"Prices (values)  :\", prices)\n\nfor item, info in sorted(inventory.items(), key=lambda p: p[1][\"price\"], reverse=True):\n    print(\"Most expensive   :\", item)\n    break", "explain": "<p>A complete program that loops over every collection type:<\/p>\n<table class=\"tbl\"><tr><th>Line<\/th><th>Loop / technique<\/th><th>Collection<\/th><\/tr>\n<tr><td>8<\/td><td><code>\", \".join(inventory)<\/code> prints all <b>keys<\/b><\/td><td>dict<\/td><\/tr>\n<tr><td>15<\/td><td><code>enumerate(inventory.items())<\/code> gives index, <b>key and value<\/b><\/td><td>dict<\/td><\/tr>\n<tr><td>18<\/td><td><code>all_tags.update(...)<\/code> merges each item's tags<\/td><td>set<\/td><\/tr>\n<tr><td>20<\/td><td><code>out_of_stock.append(item)<\/code> builds a result list<\/td><td>list<\/td><\/tr>\n<tr><td>21<\/td><td><code>continue<\/code> skips printing out‑of‑stock items<\/td><td>—<\/td><\/tr>\n<tr><td>26<\/td><td><code>sorted(all_tags)<\/code> prints a set in a predictable order<\/td><td>set<\/td><\/tr>\n<tr><td>28<\/td><td>comprehension over <code>inventory.values()<\/code><\/td><td>dict values<\/td><\/tr>\n<tr><td>31–33<\/td><td>sort by a nested value, take the first, <code>break<\/code><\/td><td>dict items<\/td><\/tr><\/table>\n<p>Notice the notebook is counted in the total (its value is 0) and listed as out of stock, but it's skipped in the table because of <code>continue<\/code>.<\/p>", "walk": [["1-6", "Dict of dicts; each has a set of tags."], ["8", "Print all keys."], ["15", "Index + key + value in one loop."], ["16-17", "Accumulate the total."], ["18", "Merge tags into one set."], ["19-21", "Collect and skip out-of-stock items."], ["22", "Aligned table row."], ["28", "Collect values with a comprehension."], ["31-33", "Sort by price, print the first, stop."]], "trace": null, "tip": "Real programs combine keys, values, items, sets and lists in a few short loops.", "tryit": ["Add a <code>\"lamp\"<\/code> item and rerun.", "Print the items sorted by quantity, lowest first.", "Print each tag followed by the items that have it."], "file": null, "expected": {"out": "ITEMS (keys): pen, notebook, bag, ruler\n\nItem        Price   Qty   Value\npen            10   120    1200\nbag           850     7    5950\nruler          25    40    1000\n\nTotal stock value: 8150\nOut of stock     : ['notebook']\nAll tags         : ['paper', 'stationery', 'travel']\nPrices (values)  : [10, 60, 850, 25]\nMost expensive   : bag", "err": null, "line": null}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, step = -1, walkSel = -1, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pyloop-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0) hlLines.add(tr[step][0]);
+  if (walkSel >= 0) {
+    const r = L().walk[walkSel][0].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === errLine ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (errLine) mk += `<div class="mark err" style="${at(errLine)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  edits[key(mi, li)] = ta.value; errLine = null;
+  if (step >= 0) step = -1;
+  renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+const isEdited = () => ta.value !== L().code;
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+
+/* ---------- output console ---------- */
+function showOutput(out, err, line, pill, meta, pillCls) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) h += `<span class="errl">${esc(err)}<small>${line ? "Raised on line " + line + " (highlighted in red)" : ""}</small></span>`;
+  o.innerHTML = h;
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  errLine = line || null; paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const cur = step >= 0 ? tr[step] : null;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${cur ? `<span class="ln">line ${cur[0]}</span>${cur[1]}` : "Watch Python move through the code one line at a time. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[2] !== null).map(t => t[2]);
+  const isNew = tr[step][2] !== null;
+  errLine = null;
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderStepper(); paintEditor(); scrollToLine(tr[step][0]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker, so a runaway loop can be stopped) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = `
+import sys, traceback, json
+def __run(src):
+    g = {"__name__": "__main__"}
+    try:
+        exec(compile(src, "<exec>", "exec"), g)
+        return ""
+    except BaseException as e:
+        line = None
+        for fr in traceback.extract_tb(e.__traceback__):
+            if fr.filename == "<exec>": line = fr.lineno
+        if isinstance(e, SyntaxError):
+            line, msg = e.lineno, e.msg
+        else:
+            msg = str(e)
+        return json.dumps({"err": type(e).__name__ + ": " + msg, "line": line})
+`;
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.code); } catch (x) { r = JSON.stringify({err:String(x), line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); pending = null; setBusy(false);
+      let err = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; }
+      showOutput(d.out, err, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live");
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run() {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  pending = { id: ++runId, code: ta.value };
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? 8000 : 60000);
+}
+$("runBtn").onclick = run;
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = L().code; step = -1; errLine = null; renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pyloop-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${md.title}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${x.title}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("fname").textContent = l.file || `module${mi + 1}_lesson${li + 1}.py`;
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errLine = null;
+  ta.value = edits[key(mi, li)] ?? l.code; ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${w[0].includes("-") ? "lines " : "line "}${w[0]}</span><span>${w[1]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][0].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

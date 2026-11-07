@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Unpacking Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.dir{display:grid;gap:8px;margin:.6em 0 1em}
+.dir div{display:grid;grid-template-columns:150px 70px 1fr 70px;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.dir b{font-family:var(--f-mono);color:var(--accent)}
+.dir span{font-weight:600;text-align:center;background:var(--accent-soft);border-radius:6px;padding:3px 6px}
+.dir i{font:normal 13px var(--f-mono);text-align:center;color:var(--muted)}
+@media (max-width:600px){.dir div{grid-template-columns:1fr}}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Python <b>Unpacking</b> Lab</h1><span>Unpacking collections · return values · function calls · edit, run and step through every example</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore the original example">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Real Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "Unpacking Basics", "level": "Beginner", "summary": "Pulling values out of a collection into separate variables in one line.", "lessons": [{"title": "What is unpacking?", "code": "student = (\"Rahul\", 25, \"Pune\")\n\n# Without unpacking\nname = student[0]\nage = student[1]\ncity = student[2]\nprint(name, age, city)\n\n# With unpacking\nname, age, city = student\nprint(name, age, city)", "explain": "<p><b>Unpacking<\/b> means taking the items out of a collection and assigning each one to its own variable — in a <b>single line<\/b>.<\/p>\n<p>Lines 4–6 do it the long way, one index at a time. Line 10 does exactly the same thing: Python matches variables to items <b>by position<\/b>.<\/p>\n<div class=\"pack\"><code>name, age, city<\/code><span>=<\/span><code>(\"Rahul\", 25, \"Pune\")<\/code><\/div>\n<table class=\"tbl\"><tr><th>Variable<\/th><th>Gets item at index<\/th><th>Value<\/th><\/tr>\n<tr><td><code>name<\/code><\/td><td>0<\/td><td>\"Rahul\"<\/td><\/tr><tr><td><code>age<\/code><\/td><td>1<\/td><td>25<\/td><\/tr><tr><td><code>city<\/code><\/td><td>2<\/td><td>\"Pune\"<\/td><\/tr><\/table>\n<p><b>Packing<\/b> is the reverse: putting several values into one collection (<code>student = \"Rahul\", 25, \"Pune\"<\/code>). You'll see both throughout this lab.<\/p>", "walk": [["1", "A tuple with three items."], ["4-6", "The long way: one index per line."], ["10", "Unpacking: three variables, three items, one line."]], "trace": null, "tip": "Unpacking = one line, many variables, matched by position.", "tryit": [], "file": null, "expected": {"out": "Rahul 25 Pune\nRahul 25 Pune", "err": null, "line": null}}, {"title": "Unpacking any collection", "code": "a, b, c = [10, 20, 30]\nprint(\"list  :\", a, b, c)\n\nx, y = (1, 2)\nprint(\"tuple :\", x, y)\n\np, q, r = \"abc\"\nprint(\"string:\", p, q, r)\n\ns1, s2, s3 = range(3)\nprint(\"range :\", s1, s2, s3)\n\nk1, k2 = {\"name\": \"Rahul\", \"age\": 25}\nprint(\"dict  :\", k1, k2)\n\nn1, n2, n3 = {30, 10, 20}\nprint(\"set   :\", n1, n2, n3)", "explain": "<p>Unpacking works with <b>any iterable<\/b> — anything you can loop over.<\/p>\n<table class=\"tbl\"><tr><th>Collection<\/th><th>What gets unpacked<\/th><\/tr>\n<tr><td>List / tuple<\/td><td>Items, in order<\/td><\/tr>\n<tr><td>String<\/td><td>Each character<\/td><\/tr>\n<tr><td>range<\/td><td>Each number<\/td><\/tr>\n<tr><td>Dictionary<\/td><td><b>Keys only<\/b> (not values!)<\/td><\/tr>\n<tr><td>Set<\/td><td>Items, but in <b>no guaranteed order<\/b><\/td><\/tr><\/table>\n<div class=\"warn\"><b>Dictionary gotcha:<\/b> unpacking a dict gives you its <b>keys<\/b>. Use <code>.values()<\/code> or <code>.items()<\/code> to get the rest (next lesson).<\/div>\n<div class=\"warn\"><b>Set gotcha:<\/b> sets have no order, so you can't rely on which item lands in which variable. Avoid unpacking sets unless the order truly doesn't matter.<\/div>", "walk": [["1", "List."], ["4", "Tuple."], ["7", "String → characters."], ["10", "range → numbers."], ["13", "Dict → keys only."], ["16", "Set → order not guaranteed."]], "trace": null, "tip": "Anything you can loop over, you can unpack.", "tryit": [], "file": null, "expected": {"out": "list  : 10 20 30\ntuple : 1 2\nstring: a b c\nrange : 0 1 2\ndict  : name age\nset   : 10 20 30", "err": null, "line": null}}, {"title": "Unpacking dictionaries", "code": "student = {\"name\": \"Rahul\", \"age\": 25}\n\nk1, k2 = student\nprint(\"keys  :\", k1, k2)\n\nv1, v2 = student.values()\nprint(\"values:\", v1, v2)\n\npair1, pair2 = student.items()\nprint(\"items :\", pair1, pair2)\n\n(key1, val1), (key2, val2) = student.items()\nprint(key1, \"=\", val1)\nprint(key2, \"=\", val2)", "explain": "<table class=\"tbl\"><tr><th>You unpack<\/th><th>You get<\/th><\/tr>\n<tr><td><code>d<\/code> or <code>d.keys()<\/code><\/td><td>keys<\/td><\/tr>\n<tr><td><code>d.values()<\/code><\/td><td>values<\/td><\/tr>\n<tr><td><code>d.items()<\/code><\/td><td><code>(key, value)<\/code> <b>tuples<\/b><\/td><\/tr><\/table>\n<p>Line 12 is <b>nested unpacking<\/b>: each item is itself a tuple, so we unpack it again with brackets on the left side. You'll see this again in loops.<\/p>", "walk": [["3", "Keys."], ["6", "Values."], ["9", "Each item is a (key, value) tuple."], ["12", "Unpack the tuples too."]], "trace": null, "tip": "Dict → keys; .values() → values; .items() → (key, value) pairs.", "tryit": [], "file": null, "expected": {"out": "keys  : name age\nvalues: Rahul 25\nitems : ('name', 'Rahul') ('age', 25)\nname = Rahul\nage = 25", "err": null, "line": null}}, {"title": "Gotcha: the count must match", "code": "a, b = [1, 2]\nprint(\"ok:\", a, b)\n\na, b = [1, 2, 3]", "explain": "<p>With plain unpacking, the number of variables on the left must <b>exactly equal<\/b> the number of items on the right.<\/p>\n<table class=\"tbl\"><tr><th>Code<\/th><th>Error<\/th><\/tr>\n<tr><td><code>a, b = [1, 2, 3]<\/code><\/td><td><code>ValueError: too many values to unpack (expected 2)<\/code><\/td><\/tr>\n<tr><td><code>a, b, c = [1, 2]<\/code><\/td><td><code>ValueError: not enough values to unpack (expected 3, got 2)<\/code><\/td><\/tr><\/table>\n<p>When you don't know the exact size, use <b>star unpacking<\/b> (next module).<\/p>", "walk": [["1", "2 names, 2 items → fine."], ["4", "2 names, 3 items → ValueError."]], "trace": null, "tip": "Plain unpacking: variables count = items count.", "tryit": ["Change line 4 to <code>a, b, c = [1, 2]<\/code> and compare the message."], "file": null, "expected": {"out": "ok: 1 2", "err": "ValueError: too many values to unpack (expected 2)", "line": 4}}, {"title": "Swapping and multiple assignment", "code": "a = 10\nb = 20\nprint(\"before:\", a, b)\n\na, b = b, a\nprint(\"after :\", a, b)\n\nx, y, z = 1, 2, 3\nprint(x, y, z)\n\nname, marks = \"Priya\", [90, 85]\nprint(name, marks)", "explain": "<p>The right‑hand side <code>b, a<\/code> is first <b>packed<\/b> into a tuple <code>(20, 10)<\/code>; then the tuple is <b>unpacked<\/b> into <code>a<\/code> and <code>b<\/code>. That's why swapping needs no temporary variable.<\/p>\n<p>The same pack‑then‑unpack happens in <code>x, y, z = 1, 2, 3<\/code>.<\/p>\n<p>Items can be anything — line 11 unpacks a string and a whole list.<\/p>", "walk": [["5", "Pack (20, 10), then unpack into a, b."], ["8", "Multiple assignment in one line."], ["11", "Items can be any type."]], "trace": [[1, "a = 10", null], [2, "b = 20", null], [3, "", "before: 10 20"], [5, "Right side packs (b, a) = (20, 10). Then unpack: a = 20, b = 10.", null], [6, "", "after : 20 10"], [8, "Pack (1, 2, 3), unpack into x, y, z.", null], [9, "", "1 2 3"], [11, "name = 'Priya', marks = [90, 85]", null], [12, "", "Priya [90, 85]"]], "tip": "a, b = b, a — pack then unpack, no temp variable.", "tryit": [], "file": null, "expected": {"out": "before: 10 20\nafter : 20 10\n1 2 3\nPriya [90, 85]", "err": null, "line": null}}]}, {"title": "Star & Nested Unpacking", "level": "Intermediate", "summary": "Handling unknown sizes, ignoring values and unpacking inside structures.", "lessons": [{"title": "Star unpacking: *rest", "code": "first, *rest = [10, 20, 30, 40, 50]\nprint(\"first:\", first)\nprint(\"rest :\", rest)\n\n*start, last = [10, 20, 30, 40, 50]\nprint(\"start:\", start)\nprint(\"last :\", last)\n\nhead, *middle, tail = [10, 20, 30, 40, 50]\nprint(head, middle, tail)\n\na, *b = [1]\nprint(a, b)", "explain": "<p>A <b>starred<\/b> variable collects <b>everything that's left over<\/b> into a <b>list<\/b>. The other variables take their items first.<\/p>\n<table class=\"tbl\"><tr><th>Pattern<\/th><th>Result for [10, 20, 30, 40, 50]<\/th><\/tr>\n<tr><td><code>first, *rest<\/code><\/td><td>first = 10, rest = [20, 30, 40, 50]<\/td><\/tr>\n<tr><td><code>*start, last<\/code><\/td><td>start = [10, 20, 30, 40], last = 50<\/td><\/tr>\n<tr><td><code>head, *middle, tail<\/code><\/td><td>head = 10, middle = [20, 30, 40], tail = 50<\/td><\/tr><\/table>\n<p>If nothing is left over, the starred variable is an <b>empty list<\/b> (line 12).<\/p>\n<div class=\"note\">Only <b>one<\/b> starred variable is allowed per unpacking — otherwise Python can't decide how to split the items.<\/div>\n<div class=\"note\">Same star, same idea as <code>*args<\/code>: \"collect the rest\". In unpacking it makes a <b>list<\/b>; in <code>*args<\/code> it makes a <b>tuple<\/b>.<\/div>", "walk": [["1", "rest takes everything after the first."], ["5", "start takes everything before the last."], ["9", "Fixed ends, flexible middle."], ["12", "Nothing left → empty list."]], "trace": null, "tip": "*name collects 'the rest' into a list.", "tryit": ["Try <code>*a, *b = [1, 2, 3]<\/code> and read the SyntaxError."], "file": null, "expected": {"out": "first: 10\nrest : [20, 30, 40, 50]\nstart: [10, 20, 30, 40]\nlast : 50\n10 [20, 30, 40] 50\n1 []", "err": null, "line": null}}, {"title": "Ignoring values with _", "code": "record = (\"Rahul\", 25, \"Pune\", \"rahul@mail.com\")\n\nname, _, city, _ = record\nprint(name, city)\n\nname, *_ = record\nprint(name)\n\n_, *_, email = record\nprint(email)", "explain": "<p>When you need only some values, assign the rest to <code>_<\/code> (underscore). It's a normal variable name, but by <b>convention<\/b> it means \"I don't care about this value\".<\/p>\n<p><code>*_<\/code> throws away any number of values.<\/p>\n<p>This keeps your code honest: readers immediately see which values matter.<\/p>", "walk": [["3", "Keep name and city; ignore age and email."], ["6", "Keep only the first."], ["9", "Keep only the last."]], "trace": null, "tip": "_ means 'ignore this'; *_ means 'ignore the rest'.", "tryit": [], "file": null, "expected": {"out": "Rahul Pune\nRahul\nrahul@mail.com", "err": null, "line": null}}, {"title": "Nested unpacking", "code": "student = (\"Rahul\", (85, 92, 78))\n\nname, (maths, science, english) = student\nprint(name, maths, science, english)\n\npoint_pairs = [(1, 2), (3, 4)]\n(x1, y1), (x2, y2) = point_pairs\nprint(x1, y1, x2, y2)\n\ndata = (\"Priya\", [90, 85, 88, 95])\nname, (first_mark, *other_marks) = data\nprint(name, first_mark, other_marks)", "explain": "<p>If an item is itself a collection, you can unpack it in the same line by mirroring its <b>shape<\/b> with brackets on the left.<\/p>\n<div class=\"pack\"><code>name, (maths, science, english)<\/code><span>mirrors<\/span><code>(\"Rahul\", (85, 92, 78))<\/code><\/div>\n<p>Line 11 combines nesting with a star: the inner list is split into its first mark and the rest.<\/p>\n<div class=\"note\">Rule of thumb: the left side should look like the shape of the data on the right.<\/div>", "walk": [["3", "Outer tuple has 2 items; the 2nd is unpacked again."], ["7", "A list of two tuples, both unpacked."], ["11", "Nested + star together."]], "trace": null, "tip": "Mirror the data's shape on the left side.", "tryit": [], "file": null, "expected": {"out": "Rahul 85 92 78\n1 2 3 4\nPriya 90 [85, 88, 95]", "err": null, "line": null}}]}, {"title": "Unpacking in Loops", "level": "Intermediate", "summary": "Where unpacking is used most often in real code.", "lessons": [{"title": "Looping over pairs", "code": "students = [(\"Rahul\", 85), (\"Priya\", 92), (\"Amit\", 78)]\n\nfor student in students:\n    print(student[0], \"scored\", student[1])\n\nprint(\"---\")\n\nfor name, marks in students:\n    print(name, \"scored\", marks)", "explain": "<p>When you loop over a list of tuples, each item is a tuple. Lines 3–4 use indexes (<code>student[0]<\/code>) — this works but is hard to read.<\/p>\n<p>Line 8 unpacks each tuple <b>directly in the for statement<\/b>. Now the code says what the values <em>mean<\/em>.<\/p>\n<p>On each loop, Python does <code>name, marks = (\"Rahul\", 85)<\/code>, then the next tuple, and so on.<\/p>", "walk": [["3-4", "Index access — works, but unclear."], ["8", "Unpack each tuple into meaningful names."]], "trace": [[1, "A list of three (name, marks) tuples.", null], [3, "student = ('Rahul', 85)", null], [4, "", "Rahul scored 85"], [3, "student = ('Priya', 92)", null], [4, "", "Priya scored 92"], [3, "student = ('Amit', 78)", null], [4, "", "Amit scored 78"], [6, "", "---"], [8, "name, marks = ('Rahul', 85) → name='Rahul', marks=85", null], [9, "", "Rahul scored 85"], [8, "name, marks = ('Priya', 92)", null], [9, "", "Priya scored 92"], [8, "name, marks = ('Amit', 78)", null], [9, "", "Amit scored 78"]], "tip": "for a, b in pairs: unpacks each pair automatically.", "tryit": [], "file": null, "expected": {"out": "Rahul scored 85\nPriya scored 92\nAmit scored 78\n---\nRahul scored 85\nPriya scored 92\nAmit scored 78", "err": null, "line": null}}, {"title": "enumerate, dict.items() and zip", "code": "fruits = [\"apple\", \"banana\", \"cherry\"]\nfor i, fruit in enumerate(fruits, start=1):\n    print(i, fruit)\n\nprices = {\"pen\": 10, \"book\": 120}\nfor item, price in prices.items():\n    print(item, \"->\", price)\n\nnames = [\"Rahul\", \"Priya\"]\nmarks = [85, 92]\ncities = [\"Pune\", \"Delhi\"]\nfor name, mark, city in zip(names, marks, cities):\n    print(name, mark, city)", "explain": "<p>Three built‑ins hand you tuples that you unpack in the loop:<\/p>\n<table class=\"tbl\"><tr><th>Function<\/th><th>Each item is<\/th><th>Unpack as<\/th><\/tr>\n<tr><td><code>enumerate(list)<\/code><\/td><td><code>(index, item)<\/code><\/td><td><code>for i, x in …<\/code><\/td><\/tr>\n<tr><td><code>dict.items()<\/code><\/td><td><code>(key, value)<\/code><\/td><td><code>for k, v in …<\/code><\/td><\/tr>\n<tr><td><code>zip(a, b, c)<\/code><\/td><td><code>(a_item, b_item, c_item)<\/code><\/td><td><code>for x, y, z in …<\/code><\/td><\/tr><\/table>\n<p><code>zip<\/code> walks several lists side by side. It stops at the shortest list.<\/p>", "walk": [["2", "enumerate gives (index, item); start=1 begins counting at 1."], ["6", "items() gives (key, value)."], ["12", "zip gives one tuple per position."]], "trace": null, "tip": "enumerate, items() and zip all produce tuples — unpack them.", "tryit": [], "file": null, "expected": {"out": "1 apple\n2 banana\n3 cherry\npen -> 10\nbook -> 120\nRahul 85 Pune\nPriya 92 Delhi", "err": null, "line": null}}, {"title": "Nested unpacking in loops", "code": "orders = [\n    (\"Rahul\", (\"pen\", 10)),\n    (\"Priya\", (\"book\", 120)),\n]\nfor customer, (item, price) in orders:\n    print(customer, \"bought\", item, \"for\", price)\n\nmarks = {\"Rahul\": [78, 85], \"Priya\": [92, 95]}\nfor i, (name, (m1, m2)) in enumerate(marks.items(), start=1):\n    print(i, name, \"average\", (m1 + m2) / 2)", "explain": "<p>Loops can use nested unpacking too — mirror the shape of each item.<\/p>\n<p>Line 9 looks complex, so read it from the inside out:<\/p>\n<ol><li><code>marks.items()<\/code> gives <code>(\"Rahul\", [78, 85])<\/code>.<\/li>\n<li><code>enumerate<\/code> wraps it: <code>(1, (\"Rahul\", [78, 85]))<\/code>.<\/li>\n<li>The left side <code>i, (name, (m1, m2))<\/code> mirrors that shape exactly.<\/li><\/ol>\n<div class=\"note\">Nice to know, but don't overdo it. If the unpacking is hard to read, unpack in two steps inside the loop body instead.<\/div>", "walk": [["5", "Each order is (customer, (item, price))."], ["9", "enumerate + items + nested list, all unpacked at once."]], "trace": null, "tip": "Mirror the item's shape in the for line.", "tryit": [], "file": null, "expected": {"out": "Rahul bought pen for 10\nPriya bought book for 120\n1 Rahul average 81.5\n2 Priya average 93.5", "err": null, "line": null}}]}, {"title": "Unpacking into Function Calls", "level": "Intermediate", "summary": "Using * and ** to spread a collection into arguments.", "lessons": [{"title": "* spreads a list into arguments", "code": "def add(a, b, c):\n    return a + b + c\n\nnumbers = [10, 20, 30]\n\nprint(add(numbers[0], numbers[1], numbers[2]))\nprint(add(*numbers))\n\nprint(*numbers)\nprint(numbers)\nprint(*\"abc\", sep=\"-\")", "explain": "<p>In a <b>function call<\/b>, <code>*<\/code> <b>unpacks<\/b> a collection into separate positional arguments.<\/p>\n<p><code>add(*numbers)<\/code> is exactly the same as <code>add(10, 20, 30)<\/code>.<\/p>\n<p>A handy trick: <code>print(*numbers)<\/code> prints the items separated by spaces, without brackets.<\/p>\n<table class=\"tbl\"><tr><th>Where * appears<\/th><th>What it does<\/th><\/tr>\n<tr><td><code>def f(*args)<\/code><\/td><td><b>Packs<\/b> incoming arguments into a tuple<\/td><\/tr>\n<tr><td><code>f(*items)<\/code><\/td><td><b>Unpacks<\/b> a collection into arguments<\/td><\/tr>\n<tr><td><code>a, *rest = items<\/code><\/td><td><b>Collects<\/b> the leftovers into a list<\/td><\/tr><\/table>", "walk": [["6", "The long way."], ["7", "* spreads the list into a, b, c."], ["9", "Print items without brackets."], ["11", "Works on strings too."]], "trace": null, "tip": "f(*items) == f(items[0], items[1], ...).", "tryit": [], "file": null, "expected": {"out": "60\n60\n10 20 30\n[10, 20, 30]\na-b-c", "err": null, "line": null}}, {"title": "** spreads a dict into keyword arguments", "code": "def greet(name, city, course=\"Python\"):\n    print(f\"Hello {name} from {city}, welcome to {course}!\")\n\ninfo = {\"name\": \"Rahul\", \"city\": \"Pune\"}\ngreet(**info)\n\nmore = {\"name\": \"Priya\", \"city\": \"Delhi\", \"course\": \"Data Science\"}\ngreet(**more)\n\ngreet(\"Amit\", **{\"city\": \"Mumbai\"})", "explain": "<p><code>**<\/code> in a call unpacks a <b>dictionary<\/b> into <b>keyword arguments<\/b>: each key becomes a parameter name and each value its argument.<\/p>\n<p><code>greet(**info)<\/code> becomes <code>greet(name=\"Rahul\", city=\"Pune\")<\/code>.<\/p>\n<div class=\"warn\">The keys must match the parameter names. A key the function doesn't accept raises <code>TypeError: got an unexpected keyword argument<\/code> — unless the function has <code>**kwargs<\/code>.<\/div>", "walk": [["5", "Keys become parameter names."], ["8", "Overrides the default course."], ["10", "Mix normal and ** arguments."]], "trace": null, "tip": "f(**d) == f(key1=value1, key2=value2, ...).", "tryit": [], "file": null, "expected": {"out": "Hello Rahul from Pune, welcome to Python!\nHello Priya from Delhi, welcome to Data Science!\nHello Amit from Mumbai, welcome to Python!", "err": null, "line": null}}, {"title": "Merging with * and **", "code": "a = [1, 2]\nb = [3, 4]\nmerged = [*a, *b, 5]\nprint(merged)\n\nt = (*a, *b)\nprint(t)\n\ndefaults = {\"theme\": \"light\", \"font\": 14}\nuser = {\"font\": 18}\nsettings = {**defaults, **user}\nprint(settings)\n\nunique = {*a, *b, 2, 3}\nprint(unique)", "explain": "<p>You can unpack inside brackets to <b>build a new collection<\/b>:<\/p>\n<ul><li><code>[*a, *b]<\/code> — a new list containing the items of both.<\/li>\n<li><code>(*a, *b)<\/code> — a new tuple.<\/li>\n<li><code>{*a, *b}<\/code> — a new set (duplicates removed).<\/li>\n<li><code>{**d1, **d2}<\/code> — a new dict; if both have the same key, the <b>later one wins<\/b>.<\/li><\/ul>\n<p>Line 11 is a common real‑world pattern: start from default settings, then override with the user's choices. <code>font<\/code> becomes 18 because <code>user<\/code> comes second.<\/p>", "walk": [["3", "Merge two lists and add an item."], ["6", "Same for a tuple."], ["11", "Later dict overrides earlier keys."], ["14", "Set merge drops duplicates."]], "trace": null, "tip": "[*a, *b] merges lists; {**d1, **d2} merges dicts (last wins).", "tryit": [], "file": null, "expected": {"out": "[1, 2, 3, 4, 5]\n(1, 2, 3, 4)\n{'theme': 'light', 'font': 18}\n{1, 2, 3, 4}", "err": null, "line": null}}]}, {"title": "Return & Unpacking", "level": "Intermediate", "summary": "Functions that return several values and how the caller unpacks them.", "lessons": [{"title": "return packs, the caller unpacks", "code": "def min_max(numbers):\n    return min(numbers), max(numbers)\n\nresult = min_max([4, 9, 1, 7])\nprint(result, type(result))\n\nlow, high = min_max([4, 9, 1, 7])\nprint(\"low :\", low)\nprint(\"high:\", high)", "explain": "<p>This is the bridge between functions and unpacking:<\/p>\n<ol><li><code>return min(...), max(...)<\/code> — the commas <b>pack<\/b> two values into one tuple.<\/li>\n<li><code>low, high = min_max(...)<\/code> — the caller <b>unpacks<\/b> that tuple.<\/li><\/ol>\n<p>A function always returns <b>one object<\/b>. \"Returning multiple values\" really means returning one tuple and unpacking it.<\/p>\n<div class=\"pack\"><code>return 1, 9<\/code><span>→ packs →<\/span><code>(1, 9)<\/code><span>→ unpacks →<\/span><code>low, high<\/code><\/div>", "walk": [["2", "Commas pack two values into a tuple."], ["4-5", "Without unpacking you get the tuple."], ["7", "Unpack straight into two names."]], "trace": [[1, "Define min_max.", null], [4, "Call min_max([4, 9, 1, 7]).", null], [2, "min = 1, max = 9 → return the tuple (1, 9).", null], [4, "result = (1, 9)", null], [5, "", "(1, 9) <class 'tuple'>"], [7, "Call again; returned (1, 9) is unpacked: low = 1, high = 9.", null], [8, "", "low : 1"], [9, "", "high: 9"]], "tip": "return a, b packs; x, y = f() unpacks.", "tryit": [], "file": null, "expected": {"out": "(1, 9) <class 'tuple'>\nlow : 1\nhigh: 9", "err": null, "line": null}}, {"title": "Ignoring and starring return values", "code": "def stats(*marks):\n    total = sum(marks)\n    average = total / len(marks)\n    return min(marks), max(marks), total, average\n\nlow, high, total, avg = stats(70, 85, 90)\nprint(low, high, total, round(avg, 1))\n\n_, _, total, _ = stats(70, 85, 90)\nprint(\"total only:\", total)\n\nlow, *others = stats(70, 85, 90)\nprint(low, others)", "explain": "<p>All the unpacking tools work on return values:<\/p>\n<ul><li><b>Full unpack<\/b> — one name per returned value (line 6).<\/li>\n<li><b><code>_<\/code><\/b> — ignore values you don't need (line 9).<\/li>\n<li><b><code>*others<\/code><\/b> — collect the rest into a list (line 12).<\/li><\/ul>\n<p>Notice <code>*marks<\/code> on line 1: the arguments are <b>packed<\/b> into a tuple on the way in, and the results are <b>packed<\/b> into a tuple on the way out.<\/p>", "walk": [["1", "*marks packs the arguments."], ["4", "Four values packed into a tuple."], ["6", "Unpack all four."], ["9", "Keep only total."], ["12", "First value, then the rest as a list."]], "trace": null, "tip": "Use _ and * on return values just like any other unpacking.", "tryit": [], "file": null, "expected": {"out": "70 90 245 81.7\ntotal only: 245\n70 [90, 245, 81.66666666666667]", "err": null, "line": null}}, {"title": "Returning a dict and unpacking it", "code": "def make_profile(name, age):\n    return {\"name\": name, \"age\": age, \"active\": True}\n\nprofile = make_profile(\"Rahul\", 25)\nprint(profile[\"name\"], profile[\"age\"])\n\nname, age, active = make_profile(\"Priya\", 23).values()\nprint(name, age, active)\n\ndef describe(name, age, active):\n    print(name, \"is\", age, \"| active:\", active)\n\ndescribe(**make_profile(\"Amit\", 30))", "explain": "<p>A function can return a <b>dictionary<\/b> instead of a tuple. Then the caller reads values by <b>name<\/b>, which is clearer when there are many values.<\/p>\n<p>You can still unpack it: <code>.values()<\/code> (line 7), or spread it into another function with <code>**<\/code> (line 13) — the keys match <code>describe<\/code>'s parameter names.<\/p>\n<table class=\"tbl\"><tr><th>Return a…<\/th><th>Caller uses<\/th><th>Best when<\/th><\/tr>\n<tr><td>tuple<\/td><td><code>a, b, c = f()<\/code><\/td><td>2–4 values with obvious meaning<\/td><\/tr>\n<tr><td>dict<\/td><td><code>r[\"name\"]<\/code> or <code>**f()<\/code><\/td><td>many values, or names matter<\/td><\/tr><\/table>", "walk": [["2", "Return a dict explicitly."], ["5", "Access by key."], ["7", "Unpack the values."], ["13", "Spread the returned dict into keyword arguments."]], "trace": null, "tip": "Return a dict when names make the result clearer.", "tryit": [], "file": null, "expected": {"out": "Rahul 25\nPriya 23 True\nAmit is 30 | active: True", "err": null, "line": null}}]}, {"title": "Project: Shopping Bill", "level": "Project", "summary": "Your calculate_bill and print_receipt program, explained line by line.", "lessons": [{"title": "The complete program", "code": "def calculate_bill(*prices, tax_rate=0.18, **discounts):\n    subtotal = sum(prices)\n    discount = sum(discounts.values())\n    taxable = subtotal - discount\n    tax = taxable * tax_rate\n    return subtotal, discount, tax, taxable + tax\n\n\ndef print_receipt(customer, subtotal, discount, tax, total):\n    print(\"=\" * 28)\n    print(\"Customer :\", customer)\n    print(\"Subtotal :\", subtotal)\n    print(\"Discount :\", discount)\n    print(\"Tax      :\", round(tax, 2))\n    print(\"TOTAL    :\", round(total, 2))\n    print(\"=\" * 28)\n\nsub, disc, tax, total = calculate_bill(120, 30, 850, festival=100, coupon=50)\nprint_receipt(\"Rahul\", sub, disc, tax, total)\nprint(disc)\n\nsub, disc, tax, total = calculate_bill(499, tax_rate=0.05)\nprint_receipt(\"Priya\", sub, disc, tax, total)", "explain": "<p>This program brings together everything from the functions and collections labs. Use <b>Step through<\/b> above to follow it line by line, then work through the next lessons, which break it into pieces.<\/p>\n<h4>What it does<\/h4>\n<ol><li><code>calculate_bill<\/code> takes any number of item prices, an optional tax rate and any number of named discounts. It <b>returns<\/b> four numbers.<\/li>\n<li>The caller <b>unpacks<\/b> those four numbers into <code>sub, disc, tax, total<\/code>.<\/li>\n<li><code>print_receipt<\/code> <b>prints<\/b> them nicely. It returns nothing.<\/li><\/ol>\n<h4>Concepts used<\/h4>\n<table class=\"tbl\"><tr><th>Concept<\/th><th>Where<\/th><\/tr>\n<tr><td><code>*args<\/code> (packing)<\/td><td><code>*prices<\/code> — line 1<\/td><\/tr>\n<tr><td>Keyword‑only parameter with default<\/td><td><code>tax_rate=0.18<\/code> after <code>*prices<\/code> — line 1<\/td><\/tr>\n<tr><td><code>**kwargs<\/code> (packing)<\/td><td><code>**discounts<\/code> — line 1<\/td><\/tr>\n<tr><td>Tuple / dict built‑ins<\/td><td><code>sum(prices)<\/code>, <code>discounts.values()<\/code> — lines 2–3<\/td><\/tr>\n<tr><td>Return multiple values<\/td><td>line 6 returns a 4‑item tuple<\/td><\/tr>\n<tr><td>Unpacking a return value<\/td><td>lines 18 and 22<\/td><\/tr>\n<tr><td>print vs return<\/td><td><code>calculate_bill<\/code> returns; <code>print_receipt<\/code> prints<\/td><\/tr>\n<tr><td>Variables being reassigned<\/td><td>line 22 overwrites <code>sub, disc, tax, total<\/code><\/td><\/tr><\/table>\n<h4>The numbers for Rahul<\/h4>\n<table class=\"tbl\"><tr><th>Step<\/th><th>Calculation<\/th><th>Value<\/th><\/tr>\n<tr><td>subtotal<\/td><td>120 + 30 + 850<\/td><td>1000<\/td><\/tr>\n<tr><td>discount<\/td><td>100 + 50<\/td><td>150<\/td><\/tr>\n<tr><td>taxable<\/td><td>1000 − 150<\/td><td>850<\/td><\/tr>\n<tr><td>tax<\/td><td>850 × 0.18<\/td><td>153.0<\/td><\/tr>\n<tr><td>total<\/td><td>850 + 153.0<\/td><td>1003.0<\/td><\/tr><\/table>", "walk": [["1", "Header: any prices, optional tax rate, any named discounts."], ["2", "Add up the prices tuple."], ["3", "Add up the discount values."], ["4", "Amount that gets taxed."], ["5", "Tax on that amount."], ["6", "Return 4 values → packed into one tuple."], ["9", "Five normal parameters — one per receipt field."], ["10-16", "Display only. No return, so it returns None."], ["18", "Call, then unpack the returned tuple into 4 variables."], ["19", "Pass the unpacked values to the receipt function."], ["20", "Print the discount on its own → 150."], ["22", "Second bill: one price, custom tax, no discounts. Variables are overwritten."], ["23", "Receipt for Priya."]], "trace": [[1, "Define calculate_bill. Body skipped.", null], [9, "Define print_receipt. Body skipped.", null], [18, "Call calculate_bill(120, 30, 850, festival=100, coupon=50).<br>prices = (120, 30, 850) · tax_rate = 0.18 · discounts = {'festival': 100, 'coupon': 50}", null], [2, "subtotal = sum((120, 30, 850)) = 1000", null], [3, "discount = sum([100, 50]) = 150", null], [4, "taxable = 1000 − 150 = 850", null], [5, "tax = 850 × 0.18 = 153.0", null], [6, "return 1000, 150, 153.0, 1003.0 → packed into the tuple (1000, 150, 153.0, 1003.0)", null], [18, "Unpack: sub = 1000, disc = 150, tax = 153.0, total = 1003.0", null], [19, "Call print_receipt('Rahul', 1000, 150, 153.0, 1003.0).", null], [10, "", "============================"], [11, "", "Customer : Rahul"], [12, "", "Subtotal : 1000"], [13, "", "Discount : 150"], [14, "round(153.0, 2) → 153.0", "Tax      : 153.0"], [15, "round(1003.0, 2) → 1003.0", "TOTAL    : 1003.0"], [16, "", "============================"], [19, "print_receipt finished (returned None). Back to the main program.", null], [20, "disc still holds 150 from line 18.", "150"], [22, "Call calculate_bill(499, tax_rate=0.05).<br>prices = (499,) · tax_rate = 0.05 · discounts = {}", null], [2, "subtotal = 499", null], [3, "discount = sum([]) = 0", null], [4, "taxable = 499 − 0 = 499", null], [5, "tax = 499 × 0.05 = 24.950000000000003 (floating‑point!)", null], [6, "return (499, 0, 24.950000000000003, 523.95)", null], [22, "Unpack and <b>overwrite<\/b>: sub = 499, disc = 0, tax ≈ 24.95, total ≈ 523.95", null], [23, "Call print_receipt('Priya', …).", null], [10, "", "============================"], [11, "", "Customer : Priya"], [12, "", "Subtotal : 499"], [13, "", "Discount : 0"], [14, "round() hides the floating‑point noise → 24.95", "Tax      : 24.95"], [15, "", "TOTAL    : 523.95"], [16, "", "============================"]], "tip": "Pack on the way in (*prices, **discounts), pack on the way out (return a, b, c, d), unpack at the caller.", "tryit": ["Add a third customer with 5 items and a <code>loyalty=75<\/code> discount.", "Move <code>print(disc)<\/code> to the very end. What does it print now, and why?"], "file": "shopping_bill.py", "expected": {"out": "============================\nCustomer : Rahul\nSubtotal : 1000\nDiscount : 150\nTax      : 153.0\nTOTAL    : 1003.0\n============================\n150\n============================\nCustomer : Priya\nSubtotal : 499\nDiscount : 0\nTax      : 24.95\nTOTAL    : 523.95\n============================", "err": null, "line": null}}, {"title": "Breakdown: the function header", "code": "def calculate_bill(*prices, tax_rate=0.18, **discounts):\n    print(\"prices   :\", prices, type(prices))\n    print(\"tax_rate :\", tax_rate)\n    print(\"discounts:\", discounts, type(discounts))\n    print()\n\ncalculate_bill(120, 30, 850, festival=100, coupon=50)\ncalculate_bill(499, tax_rate=0.05)\ncalculate_bill()", "explain": "<p>Here the body is replaced with <code>print<\/code>s so you can <b>see<\/b> what each parameter receives.<\/p>\n<pre class=\"snippet\">def calculate_bill(*prices, tax_rate=0.18, **discounts):<\/pre>\n<table class=\"tbl\"><tr><th>Parameter<\/th><th>Kind<\/th><th>Receives<\/th><\/tr>\n<tr><td><code>*prices<\/code><\/td><td>*args<\/td><td>All positional arguments, packed into a <b>tuple<\/b><\/td><\/tr>\n<tr><td><code>tax_rate=0.18<\/code><\/td><td>Keyword‑only, with default<\/td><td>Only settable by name, because it comes after <code>*prices<\/code><\/td><\/tr>\n<tr><td><code>**discounts<\/code><\/td><td>**kwargs<\/td><td>All other keyword arguments, packed into a <b>dict<\/b><\/td><\/tr><\/table>\n<h4>Why is <code>tax_rate<\/code> keyword‑only?<\/h4>\n<p><code>*prices<\/code> swallows <b>every<\/b> positional value. So in <code>calculate_bill(499, 0.05)<\/code>, the <code>0.05<\/code> would become a <b>price<\/b>! The only way to reach <code>tax_rate<\/code> is by name: <code>tax_rate=0.05<\/code>. This protects the function from a silent mistake.<\/p>\n<h4>How Python sorts the arguments of call 1<\/h4>\n<table class=\"tbl\"><tr><th>Argument<\/th><th>Goes to<\/th><\/tr>\n<tr><td><code>120, 30, 850<\/code><\/td><td><code>prices = (120, 30, 850)<\/code><\/td><\/tr>\n<tr><td>(not given)<\/td><td><code>tax_rate = 0.18<\/code> (default)<\/td><\/tr>\n<tr><td><code>festival=100, coupon=50<\/code><\/td><td><code>discounts = {'festival': 100, 'coupon': 50}<\/code><\/td><\/tr><\/table>\n<p>The third call shows the empty case: an empty tuple and an empty dict.<\/p>", "walk": [["1", "*prices → tuple, tax_rate → keyword-only, **discounts → dict."], ["7", "Three prices, default tax, two discounts."], ["8", "One price, tax set by name, no discounts."], ["9", "Nothing passed: empty tuple and empty dict."]], "trace": null, "tip": "*prices packs positionals; **discounts packs keywords; tax_rate sits between, reachable only by name.", "tryit": ["Call <code>calculate_bill(499, 0.05)<\/code>. Where does 0.05 end up?", "Call <code>calculate_bill(100, tax_rate=0.1, staff=10)<\/code> and predict each parameter first."], "file": null, "expected": {"out": "prices   : (120, 30, 850) <class 'tuple'>\ntax_rate : 0.18\ndiscounts: {'festival': 100, 'coupon': 50} <class 'dict'>\n\nprices   : (499,) <class 'tuple'>\ntax_rate : 0.05\ndiscounts: {} <class 'dict'>\n\nprices   : () <class 'tuple'>\ntax_rate : 0.18\ndiscounts: {} <class 'dict'>", "err": null, "line": null}}, {"title": "Breakdown: the calculation and return", "code": "def calculate_bill(*prices, tax_rate=0.18, **discounts):\n    subtotal = sum(prices)\n    discount = sum(discounts.values())\n    taxable = subtotal - discount\n    tax = taxable * tax_rate\n    print(\"returning:\", (subtotal, discount, tax, taxable + tax))\n    return subtotal, discount, tax, taxable + tax\n\nresult = calculate_bill(120, 30, 850, festival=100, coupon=50)\nprint(\"result   :\", result)\nprint(\"type     :\", type(result))\nprint(\"length   :\", len(result))\nprint(\"total    :\", result[3])", "explain": "<h4>Line by line<\/h4>\n<ul><li><b>Line 2<\/b> — <code>sum(prices)<\/code>: <code>prices<\/code> is a tuple, and <code>sum()<\/code> adds its items → 1000.<\/li>\n<li><b>Line 3<\/b> — <code>discounts.values()<\/code> gives just the numbers <code>100, 50<\/code> (not the names); <code>sum<\/code> → 150. With no discounts, <code>sum<\/code> of nothing is <code>0<\/code>, so the code still works.<\/li>\n<li><b>Line 4<\/b> — tax is charged <b>after<\/b> discounts: 1000 − 150 = 850.<\/li>\n<li><b>Line 5<\/b> — 850 × 0.18 = 153.0 (a float, because 0.18 is a float).<\/li>\n<li><b>Line 7<\/b> — four comma‑separated values → Python <b>packs<\/b> them into <b>one tuple<\/b>. The total <code>taxable + tax<\/code> is calculated right in the return statement, without a separate variable.<\/li><\/ul>\n<p>Lines 9–13 keep the result <b>without unpacking<\/b>, to prove it really is a tuple of length 4. Accessing <code>result[3]<\/code> works, but <code>result[3]<\/code> doesn't say what it means. Unpacking into named variables (next lesson) is much clearer.<\/p>", "walk": [["2", "Sum of a tuple."], ["3", "Sum of dict values."], ["4", "Discount before tax."], ["5", "Tax on the discounted amount."], ["7", "Four values → one tuple."], ["9", "Keep the tuple as is."], ["13", "Index 3 = total, but unclear."]], "trace": null, "tip": "return a, b, c, d sends back ONE tuple of four values.", "tryit": [], "file": null, "expected": {"out": "returning: (1000, 150, 153.0, 1003.0)\nresult   : (1000, 150, 153.0, 1003.0)\ntype     : <class 'tuple'>\nlength   : 4\ntotal    : 1003.0", "err": null, "line": null}}, {"title": "Breakdown: unpacking the result", "code": "def calculate_bill(*prices, tax_rate=0.18, **discounts):\n    subtotal = sum(prices)\n    discount = sum(discounts.values())\n    taxable = subtotal - discount\n    tax = taxable * tax_rate\n    return subtotal, discount, tax, taxable + tax\n\nsub, disc, tax, total = calculate_bill(120, 30, 850, festival=100, coupon=50)\nprint(sub, disc, tax, total)\n\n_, _, _, total = calculate_bill(499, tax_rate=0.05)\nprint(\"Priya pays:\", round(total, 2))\n\nsub, *rest = calculate_bill(100, 200)\nprint(sub, rest)\n\nbill = calculate_bill(100, 200)\nprint(\"tax is\", round(bill[2], 2))", "explain": "<p>Line 8 is the key line of your program:<\/p>\n<pre class=\"snippet\">sub, disc, tax, total = calculate_bill(...)<\/pre>\n<ol><li>The function returns the tuple <code>(1000, 150, 153.0, 1003.0)<\/code>.<\/li>\n<li>Python unpacks it by position: <code>sub = 1000<\/code>, <code>disc = 150<\/code>, <code>tax = 153.0<\/code>, <code>total = 1003.0<\/code>.<\/li><\/ol>\n<p>Four names on the left, four values on the right — the counts must match. <code>a, b = calculate_bill(...)<\/code> raises <code>ValueError: too many values to unpack (expected 2)<\/code>.<\/p>\n<h4>Other ways to take the result<\/h4>\n<table class=\"tbl\"><tr><th>Line<\/th><th>Pattern<\/th><th>When to use it<\/th><\/tr>\n<tr><td>8<\/td><td>Unpack all<\/td><td>You need every value (the receipt does)<\/td><\/tr>\n<tr><td>11<\/td><td><code>_<\/code> to ignore<\/td><td>You only need the total<\/td><\/tr>\n<tr><td>14<\/td><td><code>*rest<\/code><\/td><td>First value, then everything else as a list<\/td><\/tr>\n<tr><td>17<\/td><td>Keep the tuple<\/td><td>Pass the whole result along unchanged<\/td><\/tr><\/table>\n<div class=\"note\">The variable names outside (<code>sub<\/code>, <code>disc<\/code>) don't need to match the names inside (<code>subtotal<\/code>, <code>discount<\/code>). Only the <b>position<\/b> matters.<\/div>", "walk": [["8", "Unpack 4 returned values into 4 names."], ["11", "Keep only the total."], ["14", "First value + the rest as a list."], ["17", "Keep the whole tuple."]], "trace": null, "tip": "Unpacking matches by position, not by name.", "tryit": ["Change line 8 to <code>sub, disc = calculate_bill(...)<\/code> and read the error."], "file": null, "expected": {"out": "1000 150 153.0 1003.0\nPriya pays: 523.95\n300 [0, 54.0, 354.0]\ntax is 54.0", "err": null, "line": null}}, {"title": "Breakdown: print_receipt and print(disc)", "code": "def print_receipt(customer, subtotal, discount, tax, total):\n    print(\"=\" * 28)\n    print(\"Customer :\", customer)\n    print(\"Subtotal :\", subtotal)\n    print(\"Discount :\", discount)\n    print(\"Tax      :\", round(tax, 2))\n    print(\"TOTAL    :\", round(total, 2))\n    print(\"=\" * 28)\n\nsub, disc, tax, total = 1000, 150, 153.0, 1003.0\nr = print_receipt(\"Rahul\", sub, disc, tax, total)\nprint(\"print_receipt returned:\", r)\nprint(disc)\n\nvalues = (499, 0, 24.950000000000003, 523.95)\nprint_receipt(\"Priya\", *values)\nprint(disc)", "explain": "<h4><code>print_receipt<\/code><\/h4>\n<ul><li>It has five <b>normal<\/b> parameters, filled by position: <code>\"Rahul\"<\/code> → <code>customer<\/code>, <code>sub<\/code> → <code>subtotal<\/code>, and so on.<\/li>\n<li><code>\"=\" * 28<\/code> repeats the <code>=<\/code> character 28 times to draw a line.<\/li>\n<li><code>round(tax, 2)<\/code> shows at most 2 decimal places. It hides floating‑point noise such as <code>24.950000000000003<\/code>.<\/li>\n<li>It has <b>no return<\/b>, so it returns <code>None<\/code> (line 12 proves it). Its job is <b>display<\/b>; <code>calculate_bill<\/code>'s job is <b>calculation<\/b>. Keeping them separate means you could reuse the calculation in a web page or a test without any printing.<\/li><\/ul>\n<h4><code>print(disc)<\/code> in your program<\/h4>\n<p>After the first bill, <code>disc<\/code> holds <b>150<\/b>, so <code>print(disc)<\/code> prints <code>150<\/code> — on its own line, <b>after<\/b> the receipt, because it runs after <code>print_receipt<\/code> finishes.<\/p>\n<div class=\"warn\"><b>Variables get overwritten.<\/b> In your program, the second call to <code>calculate_bill<\/code> unpacks into the <b>same names<\/b>, so <code>disc<\/code> becomes <code>0<\/code>. A <code>print(disc)<\/code> after Priya's bill would print <code>0<\/code>, not 150.<\/div>\n<h4>Bonus: unpacking into the call<\/h4>\n<p>Line 16 uses <code>*values<\/code> to spread a tuple into the last four parameters. With this, you could skip the separate variables entirely:<\/p>\n<pre class=\"snippet\">print_receipt(\"Priya\", *calculate_bill(499, tax_rate=0.05))<\/pre>", "walk": [["1", "Five normal positional parameters."], ["2", "'=' * 28 draws a line."], ["6", "round() hides float noise."], ["10", "Pretend these came from calculate_bill."], ["11-12", "No return → None."], ["13", "disc is 150 here."], ["16", "*values spreads the tuple into four arguments."], ["17", "disc here is still 150 — line 10 set it, nothing overwrote it."]], "trace": null, "tip": "print_receipt displays and returns None; calculate_bill calculates and returns values.", "tryit": ["Replace lines 15–16 with <code>print_receipt(\"Priya\", *(499, 0, 24.95, 523.95))<\/code>."], "file": null, "expected": {"out": "============================\nCustomer : Rahul\nSubtotal : 1000\nDiscount : 150\nTax      : 153.0\nTOTAL    : 1003.0\n============================\nprint_receipt returned: None\n150\n============================\nCustomer : Priya\nSubtotal : 499\nDiscount : 0\nTax      : 24.95\nTOTAL    : 523.95\n============================\n150", "err": null, "line": null}}, {"title": "Extending it: lists, dicts and loops", "code": "def calculate_bill(*prices, tax_rate=0.18, **discounts):\n    subtotal = sum(prices)\n    discount = sum(discounts.values())\n    taxable = subtotal - discount\n    tax = taxable * tax_rate\n    return subtotal, discount, tax, taxable + tax\n\ndef print_receipt(customer, subtotal, discount, tax, total):\n    print(f\"{customer:<6} | sub {subtotal:>5} | disc {discount:>4} | tax {tax:>7.2f} | total {total:>8.2f}\")\n\ncart = [120, 30, 850]\noffers = {\"festival\": 100, \"coupon\": 50}\nprint_receipt(\"Rahul\", *calculate_bill(*cart, **offers))\n\ncustomers = [\n    (\"Rahul\", [120, 30, 850], {\"festival\": 100, \"coupon\": 50}),\n    (\"Priya\", [499], {}),\n    (\"Amit\", [250, 250, 90], {\"loyalty\": 40}),\n]\n\ngrand_total = 0\nfor name, items, deals in customers:\n    sub, disc, tax, total = calculate_bill(*items, **deals)\n    print_receipt(name, sub, disc, tax, total)\n    grand_total += total\n\nprint(\"Grand total:\", round(grand_total, 2))", "explain": "<p>Real shopping carts come as a <b>list<\/b> of prices and a <b>dict<\/b> of offers. Unpacking connects them to the function without changing it:<\/p>\n<ul><li><code>*cart<\/code> spreads the list into <code>*prices<\/code>.<\/li>\n<li><code>**offers<\/code> spreads the dict into <code>**discounts<\/code>.<\/li>\n<li>The outer <code>*calculate_bill(...)<\/code> spreads the returned tuple straight into <code>print_receipt<\/code> (line 13).<\/li><\/ul>\n<p><b>The loop (lines 21–24)<\/b> uses unpacking three times:<\/p>\n<ol><li><code>for name, items, deals in customers<\/code> — unpack each customer tuple.<\/li>\n<li><code>calculate_bill(*items, **deals)<\/code> — unpack the list and dict into arguments.<\/li>\n<li><code>sub, disc, tax, total = ...<\/code> — unpack the returned tuple.<\/li><\/ol>\n<p><code>print_receipt<\/code> here uses an f‑string to print one aligned row: <code>:&lt;6<\/code> pads left‑aligned, <code>:&gt;5<\/code> right‑aligned, <code>:.2f<\/code> gives 2 decimals.<\/p>", "walk": [["9", "f-string formatting for a one-line receipt."], ["13", "Unpack the list and dict in, unpack the result straight into print_receipt."], ["15-19", "A list of (name, prices, offers) tuples."], ["21", "Unpack each customer."], ["22", "Unpack in, unpack out."], ["24", "Add up the totals."]], "trace": null, "tip": "Function inputs and outputs can both be unpacked: f(*list, **dict) and a, b = f().", "tryit": ["Add a customer with a 12% tax rate. Hint: put <code>tax_rate<\/code> inside their dict.", "Print which customer paid the most."], "file": null, "expected": {"out": "Rahul  | sub  1000 | disc  150 | tax  153.00 | total  1003.00\nRahul  | sub  1000 | disc  150 | tax  153.00 | total  1003.00\nPriya  | sub   499 | disc    0 | tax   89.82 | total   588.82\nAmit   | sub   590 | disc   40 | tax   99.00 | total   649.00\nGrand total: 2240.82", "err": null, "line": null}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, step = -1, walkSel = -1, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pyunp-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0) hlLines.add(tr[step][0]);
+  if (walkSel >= 0) {
+    const r = L().walk[walkSel][0].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === errLine ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (errLine) mk += `<div class="mark err" style="${at(errLine)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  edits[key(mi, li)] = ta.value; errLine = null;
+  if (step >= 0) step = -1;
+  renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+const isEdited = () => ta.value !== L().code;
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+
+/* ---------- output console ---------- */
+function showOutput(out, err, line, pill, meta, pillCls) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) h += `<span class="errl">${esc(err)}<small>${line ? "Raised on line " + line + " (highlighted in red)" : ""}</small></span>`;
+  o.innerHTML = h;
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  errLine = line || null; paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const cur = step >= 0 ? tr[step] : null;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${cur ? `<span class="ln">line ${cur[0]}</span>${cur[1]}` : "Watch Python move through the code one line at a time. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[2] !== null).map(t => t[2]);
+  const isNew = tr[step][2] !== null;
+  errLine = null;
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderStepper(); paintEditor(); scrollToLine(tr[step][0]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker, so a runaway loop can be stopped) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = `
+import sys, traceback, json
+def __run(src):
+    g = {"__name__": "__main__"}
+    try:
+        exec(compile(src, "<exec>", "exec"), g)
+        return ""
+    except BaseException as e:
+        line = None
+        for fr in traceback.extract_tb(e.__traceback__):
+            if fr.filename == "<exec>": line = fr.lineno
+        if isinstance(e, SyntaxError):
+            line, msg = e.lineno, e.msg
+        else:
+            msg = str(e)
+        return json.dumps({"err": type(e).__name__ + ": " + msg, "line": line})
+`;
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.code); } catch (x) { r = JSON.stringify({err:String(x), line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); pending = null; setBusy(false);
+      let err = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; }
+      showOutput(d.out, err, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live");
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run() {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  pending = { id: ++runId, code: ta.value };
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? 8000 : 60000);
+}
+$("runBtn").onclick = run;
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = L().code; step = -1; errLine = null; renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pyunp-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${md.title}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${x.title}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("fname").textContent = l.file || `module${mi + 1}_lesson${li + 1}.py`;
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errLine = null;
+  ta.value = edits[key(mi, li)] ?? l.code; ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${w[0].includes("-") ? "lines " : "line "}${w[0]}</span><span>${w[1]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][0].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
