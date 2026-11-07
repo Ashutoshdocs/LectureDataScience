@@ -1,0 +1,111 @@
+# =====================================================================
+#  NUMPY 30 BASIC PYTHON SHELL LABS - COPY & PASTE COMMAND SHEET
+#  Paste ONE command at a time after the >>> prompt in Python Shell.
+#  Lines starting with # are notes - do not paste them.
+# =====================================================================
+
+# ---------- STEP 1: in your SYSTEM TERMINAL (not Python) ----------
+python -m pip install numpy
+python
+
+# ---------- STEP 2: inside Python Shell, run this once per session ----------
+# LAB 01 - Check NumPy installation (no output = success)
+import numpy as np
+
+# ---------------- PART A: GETTING STARTED ----------------
+# LAB 02 - Check NumPy version
+np.__version__
+
+# ---------------- PART B: CREATING ARRAYS ----------------
+# LAB 03 - Create a simple array
+np.array([10, 20, 30, 40])
+
+# LAB 04 - Create an array of zeros
+np.zeros(5)
+
+# LAB 05 - Create an array of ones
+np.ones(4)
+
+# LAB 06 - Create an array filled with a value
+np.full(5, 7)
+
+# LAB 07 - Create a range of values (1 to 10)
+np.arange(1, 11)
+
+# LAB 08 - Create evenly spaced values
+np.linspace(0, 10, 5)
+
+# ---------------- PART C: ARRAY DIMENSIONS ----------------
+# LAB 09 - Create a 1D array
+np.array([1, 2, 3, 4, 5])
+
+# LAB 10 - Create a 2D array
+np.array([[1, 2, 3], [4, 5, 6]])
+
+# LAB 11 - Create a 3D array
+np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+
+# LAB 12 - Create an identity matrix
+np.eye(3)
+
+# ---------------- PART D: ARRAY PROPERTIES ----------------
+# LAB 13 - Check number of dimensions
+np.array([[1, 2], [3, 4]]).ndim
+
+# LAB 14 - Check array shape
+np.array([[1, 2, 3], [4, 5, 6]]).shape
+
+# LAB 15 - Count array elements
+np.array([[1, 2, 3], [4, 5, 6]]).size
+
+# LAB 16 - Check data type
+np.array([1, 2, 3]).dtype
+
+# LAB 17 - Check bytes per element
+np.array([1, 2, 3], dtype=np.int32).itemsize
+
+# ---------------- PART E: INDEXING & SLICING ----------------
+# LAB 18 - Access the first element
+np.array([10, 20, 30, 40])[0]
+
+# LAB 19 - Access the last element
+np.array([10, 20, 30, 40])[-1]
+
+# LAB 20 - Slice an array
+np.array([10, 20, 30, 40, 50])[1:4]
+
+# ---------------- PART F: ARRAY ARITHMETIC ----------------
+# LAB 21 - Add two arrays
+np.array([1, 2, 3]) + np.array([10, 20, 30])
+
+# LAB 22 - Subtract arrays
+np.array([10, 20, 30]) - np.array([1, 2, 3])
+
+# LAB 23 - Multiply array elements
+np.array([2, 3, 4]) * np.array([5, 6, 7])
+
+# LAB 24 - Multiply an array by a number
+np.array([1, 2, 3]) * 10
+
+# ---------------- PART G: STATISTICS ----------------
+# LAB 25 - Find the sum
+np.sum([10, 20, 30, 40])
+
+# LAB 26 - Find the mean
+np.mean([10, 20, 30, 40])
+
+# LAB 27 - Find the maximum
+np.max([10, 50, 20, 40])
+
+# LAB 28 - Find the minimum
+np.min([10, 50, 20, 40])
+
+# ---------------- PART H: SORTING & RESHAPING ----------------
+# LAB 29 - Sort an array
+np.sort([30, 10, 40, 20])
+
+# LAB 30 - Reshape an array
+np.arange(1, 7).reshape(2, 3)
+
+# Exit Python Shell
+exit()
