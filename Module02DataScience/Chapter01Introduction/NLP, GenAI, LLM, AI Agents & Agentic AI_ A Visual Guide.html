@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLP, GenAI, LLM, AI Agents &amp; Agentic AI: A Visual Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f0; --ink:#1d1b18; --muted:#5f5a52; --line:#e2ddd2; --card:#ffffff; --base:#8a8378; --base-soft:#efece5;
+  --nlp:#1f6fd1; --nlp-soft:#e0ecfb;
+  --gen:#c2337a; --gen-soft:#fbe3ef;
+  --llm:#6b4fd8; --llm-soft:#ece7fb;
+  --agt:#0f8a73; --agt-soft:#ddf3ee;
+  --agc:#d9541e; --agc-soft:#fde7dc;
+  --warn:#9a6b00; --warn-soft:#fff3d1;
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#14130f; --ink:#f1ede4; --muted:#a8a197; --line:#2e2b25; --card:#1d1b17; --base:#9b948a; --base-soft:#24221d;
+    --nlp:#6aa8ff; --nlp-soft:#152842; --gen:#ff74b5; --gen-soft:#3a1528; --llm:#a08cff; --llm-soft:#262040;
+    --agt:#3fd1b0; --agt-soft:#12302a; --agc:#ff8a5b; --agc-soft:#3a2016; --warn:#f2c14e; --warn-soft:#332a10; }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);letter-spacing:-.01em}
+h3{font-size:1.22rem}
+p{margin:0 0 1em}
+.mono{font-family:"JetBrains Mono",monospace;font-size:.85em}
+.wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.kicker{font:600 .78rem/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.lead{font-size:1.12rem;color:var(--muted);max-width:700px}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.76rem;font-weight:600}
+.c-nlp{color:var(--nlp)} .c-gen{color:var(--gen)} .c-llm{color:var(--llm)} .c-agt{color:var(--agt)} .c-agc{color:var(--agc)}
+.b-nlp{background:var(--nlp-soft);color:var(--nlp)} .b-gen{background:var(--gen-soft);color:var(--gen)} .b-llm{background:var(--llm-soft);color:var(--llm)} .b-agt{background:var(--agt-soft);color:var(--agt)} .b-agc{background:var(--agc-soft);color:var(--agc)}
+
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+nav a{white-space:nowrap;color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:99px}
+nav a:hover{background:var(--card);color:var(--ink)}
+
+.hero{padding:64px 0 50px;display:grid;grid-template-columns:1fr 1.1fr;gap:36px;align-items:center}
+@media(max-width:860px){.hero{grid-template-columns:1fr}}
+.venn{width:100%;display:block}
+.venn .hit{cursor:pointer;transition:stroke-width .15s}
+.venn text{pointer-events:none;font-family:Inter;font-weight:700}
+.info{min-height:90px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:.95rem;margin-top:12px}
+
+.grid5{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.card.t{border-top:5px solid var(--k)}
+.card .type{font:700 .72rem Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--k)}
+.card h3{margin:6px 0 8px;color:var(--ink)}
+.card .def{font-weight:500}
+.card .lbl{font:700 .72rem Inter;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:14px}
+.card ul{padding-left:18px;margin:.3em 0 0;font-size:.93rem} .card li{margin:.2em 0}
+.spot{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--bg);font-size:.9rem}
+
+.note{border-left:4px solid var(--warn);background:var(--warn-soft);padding:14px 18px;border-radius:0 12px 12px 0;margin:22px 0;font-size:.95rem}
+.note b{color:var(--warn)}
+
+/* stack */
+.stack-wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:26px;align-items:center;margin-top:20px}
+@media(max-width:860px){.stack-wrap{grid-template-columns:1fr}}
+.stack{display:flex;flex-direction:column;gap:8px}
+.layer{border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;border:2px solid transparent;transition:transform .15s}
+.layer:hover,.layer.sel{transform:translateX(6px);border-color:var(--ink)}
+.layer b{font-family:Fraunces;font-size:1.15rem}
+.layer small{font-size:.82rem;opacity:.9}
+.layer .add{font:600 .78rem "JetBrains Mono",monospace;opacity:.85;text-align:right}
+.side-bands{display:flex;gap:8px;margin-top:8px}
+.side-bands div{flex:1;border-radius:12px;padding:10px 14px;font-size:.88rem}
+.analogy{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;min-height:220px}
+.analogy .big{font-size:3rem;line-height:1}
+
+/* lenses */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0}
+.tab{font:600 .88rem Inter;padding:8px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+.tab[aria-selected=true]{color:#fff;border-color:transparent}
+.request{background:var(--ink);color:var(--bg);border-radius:14px;padding:16px 20px;font-size:1.05rem}
+.request .mono{opacity:.7;display:block;margin-bottom:4px}
+.lens{display:grid;grid-template-columns:1fr 1.2fr;gap:18px;margin-top:16px}
+@media(max-width:760px){.lens{grid-template-columns:1fr}}
+.out{font-family:"JetBrains Mono",monospace;font-size:.84rem;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--k);border-radius:12px;padding:16px;white-space:pre-wrap;line-height:1.55}
+.limit{font-size:.9rem;padding:10px 14px;border-radius:10px;background:var(--bg);border:1px dashed var(--line);margin-top:12px}
+
+/* loop */
+.loop-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:24px;align-items:start}
+@media(max-width:860px){.loop-grid{grid-template-columns:1fr}}
+.loop svg{width:100%;max-width:400px;display:block;margin:auto}
+.loop .node rect{transition:fill .2s}
+.log{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;font-family:"JetBrains Mono",monospace;font-size:.82rem;min-height:300px}
+.log div{padding:6px 8px;border-radius:8px;margin-bottom:4px;opacity:.28;transition:opacity .25s,background .25s}
+.log div.seen{opacity:1}
+.log div.now{background:var(--agt-soft)}
+.log .k{font-weight:600}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{font:600 .9rem Inter;padding:9px 16px;border-radius:10px;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:focus-visible,.tab:focus-visible,.opt:focus-visible,.layer:focus-visible{outline:3px solid var(--llm);outline-offset:2px}
+
+/* tables */
+.tscroll{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;background:var(--card);font-size:.92rem;min-width:760px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td:first-child{font-weight:700;white-space:nowrap}
+
+/* autonomy */
+.ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+@media(max-width:760px){.ladder{grid-template-columns:1fr 1fr}}
+.rung{border-radius:14px;padding:16px;background:var(--card);border:1px solid var(--line);position:relative}
+.rung .lvl{font:700 .72rem Inter;letter-spacing:.1em;color:var(--muted)}
+.rung h4{margin:6px 0;font-family:Fraunces;font-size:1.05rem}
+.rung p{font-size:.86rem;margin:0;color:var(--muted)}
+.bar{height:8px;border-radius:99px;background:var(--line);margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--llm),var(--agt),var(--agc))}
+
+/* identifier */
+.ident{display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start}
+@media(max-width:820px){.ident{grid-template-columns:1fr}}
+.qbox{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;min-height:260px}
+.qbox .qt{font-family:Fraunces;font-size:1.3rem;margin-bottom:6px}
+.qbox .hint{color:var(--muted);font-size:.92rem;margin-bottom:16px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{font:600 .92rem Inter;padding:10px 18px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.trail{font-size:.85rem;color:var(--muted);margin-top:16px}
+.trail span{display:inline-block;background:var(--bg);border-radius:6px;padding:2px 8px;margin:2px 4px 2px 0}
+.result{border-radius:var(--radius);padding:24px;color:#fff}
+.flow-list{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;font-size:.92rem}
+.flow-list ol{margin:0;padding-left:20px} .flow-list li{margin:.5em 0}
+
+/* game */
+.game{display:grid;gap:12px}
+.scard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
+.scard .s{font-weight:500;margin-bottom:10px}
+.scard .choices{display:flex;flex-wrap:wrap;gap:6px}
+.scard .choices button{font:600 .82rem Inter;padding:6px 12px;border-radius:99px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.scard .choices button.right{border-color:var(--agt);background:var(--agt-soft);color:var(--agt)}
+.scard .choices button.wrong{border-color:var(--agc);background:var(--agc-soft);color:var(--agc);text-decoration:line-through}
+.scard .why{display:none;margin-top:10px;font-size:.9rem;color:var(--muted)}
+.score{font-family:Fraunces;font-size:1.3rem}
+
+.cheat{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:900px){.cheat{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.cheat{grid-template-columns:1fr}}
+.cheat div{padding:16px;border-radius:14px;font-size:.92rem}
+.cheat b{display:block;font-family:Fraunces;font-size:1.1rem;margin-bottom:4px}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#map">The map</a>
+  <a href="#five">The 5 terms</a>
+  <a href="#stack">How they stack</a>
+  <a href="#lenses">One request, 5 lenses</a>
+  <a href="#loop">Agent loop</a>
+  <a href="#agent-vs-agentic">Agent vs Agentic</a>
+  <a href="#compare">Compare</a>
+  <a href="#identify">Identify it</a>
+  <a href="#game">Practice</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="map">
+  <div>
+    <div class="kicker">Part 2 · After AI, ML &amp; DL</div>
+    <h1>NLP, Generative AI, LLMs, AI Agents &amp; Agentic AI</h1>
+    <p class="lead">These five words get used as if they mean the same thing. They don't, because they aren't even the same <i>kind</i> of thing:</p>
+    <p style="font-size:1.02rem"><span class="pill b-nlp">NLP = a field</span> <span class="pill b-gen">GenAI = a capability</span> <span class="pill b-llm">LLM = a model</span> <span class="pill b-agt">AI agent = a system</span> <span class="pill b-agc">Agentic AI = a way of working</span></p>
+    <p class="lead" style="font-size:.98rem">Tap any shape on the map to see where it sits.</p>
+  </div>
+  <div>
+    <svg class="venn" viewBox="0 0 500 400" role="img" aria-label="Map: AI contains ML, which contains DL. Generative AI sits inside DL. NLP overlaps ML and DL, with some rule-based NLP outside ML. LLMs sit where NLP and Generative AI overlap.">
+      <rect class="hit" data-k="ai" x="8" y="8" width="484" height="384" rx="18" fill="var(--base-soft)" stroke="var(--base)" stroke-width="2"/>
+      <circle class="hit" data-k="ml" cx="262" cy="222" r="160" fill="var(--bg)" stroke="var(--base)" stroke-width="2" stroke-dasharray="6 5"/>
+      <circle class="hit" data-k="dl" cx="292" cy="252" r="116" fill="var(--base-soft)" stroke="var(--base)" stroke-width="2" stroke-dasharray="6 5"/>
+      <circle class="hit" data-k="nlp" cx="190" cy="250" r="100" fill="var(--nlp)" fill-opacity=".16" stroke="var(--nlp)" stroke-width="2.5"/>
+      <ellipse class="hit" data-k="gen" cx="317" cy="275" rx="70" ry="60" fill="var(--gen)" fill-opacity=".18" stroke="var(--gen)" stroke-width="2.5"/>
+      <circle class="hit" data-k="llm" cx="268" cy="268" r="17" fill="var(--llm)" stroke="var(--llm)" stroke-width="2"/>
+      <text x="28" y="40" fill="var(--base)" font-size="16">AI</text>
+      <text x="262" y="88" text-anchor="middle" fill="var(--base)" font-size="13">Machine Learning</text>
+      <text x="292" y="160" text-anchor="middle" fill="var(--base)" font-size="13">Deep Learning</text>
+      <text x="150" y="232" text-anchor="middle" fill="var(--nlp)" font-size="18">NLP</text>
+      <text x="150" y="250" text-anchor="middle" fill="var(--nlp)" font-size="10" font-weight="500">language</text>
+      <text x="340" y="300" text-anchor="middle" fill="var(--gen)" font-size="14">Generative</text>
+      <text x="340" y="316" text-anchor="middle" fill="var(--gen)" font-size="14">AI</text>
+      <text x="268" y="272" text-anchor="middle" fill="#fff" font-size="9.5">LLM</text>
+    </svg>
+    <div class="info" id="info" aria-live="polite"><b>Where are agents?</b> They aren't a circle on this map. Agents are <i>systems built on top</i> of these models. See “How they stack” below.</div>
+  </div>
+</header>
+</div>
+
+<!-- FIVE TERMS -->
+<section id="five"><div class="wrap">
+  <div class="kicker">Step 1 · Definitions</div>
+  <h2>The five terms, one by one</h2>
+  <p class="lead">Each card says what kind of thing it is, what it does, real examples, and the giveaway sign that tells you you're looking at it.</p>
+  <div class="grid5" style="margin-top:22px" id="cards"></div>
+  <div class="note"><b>Labels stack.</b> One product can carry several labels at once. A chat assistant is an <span class="c-llm">LLM</span>, which is a kind of <span class="c-gen">GenAI</span>, which does <span class="c-nlp">NLP</span>. Give it tools to book things and it becomes the brain of an <span class="c-agt">AI agent</span>. When identifying, pick the <b>most specific</b> label that fits.</div>
+</div></section>
+
+<!-- STACK -->
+<section id="stack"><div class="wrap">
+  <div class="kicker">Step 2 · How they build on each other</div>
+  <h2>From brain to team: the stack</h2>
+  <p class="lead">Read it bottom-up. Each layer adds one thing to the layer below. Tap a layer for the analogy.</p>
+  <div class="stack-wrap">
+    <div>
+      <div class="stack" id="stackEl"></div>
+      <div class="side-bands">
+        <div class="b-nlp"><b>NLP</b> is the <i>subject</i> the LLM has mastered: language.</div>
+        <div class="b-gen"><b>GenAI</b> is the <i>talent</i> it shows: creating new content.</div>
+      </div>
+    </div>
+    <div class="analogy" id="analogy"></div>
+  </div>
+</div></section>
+
+<!-- LENSES -->
+<section id="lenses"><div class="wrap">
+  <div class="kicker">Step 3 · One example, five lenses</div>
+  <h2>Same request. What does each one do?</h2>
+  <div class="request"><span class="mono">You type:</span>“Plan a weekend trip from Pune to Goa, under ₹15,000, leaving Friday night.”</div>
+  <div class="tabs" role="tablist" id="ltabs"></div>
+  <div id="lens" role="tabpanel"></div>
+  <p style="font-size:.85rem;color:var(--muted);margin-top:14px">Prices and bookings in this example are made up for teaching.</p>
+</div></section>
+
+<!-- LOOP -->
+<section id="loop"><div class="wrap">
+  <div class="kicker">Step 4 · Inside an AI agent</div>
+  <h2>The agent loop: think → act → observe → repeat</h2>
+  <p class="lead">An LLM on its own answers once and stops. An agent <b>runs in a loop</b>: it decides on a step, uses a tool, looks at the result, and decides again, until the task is done.</p>
+  <div class="loop-grid" style="margin-top:20px">
+    <div class="loop">
+      <svg viewBox="0 0 400 380" id="loopSvg" aria-label="Agent loop diagram">
+        <defs><marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10z" fill="var(--muted)"/></marker></defs>
+        <path d="M200,95 C300,95 330,140 330,180" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/>
+        <path d="M330,230 C330,290 280,305 240,305" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/>
+        <path d="M160,305 C110,305 70,280 70,230" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/>
+        <path d="M70,180 C70,130 100,95 150,95" fill="none" stroke="var(--muted)" stroke-width="2" marker-end="url(#ah)"/>
+        <g class="node" id="n-think"><rect x="140" y="70" width="120" height="50" rx="12" fill="var(--llm-soft)" stroke="var(--llm)" stroke-width="2"/><text x="200" y="93" text-anchor="middle" font-family="Inter" font-weight="700" fill="var(--llm)" font-size="15">THINK</text><text x="200" y="110" text-anchor="middle" font-family="Inter" fill="var(--llm)" font-size="10">LLM plans next step</text></g>
+        <g class="node" id="n-act"><rect x="270" y="180" width="120" height="50" rx="12" fill="var(--agt-soft)" stroke="var(--agt)" stroke-width="2"/><text x="330" y="203" text-anchor="middle" font-family="Inter" font-weight="700" fill="var(--agt)" font-size="15">ACT</text><text x="330" y="220" text-anchor="middle" font-family="Inter" fill="var(--agt)" font-size="10">calls a tool / API</text></g>
+        <g class="node" id="n-obs"><rect x="140" y="280" width="120" height="50" rx="12" fill="var(--nlp-soft)" stroke="var(--nlp)" stroke-width="2"/><text x="200" y="303" text-anchor="middle" font-family="Inter" font-weight="700" fill="var(--nlp)" font-size="15">OBSERVE</text><text x="200" y="320" text-anchor="middle" font-family="Inter" fill="var(--nlp)" font-size="10">reads the result</text></g>
+        <g class="node" id="n-mem"><rect x="10" y="180" width="120" height="50" rx="12" fill="var(--gen-soft)" stroke="var(--gen)" stroke-width="2"/><text x="70" y="203" text-anchor="middle" font-family="Inter" font-weight="700" fill="var(--gen)" font-size="15">REMEMBER</text><text x="70" y="220" text-anchor="middle" font-family="Inter" fill="var(--gen)" font-size="10">updates memory</text></g>
+        <circle cx="200" cy="205" r="44" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+        <text x="200" y="200" text-anchor="middle" font-family="Fraunces" font-weight="700" font-size="15" fill="var(--ink)">GOAL</text>
+        <text x="200" y="218" text-anchor="middle" font-family="Inter" font-size="10" fill="var(--muted)" id="loopCount">step 0</text>
+      </svg>
+    </div>
+    <div>
+      <div class="log" id="log"></div>
+      <div class="btnrow"><button class="btn" id="stepBtn">Next step ▶</button><button class="btn ghost" id="playBtn">Play all</button><button class="btn ghost" id="resetBtn">Reset</button></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:24px">
+    <div class="card"><h3>The 4 ingredients of an agent</h3><ul>
+      <li><b class="c-llm">Brain:</b> an LLM that reasons and decides</li>
+      <li><b class="c-agt">Tools:</b> APIs, search, code, browser, email</li>
+      <li><b class="c-gen">Memory:</b> what it has done and learned so far</li>
+      <li><b class="c-nlp">Loop:</b> keeps going until the goal is met</li></ul></div>
+    <div class="card"><h3>Take one away…</h3><ul>
+      <li>No tools → it's just a <b>chatbot</b> (talks, can't do)</li>
+      <li>No loop → a single <b>tool call</b>, not an agent</li>
+      <li>No LLM → a fixed <b>automation script</b> (if X then Y)</li>
+      <li>No memory → it forgets earlier steps and repeats itself</li></ul></div>
+  </div>
+</div></section>
+
+<!-- AGENT VS AGENTIC -->
+<section id="agent-vs-agentic"><div class="wrap">
+  <div class="kicker">Step 5 · The most confused pair</div>
+  <h2>AI agent vs Agentic AI</h2>
+  <p class="lead">An <b class="c-agt">AI agent</b> is a <i>thing</i>, one worker. <b class="c-agc">Agentic AI</b> describes <i>how much independence</i> a system has. It's usually several agents, planning and adapting toward a bigger goal with little hand-holding.</p>
+  <div class="ladder" id="ladder"></div>
+  <div class="tscroll" style="margin-top:24px">
+  <table>
+    <tr><th></th><th class="c-agt">AI agent</th><th class="c-agc">Agentic AI</th></tr>
+    <tr><td>What it is</td><td>A single software worker</td><td>A design approach / system with high autonomy, often many agents</td></tr>
+    <tr><td>Scope</td><td>One well-defined task (“book the cheapest train”)</td><td>An open-ended goal or workflow (“run my Goa trip end to end”)</td></tr>
+    <tr><td>Who starts it</td><td>Usually you, for each task</td><td>Can start itself on a schedule or a trigger (a cancellation, a price drop)</td></tr>
+    <tr><td>Planning</td><td>Follows a loop for the task in front of it</td><td>Breaks the goal into sub-tasks, assigns them, re-plans when things change</td></tr>
+    <tr><td>Agents involved</td><td>Usually one</td><td>Often several specialists plus a coordinator</td></tr>
+    <tr><td>Memory</td><td>Mostly within the task</td><td>Longer-term: remembers preferences and past outcomes</td></tr>
+    <tr><td>Human role</td><td>Approves or reviews the result</td><td>Sets the goal and limits; steps in only for exceptions</td></tr>
+    <tr><td>Example</td><td>Support bot that looks up your order and issues a refund</td><td>Supply-chain system that watches stock, forecasts demand, reorders from suppliers and escalates only problems</td></tr>
+  </table>
+  </div>
+  <div class="note"><b>Honest note:</b> these terms are still loosely used in industry, and many people say “agentic AI” to mean any AI agent. It's best understood as a <b>spectrum of autonomy</b>, not a hard line.</div>
+</div></section>
+
+<!-- COMPARE -->
+<section id="compare"><div class="wrap">
+  <div class="kicker">Step 6 · All five at once</div>
+  <h2>Comparison table</h2>
+  <div class="tscroll">
+  <table>
+    <tr><th>Term</th><th>Kind of thing</th><th>Core job</th><th>Input → Output</th><th>Takes actions?</th><th>Typical examples</th></tr>
+    <tr><td class="c-nlp">NLP</td><td>Field of AI (since the 1950s)</td><td>Understand &amp; process human language</td><td>Text/speech → labels, extracted facts, translation</td><td>No</td><td>Spam filter, autocorrect, sentiment analysis, voice-to-text</td></tr>
+    <tr><td class="c-gen">Generative AI</td><td>Capability / category of models</td><td>Create new content</td><td>Prompt → new text, image, audio, video, code</td><td>No</td><td>Image generators, music generators, AI video tools, chatbots</td></tr>
+    <tr><td class="c-llm">LLM</td><td>A specific model type (Transformer)</td><td>Predict the next word, at huge scale</td><td>Text → text</td><td>Not by itself</td><td>GPT, Claude, Gemini, Llama</td></tr>
+    <tr><td class="c-agt">AI agent</td><td>System = LLM + tools + memory + loop</td><td>Complete a task</td><td>Goal → actions + result</td><td><b>Yes</b></td><td>Refund bot, coding agent, booking assistant</td></tr>
+    <tr><td class="c-agc">Agentic AI</td><td>Approach / multi-agent system</td><td>Own a goal end to end</td><td>Objective → plan → many actions over time</td><td><b>Yes, many</b></td><td>Autonomous research pipelines, self-running ops workflows</td></tr>
+  </table>
+  </div>
+</div></section>
+
+<!-- IDENTIFY -->
+<section id="identify"><div class="wrap">
+  <div class="kicker">Step 7 · How to identify</div>
+  <h2>The 4-question test</h2>
+  <p class="lead">Think of any AI product or feature and answer honestly. You'll land on the most specific label.</p>
+  <div class="ident" style="margin-top:20px">
+    <div id="qbox" class="qbox"></div>
+    <div class="flow-list">
+      <div class="kicker">The rule of thumb</div>
+      <ol>
+        <li><b>Does it DO things in the world</b> (call APIs, book, send, click, run code)?<br>→ Yes: it's an <b class="c-agt">agent</b>. Go to Q4.</li>
+        <li><b>Does it CREATE something new</b> (text, image, audio, code)?<br>→ Yes: it's <b class="c-gen">GenAI</b>. Go to Q3.<br>→ No, but it works on language: <b class="c-nlp">NLP</b>.</li>
+        <li><b>Is it text from a large language model?</b><br>→ Yes: <b class="c-llm">LLM</b>. No (pictures, music, video): <b class="c-gen">GenAI</b>.</li>
+        <li><b>Does it plan, re-plan and pursue a bigger goal on its own</b>, often with several agents?<br>→ Yes: <b class="c-agc">Agentic AI</b>. No, one task you hand it: <b class="c-agt">AI agent</b>.</li>
+      </ol>
+      <div class="spot" style="margin-top:14px;background:var(--bg)"><b>Quick verbs:</b> <span class="c-nlp">understands</span> · <span class="c-gen">creates</span> · <span class="c-llm">writes</span> · <span class="c-agt">does</span> · <span class="c-agc">manages</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- GAME -->
+<section id="game"><div class="wrap">
+  <div class="kicker">Step 8 · Practice</div>
+  <h2>Spot the label</h2>
+  <p class="lead">Pick the <b>most specific</b> label for each scenario.</p>
+  <p class="score" id="score">Score: 0 / 0</p>
+  <div class="game" id="gameEl"></div>
+
+  <h3 style="margin-top:36px">One-line cheat sheet</h3>
+  <div class="cheat">
+    <div class="b-nlp"><b>NLP</b>Machines <i>understanding</i> language.</div>
+    <div class="b-gen"><b>Generative AI</b>Machines <i>creating</i> new content.</div>
+    <div class="b-llm"><b>LLM</b>The giant <i>language brain</i> behind chatbots.</div>
+    <div class="b-agt"><b>AI agent</b>An LLM with <i>tools</i> that <i>does</i> a task.</div>
+    <div class="b-agc"><b>Agentic AI</b>Agents that <i>plan &amp; run</i> a goal on their own.</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Teaching page, Part 2: NLP · GenAI · LLM · AI agents · Agentic AI. Examples and prices are illustrative.</div></footer>
+
+<script>
+const K={nlp:'--nlp',gen:'--gen',llm:'--llm',agt:'--agt',agc:'--agc'};
+const col=k=>`var(${K[k]})`;
+
+// Venn
+const vinfo={
+ ai:'<b>AI</b>: the whole field of machines acting intelligently.',
+ ml:'<b>Machine Learning</b>: AI that learns from data.',
+ dl:'<b>Deep Learning</b>: ML with many-layered neural networks. Almost all modern GenAI lives here.',
+ nlp:'<b class="c-nlp">NLP</b>: the <i>field</i> of language. Notice it pokes outside ML: early NLP was hand-written grammar rules. Today most of it uses deep learning.',
+ gen:'<b class="c-gen">Generative AI</b>: models that <i>create</i>. Includes LLMs (text) but also image, music and video generators, which are not NLP.',
+ llm:'<b class="c-llm">LLM</b>: sits exactly where NLP meets Generative AI. A deep-learning model that generates <i>language</i>.'
+};
+document.querySelectorAll('.venn .hit').forEach(s=>s.addEventListener('click',e=>{e.stopPropagation();
+  document.querySelectorAll('.venn .hit').forEach(x=>x.style.strokeWidth='');s.style.strokeWidth='5';
+  document.getElementById('info').innerHTML=vinfo[s.dataset.k];}));
+
+// Cards
+const cards=[
+ {k:'nlp',type:'A field',name:'Natural Language Processing',def:'Teaching computers to understand, analyse and work with human language.',
+  does:['Classifies text (spam / not spam)','Pulls out names, dates, places','Detects sentiment & intent','Translates, transcribes speech'],
+  eg:'Gmail spam filter, phone autocorrect, review sentiment dashboards, voice-to-text.',spot:'Output is a <b>label, tag or extraction</b> about the text, not a fresh creation.'},
+ {k:'gen',type:'A capability',name:'Generative AI',def:'AI that creates new content that didn\'t exist before, learned from patterns in huge datasets.',
+  does:['Text: essays, emails, code','Images from a description','Music, voice, video','Synthetic data'],
+  eg:'Image generators (Midjourney, DALL·E, Stable Diffusion), AI music & video tools, chat assistants.',spot:'Something <b>new appears</b> on screen: a picture, paragraph, song.'},
+ {k:'llm',type:'A model',name:'Large Language Model',def:'A huge deep-learning model (a Transformer) trained on vast text to predict the next word, which lets it write, summarise, reason and converse.',
+  does:['Answers questions','Writes & summarises','Explains & translates','Writes code'],
+  eg:'GPT (ChatGPT), Claude, Gemini, Llama.',spot:'<b>Text in → text out</b>. Usually a chat box. By itself it can only talk.'},
+ {k:'agt',type:'A system',name:'AI Agent',def:'Software that uses an LLM as its brain plus tools and memory, and loops until a task is done.',
+  does:['Calls APIs & searches the web','Reads/writes files, runs code','Books, orders, sends emails','Checks its own results'],
+  eg:'Support bot that issues your refund, coding agent that fixes a failing test, travel booking assistant.',spot:'It <b>does things</b>: the world changes (a ticket is booked, a file is edited).'},
+ {k:'agc',type:'A way of working',name:'Agentic AI',def:'Systems with high autonomy: they take a big goal, plan, split it among agents, act over time and adapt with little human input.',
+  does:['Breaks goals into sub-tasks','Coordinates several agents','Re-plans when something fails','Runs on triggers / schedules'],
+  eg:'Multi-agent research pipeline (search → write → review → publish), autonomous supply-chain or IT-ops workflows.',spot:'You give a <b>goal, not steps</b>, and it manages the whole job, handling surprises.'}
+];
+document.getElementById('cards').innerHTML=cards.map(c=>`<div class="card t" style="--k:${col(c.k)}">
+ <div class="type">${c.type}</div><h3>${c.name}</h3><p class="def">${c.def}</p>
+ <div class="lbl">What it does</div><ul>${c.does.map(d=>`<li>${d}</li>`).join('')}</ul>
+ <div class="lbl">Examples</div><p style="font-size:.92rem;margin:.3em 0 0">${c.eg}</p>
+ <div class="spot">🔍 <b>Spot it:</b> ${c.spot}</div></div>`).join('');
+
+// Stack
+const stack=[
+ {k:'agc',name:'Agentic AI',sub:'a self-managing team',add:'+ planning, many agents, autonomy',emoji:'👥',an:'<b>A project team with a manager.</b> You say “handle my Goa trip.” The manager splits work between a transport worker, a hotel worker and a budget checker, watches progress, and re-plans if the train is cancelled. You hear back only when it matters.'},
+ {k:'agt',name:'AI Agent',sub:'brain with hands',add:'+ tools, memory, loop',emoji:'🧑‍💻',an:'<b>One capable employee with a laptop and phone.</b> Same brain as the LLM, but now it can search, click, call APIs and book. Give it one task and it keeps working until it\'s done.'},
+ {k:'llm',name:'LLM',sub:'the language brain',add:'trained on huge text',emoji:'🧠',an:'<b>A brilliant, well-read brain in a jar.</b> It can talk about anything, write and explain, but has no hands. It can\'t check today\'s prices or book anything on its own.'},
+ {k:'dl',name:'Deep Learning / Transformers',sub:'the foundation',add:'neural networks',emoji:'⚙️',an:'<b>The building material.</b> Deep neural networks, specifically the Transformer architecture, are what LLMs and most generative models are built from (see Part 1).'}
+];
+const se=document.getElementById('stackEl'), an=document.getElementById('analogy');
+stack.forEach((s,i)=>{const d=document.createElement('div');d.className='layer';d.tabIndex=0;
+  const fg=s.k==='dl'?'var(--ink)':'#fff', bg=s.k==='dl'?'var(--base-soft)':col(s.k);
+  d.style.background=bg;d.style.color=fg;
+  d.innerHTML=`<div><b>${s.name}</b><br><small>${s.sub}</small></div><div class="add">${s.add}</div>`;
+  const pick=()=>{[...se.children].forEach(x=>x.classList.remove('sel'));d.classList.add('sel');an.innerHTML=`<div class="big">${s.emoji}</div><h3 style="margin-top:12px">${s.name}</h3><p style="margin:0">${s.an}</p>`;};
+  d.onclick=pick;d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}};se.appendChild(d);if(i===2)pick();});
+
+// Lenses
+const lenses=[
+ {k:'nlp',t:'NLP',what:'<b>Understands</b> the sentence and turns it into structured data a program can use.',
+  out:'intent      : plan_trip\norigin      : Pune\ndestination : Goa\nbudget      : ₹15,000\ndepart      : Friday, night\nduration    : weekend (2 nights)',
+  lim:'Doesn\'t write a plan, doesn\'t book anything. It only understands.'},
+ {k:'gen',t:'Generative AI',what:'<b>Creates</b> new content around the trip, in any medium.',
+  out:'🖼  A poster: sunset at Baga beach, watercolour\n🎵  A 30-sec upbeat travel jingle for your reel\n📝  A packing checklist\n🗺  A pretty day-by-day itinerary card',
+  lim:'Made from learned patterns, not live data. The hotel in the poster may not exist.'},
+ {k:'llm',t:'LLM',what:'<b>Writes</b> a helpful text answer, the language part of GenAI.',
+  out:'"Take an overnight train Friday (~₹1,200),\nstay in North Goa guesthouses (~₹2,500/night),\nrent a scooter Saturday (~₹400)…\nTotal: roughly ₹9,000–12,000."',
+  lim:'Sounds confident but can\'t check today\'s fares. Numbers may be outdated or invented ("hallucination").'},
+ {k:'agt',t:'AI agent',what:'<b>Does the task</b>, using tools in a loop, then reports back.',
+  out:'→ search_trains(Pune→Goa, Fri)    ✓ 3 options\n→ search_hotels(Goa, ≤₹3,000)     ✓ 5 options\n→ check_calendar(Fri–Sun)          ✓ free\n→ ask_user("Book train+hotel for ₹10,850?")\n→ book() ✓  email_confirmation() ✓',
+  lim:'Handles this one task you gave it. If the train gets cancelled next week, it won\'t notice unless you ask again.'},
+ {k:'agc',t:'Agentic AI',what:'<b>Owns the goal</b> (“a great Goa weekend under budget”) and manages it over days with a team of agents.',
+  out:'Planner  → splits: transport · stay · activities · budget\nTransport agent  → books train ✓\nStay agent       → books guesthouse ✓\nBudget agent     → tracks ₹10,850 / ₹15,000\n…Thursday: ⚠ train cancelled\nPlanner  → rebooks bus, shifts check-in, budget re-checked\n→ notifies you: "Fixed. New bus 9:30 PM."',
+  lim:'Powerful, but needs clear limits (budget, what it may pay for) and human oversight for risky actions.'}
+];
+const lt=document.getElementById('ltabs'), lp=document.getElementById('lens');
+function showLens(i){const L=lenses[i];[...lt.children].forEach((b,j)=>{b.setAttribute('aria-selected',i===j);b.style.background=i===j?col(lenses[j].k):'';});
+  lp.innerHTML=`<div class="lens" style="--k:${col(L.k)}"><div><h3 class="c-${L.k}">${L.t}</h3><p>${L.what}</p><div class="limit">⚠ <b>Limit:</b> ${L.lim}</div></div><div class="out">${L.out}</div></div>`;}
+lenses.forEach((L,i)=>{const b=document.createElement('button');b.className='tab';b.role='tab';b.textContent=L.t;b.onclick=()=>showLens(i);lt.appendChild(b);});
+showLens(0);
+
+// Loop
+const steps=[
+ ['think','THINK','Goal: Goa trip ≤ ₹15k. First I need transport options.'],
+ ['act','ACT','search_trains(from="Pune", to="Goa", date="Fri")'],
+ ['obs','OBSERVE','3 trains found. Cheapest sleeper ₹1,150, leaves 22:15.'],
+ ['mem','REMEMBER','Transport ≈ ₹2,300 return. Budget left ≈ ₹12,700.'],
+ ['think','THINK','Now find a stay under ₹3,000/night near the beach.'],
+ ['act','ACT','search_hotels(city="Goa", max_price=3000, nights=2)'],
+ ['obs','OBSERVE','Guesthouse in Anjuna, ₹2,600/night, rated 4.4.'],
+ ['think','THINK','Total ≈ ₹7,500. Under budget, so ask the user before paying.'],
+ ['act','ACT','ask_user("Book train + guesthouse for ₹7,500?") → "Yes"'],
+ ['act','ACT','book_train() ✓  book_hotel() ✓  send_email() ✓'],
+ ['done','DONE','Goal met. Loop ends.']
+];
+const log=document.getElementById('log');
+log.innerHTML=steps.map(s=>`<div><span class="k">${s[1]}</span> · ${s[2]}</div>`).join('');
+const nodes={think:'n-think',act:'n-act',obs:'n-obs',mem:'n-mem'};
+const nodeFill={think:['var(--llm-soft)','var(--llm)'],act:['var(--agt-soft)','var(--agt)'],obs:['var(--nlp-soft)','var(--nlp)'],mem:['var(--gen-soft)','var(--gen)']};
+let si=0,timer=null;
+function render(){[...log.children].forEach((d,i)=>{d.classList.toggle('seen',i<si);d.classList.toggle('now',i===si-1);});
+  Object.entries(nodes).forEach(([k,id])=>document.querySelector('#'+id+' rect').setAttribute('fill',nodeFill[k][0]));
+  if(si>0){const k=steps[si-1][0];if(nodes[k])document.querySelector('#'+nodes[k]+' rect').setAttribute('fill',nodeFill[k][1]);}
+  document.getElementById('loopCount').textContent=si>=steps.length?'done ✓':'step '+si;}
+function next(){if(si<steps.length){si++;render();}else{clearInterval(timer);timer=null;}}
+document.getElementById('stepBtn').onclick=next;
+document.getElementById('playBtn').onclick=()=>{if(timer)return;if(si>=steps.length)si=0;timer=setInterval(()=>{next();if(si>=steps.length){clearInterval(timer);timer=null;}},850);};
+document.getElementById('resetBtn').onclick=()=>{clearInterval(timer);timer=null;si=0;render();};
+render();
+
+// Ladder
+const ladder=[
+ ['LEVEL 1','Chatbot (LLM)','Answers questions. You do everything else.',20],
+ ['LEVEL 2','Tool-using assistant','Calls one tool when asked (e.g. a web search).',42],
+ ['LEVEL 3','AI agent','Loops through tools to finish a task you hand it.',68],
+ ['LEVEL 4','Agentic AI','Plans, coordinates agents, adapts and runs the whole goal.',96]
+];
+document.getElementById('ladder').innerHTML=ladder.map(l=>`<div class="rung"><div class="lvl">${l[0]}</div><h4>${l[1]}</h4><p>${l[2]}</p><div class="bar"><i style="width:${l[3]}%"></i></div></div>`).join('')+
+ '<div style="grid-column:1/-1;font-size:.82rem;color:var(--muted)">Bar = how much independence the system has.</div>';
+
+// Identifier
+const R={
+ nlp:['NLP','It understands or analyses language but doesn\'t create new content or take actions. Classic NLP.'],
+ gen:['Generative AI','It creates new non-text content (images, music, video). Generative, but not an LLM.'],
+ llm:['LLM','Text in, text out from a large language model. Also counts as GenAI and NLP, but LLM is the most specific label.'],
+ agt:['AI agent','It uses tools to complete a task you hand it, then stops. Usually an LLM brain + tools + loop.'],
+ agc:['Agentic AI','It owns a bigger goal, plans and re-plans, often coordinating multiple agents with minimal human input.'],
+ other:['Other AI / ML','No actions, no new content, no language. Probably classic ML or computer vision (see Part 1).']
+};
+const QS={
+ q1:{t:'Does it take actions in the world?',h:'Booking, sending emails, calling APIs, editing files, clicking buttons, running code.',o:[['Yes','q4'],['No','q2']]},
+ q2:{t:'Does it create new content?',h:'A new paragraph, picture, song, video or code that didn\'t exist before.',o:[['Yes','q3'],['No','q5']]},
+ q3:{t:'Is the output text from a large language model?',h:'e.g. a chat assistant writing an answer.',o:[['Yes, text','=llm'],['No, images / audio / video','=gen']]},
+ q4:{t:'Does it plan and pursue a bigger goal on its own?',h:'Re-plans when things change, runs over time, maybe several agents. Or does it just finish one task you hand it?',o:[['Yes, it manages the goal','=agc'],['No, one task at a time','=agt']]},
+ q5:{t:'Does it work with human language?',h:'Classifying emails, extracting names, detecting sentiment, transcribing speech.',o:[['Yes','=nlp'],['No','=other']]}
+};
+const qb=document.getElementById('qbox'); let trail=[];
+function ask(id){const q=QS[id];
+  qb.innerHTML=`<div class="kicker">Question ${trail.length+1}</div><div class="qt">${q.t}</div><div class="hint">${q.h}</div><div class="opts"></div>${trailHTML()}`;
+  q.o.forEach(([l,n])=>{const b=document.createElement('button');b.className='opt';b.textContent=l;b.onclick=()=>{trail.push(q.t.replace('?','')+': '+l);n[0]==='='?result(n.slice(1)):ask(n);};qb.querySelector('.opts').appendChild(b);});}
+function trailHTML(){return trail.length?`<div class="trail">${trail.map(t=>`<span>${t}</span>`).join('')}</div>`:'';}
+function result(k){const r=R[k];const bg=K[k]?col(k):'var(--base)';
+  qb.innerHTML=`<div class="result" style="background:${bg}"><div class="kicker" style="color:#fff;opacity:.8">It's most likely…</div><h2 style="color:#fff;margin-bottom:.3em">${r[0]}</h2><p style="margin:0">${r[1]}</p></div>${trailHTML()}<div class="btnrow"><button class="btn" id="again">Try another product</button></div>`;
+  document.getElementById('again').onclick=()=>{trail=[];ask('q1');};}
+ask('q1');
+
+// Game
+const labels=[['nlp','NLP'],['gen','GenAI'],['llm','LLM'],['agt','AI agent'],['agc','Agentic AI']];
+const G=[
+ ['Your email app quietly moves a "You won ₹50 lakh!" message to Spam.','nlp','It analyses language and outputs a label (spam). Nothing new is created, no actions beyond filtering.'],
+ ['You type "a tiger in the Kerala backwaters, watercolour" and get a painting.','gen','New image content. Generative, but not language output, so not an LLM.'],
+ ['A chat assistant explains recursion "like I\'m 10" in a friendly paragraph.','llm','Text in, text out from a large language model.'],
+ ['A support bot looks up your order ID, sees it\'s damaged, and starts a refund.','agt','It uses tools (order database, refund API) to finish one task. Classic AI agent.'],
+ ['Each morning a system checks warehouse stock, forecasts demand, has a buyer agent negotiate with suppliers, places orders, and only pings a manager for unusual cases.','agc','Self-started, multi-step, multiple agents, ongoing goal, minimal human input: agentic.'],
+ ['A dashboard tags 10,000 product reviews as positive, neutral or negative.','nlp','Sentiment analysis is a textbook NLP task: understanding, not creating.'],
+ ['A coding assistant reads a failing test, edits the file, reruns tests, and repeats until they pass.','agt','Tool loop toward one task you gave it. (If it also picked its own tasks from a backlog and coordinated reviewers, it would lean agentic.)'],
+ ['An app generates background music to match your Instagram reel.','gen','Creates new audio. Generative AI, not an LLM.']
+];
+let right=0,tried=0;const ge=document.getElementById('gameEl');
+G.forEach(([s,ans,why],i)=>{const c=document.createElement('div');c.className='scard';
+  c.innerHTML=`<div class="s">${i+1}. ${s}</div><div class="choices"></div><div class="why"></div>`;
+  labels.forEach(([k,l])=>{const b=document.createElement('button');b.textContent=l;b.onclick=()=>{
+    if(c.dataset.done)return;c.dataset.done=1;tried++;if(k===ans)right++;
+    [...c.querySelectorAll('.choices button')].forEach((y,j)=>{if(labels[j][0]===ans)y.classList.add('right');else if(y===b)y.classList.add('wrong');});
+    const w=c.querySelector('.why');w.innerHTML=(k===ans?'✅ ':'❌ Answer: <b>'+labels.find(x=>x[0]===ans)[1]+'</b>. ')+why;w.style.display='block';
+    document.getElementById('score').textContent=`Score: ${right} / ${tried}`;};c.querySelector('.choices').appendChild(b);});
+  ge.appendChild(c);});
+</script>
+</body>
+</html>
