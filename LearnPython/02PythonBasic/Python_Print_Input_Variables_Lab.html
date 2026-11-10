@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python print, input &amp; Variables Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Python print, input &amp; Variables Lab. Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.stdin textarea{width:100%;border:0;outline:none;resize:vertical;font:13.5px/1.6 var(--f-mono);padding:10px 16px;margin:0;background:var(--yellow-soft);color:var(--ink);min-height:52px;display:block}
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Python <b>print, input &amp; Variables</b> Lab</h1><span>show output · store values · read what the user types</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore the original example">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Real Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console stdin" id="stdinBox" hidden><div class="chead"><b>Program input</b><span class="pill wait">keyboard</span><span class="meta">One line per input() call: edit it, then Run</span></div><textarea id="stdin" spellcheck="false" autocapitalize="off" aria-label="Program input"></textarea></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "print(): Showing Output", "level": "Beginner", "summary": "", "lessons": [{"title": "Hello, print!", "code": "print(\"Hello, World!\")\nprint('Single quotes work too')\nprint(42)\nprint(3.14)\nprint(\"Python\", \"is\", \"fun\")\nprint()\nprint(\"The line above is empty\")", "explain": "<p><code>print()<\/code> is a <b>built-in function<\/b> that displays values on the screen. It's usually the first thing anyone learns, and the tool you'll use most for checking what your program is doing.<\/p>\n<ul><li>Text (a <b>string<\/b>) goes inside quotes: <code>\"…\"<\/code> or <code>'…'<\/code>. Both are identical.<\/li>\n<li>Numbers don't need quotes.<\/li>\n<li>Separate several values with <b>commas<\/b>. print puts a <b>space<\/b> between them.<\/li>\n<li><code>print()<\/code> with nothing inside prints an empty line.<\/li>\n<li>Each call ends with a <b>new line<\/b>, so the next print starts on the next line.<\/li><\/ul>\n<div class=\"warn\">Python is case-sensitive: <code>Print(\"hi\")<\/code> gives <code>NameError: name 'Print' is not defined<\/code>.<\/div>", "walk": [["1-2", "Strings in double or single quotes."], ["3-4", "Numbers print as they are."], ["5", "Several values separated by spaces."], ["6-7", "An empty line, then text."]], "trace": null, "tip": "print() shows values on the screen; commas separate values with a space, and every print ends with a new line.", "tryit": ["Print your name, age and city in one print() call.", "Change <code>print<\/code> to <code>Print<\/code> and read the error."], "file": null, "expected": {"out": "Hello, World!\nSingle quotes work too\n42\n3.14\nPython is fun\n\nThe line above is empty", "err": null, "line": null}, "stdin": null}, {"title": "sep and end", "code": "print(\"2026\", \"11\", \"10\", sep=\"-\")\nprint(\"a\", \"b\", \"c\", sep=\"\")\nprint(\"apples\", \"bananas\", \"cherries\", sep=\", \")\n\nprint(\"Loading\", end=\"\")\nprint(\"...\", end=\"\")\nprint(\" done!\")\n\nfor i in range(1, 6):\n    print(i, end=\" \")\nprint()\nprint(\"Countdown finished\")", "explain": "<p><code>print<\/code> has two handy optional settings, called <b>keyword arguments<\/b>:<\/p>\n<table class=\"tbl\"><tr><th>Argument<\/th><th>Default<\/th><th>Controls<\/th><\/tr>\n<tr><td><code>sep<\/code><\/td><td><code>\" \"<\/code> (a space)<\/td><td>What goes <b>between<\/b> the values<\/td><\/tr>\n<tr><td><code>end<\/code><\/td><td><code>\"\\n\"<\/code> (new line)<\/td><td>What goes <b>after<\/b> the last value<\/td><\/tr><\/table>\n<ul><li><code>sep=\"-\"<\/code> joins a date; <code>sep=\"\"<\/code> joins with nothing.<\/li>\n<li><code>end=\"\"<\/code> keeps the cursor on the same line, so the next print continues it.<\/li>\n<li>A loop with <code>end=\" \"<\/code> prints numbers side by side. The bare <code>print()<\/code> afterwards finishes the line.<\/li><\/ul>", "walk": [["1-3", "Custom separators."], ["5-7", "Three prints build one line, because end=\"\" suppresses the new line."], ["9-10", "Print a sequence on one line."], ["11", "End that line."]], "trace": null, "tip": "sep goes between values, end goes after them. Change them to control exactly how output is laid out.", "tryit": ["Print <code>10:30:45<\/code> from three numbers using <code>sep<\/code>.", "Print a row of 20 stars using a loop and <code>end=\"\"<\/code>."], "file": null, "expected": {"out": "2026-11-10\nabc\napples, bananas, cherries\nLoading... done!\n1 2 3 4 5 \nCountdown finished", "err": null, "line": null}, "stdin": null}, {"title": "Escape characters & multi-line text", "code": "print(\"Line one\\nLine two\")\nprint(\"Name:\\tAsha\")\nprint(\"Name:\\tRavi\")\nprint(\"She said \\\"Hi!\\\"\")\nprint('It\\'s easy')\nprint(\"A backslash: \\\\\")\nprint(r\"C:\\new\\table (raw string)\")\n\npoem = \"\"\"Roses are red,\n  Python is neat,\nprint() and input()\n  make code complete.\"\"\"\nprint(poem)", "explain": "<p>A backslash <code>\\<\/code> inside a string starts an <b>escape sequence<\/b>: a way to write characters you can't type directly.<\/p>\n<table class=\"tbl\"><tr><th>Escape<\/th><th>Means<\/th><\/tr>\n<tr><td><code>\\n<\/code><\/td><td>New line<\/td><\/tr>\n<tr><td><code>\\t<\/code><\/td><td>Tab (jumps to the next column, useful for alignment)<\/td><\/tr>\n<tr><td><code>\\\"<\/code> / <code>\\'<\/code><\/td><td>A quote inside a string using the same quotes<\/td><\/tr>\n<tr><td><code>\\\\<\/code><\/td><td>One real backslash<\/td><\/tr><\/table>\n<ul><li>A <b>raw string<\/b> <code>r\"…\"<\/code> turns escapes off. It's handy for Windows paths and regular expressions.<\/li>\n<li><b>Triple quotes<\/b> <code>\"\"\"…\"\"\"<\/code> let text span several lines, keeping line breaks and spaces exactly.<\/li><\/ul>", "walk": [["1", "\\n splits the output into two lines."], ["2-3", "\\t lines up columns."], ["4-5", "Escaped quotes."], ["6", "\\\\ prints one backslash."], ["7", "Raw string: backslashes are kept as-is."], ["9-13", "A multi-line string."]], "trace": null, "tip": "Use \\n for new lines, \\t for tabs, r\"…\" to switch escapes off, and triple quotes for multi-line text.", "tryit": ["Print a 3-row table with names and marks, using <code>\\t<\/code> between columns.", "Remove the <code>r<\/code> on line 7 and see how <code>\\n<\/code> and <code>\\t<\/code> change the output."], "file": null, "expected": {"out": "Line one\nLine two\nName:\tAsha\nName:\tRavi\nShe said \"Hi!\"\nIt's easy\nA backslash: \\\nC:\\new\\table (raw string)\nRoses are red,\n  Python is neat,\nprint() and input()\n  make code complete.", "err": null, "line": null}, "stdin": null}, {"title": "Printing values & expressions", "code": "print(2 + 3)\nprint(\"2 + 3\")\nprint(\"2\" + \"3\")\n\nprice = 49.5\nqty = 3\nprint(\"Total:\", price * qty)\nprint(\"Total: \" + str(price * qty))\nprint(\"Is it over 100?\", price * qty > 100)", "explain": "<p><code>print<\/code> first <b>evaluates<\/b> what's inside the brackets, then shows the result.<\/p>\n<div class=\"cmp\"><div><h5>print(2 + 3)<\/h5><ul><li>Maths is done first<\/li><li>Shows <code>5<\/code><\/li><\/ul><\/div>\n<div><h5>print(\"2 + 3\")<\/h5><ul><li>Quotes make it text<\/li><li>Shows exactly <code>2 + 3<\/code><\/li><\/ul><\/div><\/div>\n<p>Two ways to combine text and numbers:<\/p>\n<ul><li><b>Commas:<\/b> <code>print(\"Total:\", 148.5)<\/code>. print converts each value and adds spaces for you.<\/li>\n<li><b>The <code>+<\/code> operator:<\/b> joins strings only, so numbers must be converted with <code>str()<\/code> first. <code>\"Total: \" + 148.5<\/code> would be a <code>TypeError<\/code>.<\/li><\/ul>\n<p>Commas are simpler; f-strings (next lesson) are the best of all.<\/p>", "walk": [["1", "Expression: Python calculates 5."], ["2", "Text: printed literally."], ["3", "+ on two strings joins them: \"23\"."], ["5-7", "Variables in an expression, printed with a comma."], ["8", "Joining with + needs str()."], ["9", "A comparison prints True or False."]], "trace": null, "tip": "print evaluates first, then displays; quotes turn code into plain text.", "tryit": ["Remove <code>str()<\/code> from line 8 and read the error."], "file": null, "expected": {"out": "5\n2 + 3\n23\nTotal: 148.5\nTotal: 148.5\nIs it over 100? True", "err": null, "line": null}, "stdin": null}, {"title": "f-strings: the best way to format", "code": "name = \"Asha\"\nmarks = 92.456\nprice = 1499\nrank = 3\nratio = 0.874\n\nprint(f\"Hello, {name}!\")\nprint(f\"{name} scored {marks:.1f} marks\")\nprint(f\"Price: Rs {price:,}\")\nprint(f\"Rank: #{rank:03d}\")\nprint(f\"Accuracy: {ratio:.1%}\")\nprint(f\"[{name:<8}] [{name:>8}] [{name:^8}]\")\nprint(f\"Next year {name} will be {20 + 1}\")\nprint(f\"{marks = }\")", "explain": "<p>Put an <code>f<\/code> before the quotes and write any variable or expression inside <code>{ }<\/code>. Python fills in the value. No commas, <code>+<\/code> or <code>str()<\/code> needed.<\/p>\n<p>After a colon you can add a <b>format spec<\/b>:<\/p>\n<table class=\"tbl\"><tr><th>Spec<\/th><th>Meaning<\/th><th>Result<\/th><\/tr>\n<tr><td><code>:.1f<\/code><\/td><td>1 decimal place<\/td><td>92.5<\/td><\/tr>\n<tr><td><code>:,<\/code><\/td><td>Thousands separator<\/td><td>1,499<\/td><\/tr>\n<tr><td><code>:03d<\/code><\/td><td>Integer padded with zeros to width 3<\/td><td>003<\/td><\/tr>\n<tr><td><code>:.1%<\/code><\/td><td>Percentage<\/td><td>87.4%<\/td><\/tr>\n<tr><td><code>:&lt;8<\/code> <code>:&gt;8<\/code> <code>:^8<\/code><\/td><td>Left / right / centre in 8 characters<\/td><td>aligned columns<\/td><\/tr>\n<tr><td><code>{x = }<\/code><\/td><td>Show the name and the value (debugging)<\/td><td>marks = 92.456<\/td><\/tr><\/table>", "walk": [["1-5", "Some values to display."], ["7", "The simplest f-string."], ["8", "Rounded to 1 decimal."], ["9", "Comma separators."], ["10", "Zero padding."], ["11", "Percentage format."], ["12", "Alignment inside brackets to show the width."], ["13", "Any expression works inside { }."], ["14", "The = shortcut for debugging."]], "trace": null, "tip": "f\"…{value:spec}…\" is the clearest, most powerful way to mix text and values.", "tryit": ["Print a receipt line: <code>f\"{'Tea':&lt;10}{20:&gt;6.2f}\"<\/code>.", "Show 1234567.891 as <code>1,234,567.89<\/code>."], "file": null, "expected": {"out": "Hello, Asha!\nAsha scored 92.5 marks\nPrice: Rs 1,499\nRank: #003\nAccuracy: 87.4%\n[Asha    ] [    Asha] [  Asha  ]\nNext year Asha will be 21\nmarks = 92.456", "err": null, "line": null}, "stdin": null}, {"title": "Older styles: .format() and %", "code": "name = \"Ravi\"\nage = 20\n\nprint(\"Name: {}, Age: {}\".format(name, age))\nprint(\"{1} is {0} years old\".format(age, name))\nprint(\"{n} likes {lang}\".format(n=name, lang=\"Python\"))\nprint(\"Pi is about {:.3f}\".format(3.14159))\n\nprint(\"Name: %s, Age: %d\" % (name, age))\nprint(\"Pi is about %.2f\" % 3.14159)\n\nprint(f\"Name: {name}, Age: {age}\")", "explain": "<p>You'll meet two older formatting styles in tutorials and existing code. Recognise them, but prefer f-strings in new code.<\/p>\n<table class=\"tbl\"><tr><th>Style<\/th><th>Example<\/th><th>Since<\/th><\/tr>\n<tr><td><code>%<\/code> formatting<\/td><td><code>\"%s is %d\" % (name, age)<\/code><\/td><td>The original, borrowed from C<\/td><\/tr>\n<tr><td><code>str.format()<\/code><\/td><td><code>\"{} is {}\".format(name, age)<\/code><\/td><td>Python 2.6 / 3.0<\/td><\/tr>\n<tr><td><b>f-strings<\/b><\/td><td><code>f\"{name} is {age}\"<\/code><\/td><td>Python 3.6: the modern choice<\/td><\/tr><\/table>\n<p>In <code>%<\/code> style: <code>%s<\/code> = string, <code>%d<\/code> = integer, <code>%.2f<\/code> = float with 2 decimals. In <code>.format()<\/code>, <code>{}<\/code> placeholders are filled in order, by number (<code>{1}<\/code>) or by name (<code>{n}<\/code>). The format specs after <code>:<\/code> are the same as in f-strings.<\/p>", "walk": [["4-7", "str.format with positional, numbered and named placeholders."], ["9-10", "Old % formatting."], ["12", "The same output with an f-string, which is shortest and clearest."]], "trace": null, "tip": "All three styles work, but f-strings are the modern standard.", "tryit": ["Rewrite line 7 as an f-string."], "file": null, "expected": {"out": "Name: Ravi, Age: 20\nRavi is 20 years old\nRavi likes Python\nPi is about 3.142\nName: Ravi, Age: 20\nPi is about 3.14\nName: Ravi, Age: 20", "err": null, "line": null}, "stdin": null}, {"title": "print() tricks", "code": "fruits = [\"apple\", \"mango\", \"kiwi\"]\n\nprint(fruits)\nprint(*fruits)\nprint(*fruits, sep=\" | \")\n\nresult = print(\"print shows this...\")\nprint(\"...but returns:\", result)\n\nprint(\"=\" * 30)\nprint(f\"{'Item':<10}{'Qty':>5}{'Price':>10}\")\nprint(\"-\" * 30)\nprint(f\"{'Pen':<10}{3:>5}{30.0:>10.2f}\")\nprint(f\"{'Notebook':<10}{2:>5}{120.0:>10.2f}\")\nprint(\"=\" * 30)", "explain": "<ul><li><code>print(list)<\/code> shows the list with brackets and quotes. <code>print(*list)<\/code> <b>unpacks<\/b> it, printing the items as separate values.<\/li>\n<li><code>print<\/code> <b>returns <code>None<\/code><\/b>. It displays something but gives nothing back, so you can't store its result. (This matters later when you learn <code>return<\/code>.)<\/li>\n<li><code>\"=\" * 30<\/code> repeats a string, which is great for lines and borders.<\/li>\n<li>f-string alignment builds neat tables: <code>:&lt;10<\/code> left-aligns text, and <code>:&gt;10.2f<\/code> right-aligns a number with 2 decimals.<\/li><\/ul>", "walk": [["3", "The list as Python writes it."], ["4-5", "Unpacked items, then with a custom separator."], ["7-8", "print gives back None."], ["10-15", "A formatted table with borders."]], "trace": null, "tip": "print(*items) unpacks a list; print returns None; f-string alignment makes tables.", "tryit": ["Add a Total row to the table."], "file": null, "expected": {"out": "['apple', 'mango', 'kiwi']\napple mango kiwi\napple | mango | kiwi\nprint shows this...\n...but returns: None\n==============================\nItem        Qty     Price\n------------------------------\nPen           3     30.00\nNotebook      2    120.00\n==============================", "err": null, "line": null}, "stdin": null}]}, {"title": "Variables", "level": "Beginner", "summary": "", "lessons": [{"title": "What is a variable?", "code": "name = \"Asha\"\nage = 21\nheight = 1.62\n\nprint(name)\nprint(age, height)\n\nage = age + 1\nprint(\"Next year:\", age)", "explain": "<p>A <b>variable<\/b> is a <b>name that refers to a value<\/b>, so you can use the value later and change it. You create one with the <b>assignment operator<\/b> <code>=<\/code>:<\/p>\n<pre class=\"snippet\">name = \"Asha\"\n# name  ←  \"Asha\"   (read = as \"now refers to\")<\/pre>\n<div class=\"analogy\"><div><span>name<\/span>A label<small>name, age, height<\/small><\/div><div><span>=<\/span>Attaches it<small>right side is worked out first<\/small><\/div><div><span>value<\/span>The data<small>\"Asha\", 21, 1.62<\/small><\/div><\/div>\n<ul><li>No declaration or type is needed. Python creates the variable the first time you assign to it.<\/li>\n<li><code>=<\/code> is <b>not<\/b> \"equals\" from maths. <code>age = age + 1<\/code> means: work out <code>age + 1<\/code> (22), then make <code>age<\/code> refer to the result.<\/li>\n<li>Using a variable before assigning it gives <code>NameError<\/code>.<\/li><\/ul>", "walk": [["1-3", "Create three variables."], ["5-6", "Use them by name."], ["8-9", "Compute a new value and re-assign."]], "trace": [[1, "Create <code>name<\/code> → \"Asha\".", null], [2, "Create <code>age<\/code> → 21.", null], [3, "Create <code>height<\/code> → 1.62.", null], [5, "Look up <code>name<\/code> and print its value.", "Asha"], [6, "Print two variables at once.", "21 1.62"], [8, "Right side first: 21 + 1 = 22. Then <code>age<\/code> refers to <code>22<\/code>.", null], [9, "Print the updated value.", "Next year: 22"]], "tip": "A variable is a name pointing at a value; = means \"evaluate the right side, then attach the name\".", "tryit": ["Create a variable <code>city<\/code> and print a sentence using all four variables."], "file": null, "expected": {"out": "Asha\n21 1.62\nNext year: 22", "err": null, "line": null}, "stdin": null}, {"title": "Naming rules & conventions", "code": "student_name = \"Ravi\"\ntotal_marks = 450\n_hidden = \"internal\"\nscore2 = 88\nMAX_SCORE = 500\nName = \"different from name\"\nname = \"Asha\"\n\nprint(student_name, total_marks, score2)\nprint(name, \"|\", Name)\nprint(\"Percentage:\", total_marks / MAX_SCORE * 100)", "explain": "<h4>Rules (Python enforces these)<\/h4>\n<ul><li>Use only letters, digits and underscores: <code>score2<\/code> ✓, <code>my-score<\/code> ✗<\/li>\n<li>Can't <b>start<\/b> with a digit: <code>2nd_place<\/code> ✗<\/li>\n<li>No spaces: <code>total marks<\/code> ✗<\/li>\n<li>Can't be a <b>keyword<\/b>: <code>class<\/code>, <code>for<\/code>, <code>if<\/code> ✗<\/li>\n<li><b>Case-sensitive<\/b>: <code>name<\/code> and <code>Name<\/code> are two different variables.<\/li><\/ul>\n<h4>Conventions (style everyone follows: PEP 8)<\/h4>\n<table class=\"tbl\"><tr><th>Kind<\/th><th>Style<\/th><th>Example<\/th><\/tr>\n<tr><td>Variables &amp; functions<\/td><td>snake_case<\/td><td><code>total_marks<\/code><\/td><\/tr>\n<tr><td>Constants<\/td><td>UPPER_CASE<\/td><td><code>MAX_SCORE<\/code><\/td><\/tr>\n<tr><td>Classes<\/td><td>CapWords<\/td><td><code>StudentRecord<\/code><\/td><\/tr>\n<tr><td>Internal use<\/td><td>leading underscore<\/td><td><code>_hidden<\/code><\/td><\/tr><\/table>\n<p><b>Choose meaningful names.<\/b> <code>total_marks<\/code> explains itself; <code>tm<\/code> or <code>x<\/code> doesn't.<\/p>", "walk": [["1-5", "Valid, well-styled names."], ["6-7", "Name and name are separate variables."], ["9-11", "Using them."]], "trace": null, "tip": "Names may use letters, digits and _ (not starting with a digit); write variables in snake_case and constants in UPPER_CASE.", "tryit": ["Add the line <code>2nd_place = \"Dev\"<\/code> and run. A SyntaxError stops the whole program before anything prints.", "Try <code>my-score = 5<\/code>. What does Python think the minus sign means?"], "file": null, "expected": {"out": "Ravi 450 88\nAsha | different from name\nPercentage: 90.0", "err": null, "line": null}, "stdin": null}, {"title": "Updating variables", "code": "score = 10\nprint(\"start:\", score)\n\nscore = score + 5\nprint(\"after + 5:\", score)\n\nscore += 10\nprint(\"after += 10:\", score)\n\nscore -= 3\nscore *= 2\nprint(\"after -= 3 and *= 2:\", score)\n\nscore //= 4\nprint(\"after //= 4:\", score)\n\nmessage = \"Hi\"\nmessage += \" there\"\nprint(message)", "explain": "<p>Changing a variable based on its current value is so common that Python has shortcuts called <b>augmented assignment<\/b>:<\/p>\n<table class=\"tbl\"><tr><th>Shortcut<\/th><th>Same as<\/th><\/tr>\n<tr><td><code>x += 5<\/code><\/td><td><code>x = x + 5<\/code><\/td><\/tr>\n<tr><td><code>x -= 5<\/code><\/td><td><code>x = x - 5<\/code><\/td><\/tr>\n<tr><td><code>x *= 5<\/code><\/td><td><code>x = x * 5<\/code><\/td><\/tr>\n<tr><td><code>x /= 5<\/code><\/td><td><code>x = x / 5<\/code> (the result is a float)<\/td><\/tr>\n<tr><td><code>x //= 5<\/code><\/td><td><code>x = x // 5<\/code> (whole-number division)<\/td><\/tr>\n<tr><td><code>x %= 5<\/code><\/td><td><code>x = x % 5<\/code> (remainder)<\/td><\/tr><\/table>\n<p><code>+=<\/code> also works on strings (joining) and lists (extending). Python has no <code>x++<\/code>; write <code>x += 1<\/code>.<\/p>", "walk": [["1-2", "Start at 10."], ["4-5", "The long form."], ["7-8", "The shortcut."], ["10-12", "Subtract, then double."], ["14-15", "Whole-number division."], ["17-19", "+= on a string joins text."]], "trace": [[1, "<code>score<\/code> = 10.", null], [2, "Show it.", "start: 10"], [4, "10 + 5 → <code>score<\/code> = <code>15<\/code>.", null], [5, "Show it.", "after + 5: 15"], [7, "<code>+=<\/code> 10 → <code>25<\/code>.", null], [8, "Show it.", "after += 10: 25"], [10, "<code>-=<\/code> 3 → <code>22<\/code>.", null], [11, "<code>*=<\/code> 2 → <code>44<\/code>.", null], [12, "Show it.", "after -= 3 and *= 2: 44"], [14, "<code>//=<\/code> 4 → <code>11<\/code> (the remainder is dropped).", null], [15, "Show it.", "after //= 4: 11"], [17, "<code>message<\/code> = \"Hi\".", null], [18, "<code>+=<\/code> joins text → <code>&#x27;Hi there&#x27;<\/code>.", null], [19, "Show it.", "Hi there"]], "tip": "x += 1 is shorthand for x = x + 1. The same pattern works for every arithmetic operator.", "tryit": ["Start with <code>balance = 1000<\/code>, add 10% interest with <code>*=<\/code>, then withdraw 200."], "file": null, "expected": {"out": "start: 10\nafter + 5: 15\nafter += 10: 25\nafter -= 3 and *= 2: 44\nafter //= 4: 11\nHi there", "err": null, "line": null}, "stdin": null}, {"title": "Multiple assignment & swapping", "code": "x, y, z = 1, 2, 3\nprint(x, y, z)\n\na = b = c = 0\nprint(a, b, c)\n\nfirst, last = \"Asha Rao\".split()\nprint(\"First:\", first, \"| Last:\", last)\n\nleft, right = \"L\", \"R\"\nleft, right = right, left\nprint(left, right)", "explain": "<ul><li><b>Several at once:<\/b> <code>x, y, z = 1, 2, 3<\/code>. The counts on both sides must match, otherwise you get a <code>ValueError<\/code>.<\/li>\n<li><b>Same value to many names:<\/b> <code>a = b = c = 0<\/code>.<\/li>\n<li><b>Unpacking:<\/b> anything that produces several values can be split into names, such as <code>\"Asha Rao\".split()<\/code>.<\/li>\n<li><b>Swapping<\/b> without a temporary variable: <code>a, b = b, a<\/code>. Python builds the right side first (<code>\"R\", \"L\"<\/code>), then assigns.<\/li><\/ul>\n<div class=\"cmp\"><div><h5>Most languages<\/h5><pre class=\"snippet\">temp = a\na = b\nb = temp<\/pre><\/div><div><h5>Python<\/h5><pre class=\"snippet\">a, b = b, a<\/pre><\/div><\/div>", "walk": [["1-2", "Three variables in one line."], ["4-5", "One value, three names."], ["7-8", "Unpack the two words of a name."], ["10-12", "Swap in one line."]], "trace": [[1, "Three assignments at once: x = 1, y = 2, z = 3.", null], [2, "Print them.", "1 2 3"], [4, "All three names refer to 0.", null], [5, "Print them.", "0 0 0"], [7, "split() gives two words, unpacked into <code>first<\/code> = <code>&#x27;Asha&#x27;<\/code>, <code>last<\/code> = <code>&#x27;Rao&#x27;<\/code>.", null], [8, "Print them.", "First: Asha | Last: Rao"], [10, "<code>left<\/code> = \"L\", <code>right<\/code> = \"R\".", null], [11, "Build (right, left) = (\"R\", \"L\") first, then assign. Now left = <code>&#x27;R&#x27;<\/code>, right = <code>&#x27;L&#x27;<\/code>.", null], [12, "Swapped!", "R L"]], "tip": "a, b = b, a swaps two variables; the right side is fully built before anything is assigned.", "tryit": ["Try <code>p, q = 1, 2, 3<\/code> and read the error."], "file": null, "expected": {"out": "1 2 3\n0 0 0\nFirst: Asha | Last: Rao\nR L", "err": null, "line": null}, "stdin": null}, {"title": "Data types of variables", "code": "count = 25\nprice = 99.99\nname = \"Laptop\"\nin_stock = True\ndiscount = None\n\nprint(type(count))\nprint(type(price))\nprint(type(name))\nprint(type(in_stock))\nprint(type(discount))\n\ncount = \"twenty-five\"\nprint(type(count))", "explain": "<p>Every value has a <b>type<\/b>, which decides what you can do with it. <code>type(x)<\/code> tells you which type a variable currently refers to.<\/p>\n<table class=\"tbl\"><tr><th>Type<\/th><th>Holds<\/th><th>Examples<\/th><\/tr>\n<tr><td><code>int<\/code><\/td><td>Whole numbers<\/td><td><code>25<\/code>, <code>-3<\/code>, <code>0<\/code><\/td><\/tr>\n<tr><td><code>float<\/code><\/td><td>Decimal numbers<\/td><td><code>99.99<\/code>, <code>2.0<\/code><\/td><\/tr>\n<tr><td><code>str<\/code><\/td><td>Text<\/td><td><code>\"Laptop\"<\/code>, <code>\"\"<\/code><\/td><\/tr>\n<tr><td><code>bool<\/code><\/td><td>Yes/no<\/td><td><code>True<\/code>, <code>False<\/code><\/td><\/tr>\n<tr><td><code>NoneType<\/code><\/td><td>\"No value yet\"<\/td><td><code>None<\/code><\/td><\/tr><\/table>\n<p>Python is <b>dynamically typed<\/b>: the variable has no fixed type, but the <em>value<\/em> does. Line 13 makes <code>count<\/code> refer to a string instead, which is allowed (though usually confusing, so avoid doing it).<\/p>\n<p>Collections like <code>list<\/code>, <code>tuple<\/code>, <code>set<\/code> and <code>dict<\/code> are covered in the Data Types Lab.<\/p>", "walk": [["1-5", "One variable of each basic type."], ["7-11", "Ask each one its type."], ["13-14", "The same name now refers to a str."]], "trace": null, "tip": "The value has the type, not the variable; type() tells you what a name currently refers to.", "tryit": ["What is <code>type(7 / 7)<\/code>? And <code>type(7 // 7)<\/code>?"], "file": null, "expected": {"out": "<class 'int'>\n<class 'float'>\n<class 'str'>\n<class 'bool'>\n<class 'NoneType'>\n<class 'str'>", "err": null, "line": null}, "stdin": null}, {"title": "Type conversion (casting)", "code": "text_number = \"42\"\nreal_number = int(text_number)\nprint(real_number + 8)\n\nprint(float(\"3.5\") * 2)\nprint(int(9.99))\nprint(round(9.99))\nprint(str(100) + \" percent\")\nprint(bool(0), bool(7), bool(\"\"), bool(\"hi\"))\n\nage = 20\nprint(\"I am \" + str(age) + \" years old\")\n\nprint(int(\"abc\"))", "explain": "<p>Convert a value to another type by calling the type's name like a function:<\/p>\n<table class=\"tbl\"><tr><th>Call<\/th><th>Gives<\/th><th>Watch out<\/th><\/tr>\n<tr><td><code>int(\"42\")<\/code><\/td><td>42<\/td><td>The text must look like a whole number<\/td><\/tr>\n<tr><td><code>int(9.99)<\/code><\/td><td>9<\/td><td><b>Cuts off<\/b> the decimals; use <code>round()<\/code> to round<\/td><\/tr>\n<tr><td><code>float(\"3.5\")<\/code><\/td><td>3.5<\/td><td><\/td><\/tr>\n<tr><td><code>str(100)<\/code><\/td><td>\"100\"<\/td><td>Needed when joining with <code>+<\/code><\/td><\/tr>\n<tr><td><code>bool(x)<\/code><\/td><td>True / False<\/td><td>0, <code>\"\"<\/code>, empty collections and None are False<\/td><\/tr><\/table>\n<p>This matters most with <code>input()<\/code>, which always gives you <b>text<\/b> (Module 3). The last line shows what happens when text can't be converted: a <code>ValueError<\/code>.<\/p>", "walk": [["1-3", "Text → int, then do maths."], ["5", "Text → float."], ["6-7", "int() truncates; round() rounds."], ["8", "Number → text for joining."], ["9", "Truthiness."], ["11-12", "A common pattern: str() inside a sentence."], ["14", "\"abc\" isn't a number, so ValueError."]], "trace": null, "tip": "Convert with int(), float(), str() and bool(); converting text that isn't a number raises ValueError.", "tryit": ["Convert <code>\"3.7\"<\/code> to an int. (Hint: you need <code>float<\/code> first.)"], "file": null, "expected": {"out": "50\n7.0\n9\n10\n100 percent\nFalse True False True\nI am 20 years old", "err": "ValueError: invalid literal for int() with base 10: 'abc'", "line": 14}, "stdin": null}, {"title": "Variables are references", "code": "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(\"a:\", a)\nprint(\"b:\", b)\nprint(\"same object?\", a is b)\n\nc = a.copy()\nc.append(99)\nprint(\"a:\", a)\nprint(\"c:\", c)\n\nx = 10\ny = x\ny = y + 1\nprint(\"x:\", x, \"y:\", y)", "explain": "<p>A variable doesn't contain a value. It <b>refers to<\/b> (points at) an object stored in memory.<\/p>\n<ul><li><code>b = a<\/code> does <b>not<\/b> copy the list. It makes <code>b<\/code> a second name for the <b>same<\/b> list, so changing it through <code>b<\/code> shows up through <code>a<\/code> too. <code>a is b<\/code> confirms they're one object.<\/li>\n<li>To get a separate list, copy it: <code>a.copy()<\/code> or <code>list(a)<\/code>.<\/li>\n<li>With numbers and strings this never surprises you. They can't be changed in place, so <code>y = y + 1<\/code> creates a new number and points <code>y<\/code> at it, leaving <code>x<\/code> alone.<\/li><\/ul>\n<div class=\"note\">Picture names as <b>sticky labels<\/b> on boxes, not as boxes themselves. One box can carry several labels.<\/div>", "walk": [["1-6", "Two names, one list: a change via b is visible via a."], ["8-11", "A real copy is independent."], ["13-16", "Numbers: re-assigning y doesn't affect x."]], "trace": [[1, "<code>a<\/code> refers to a new list [1, 2, 3].", null], [2, "<code>b = a<\/code>: no copy! b is a second label on the <b>same<\/b> list.", null], [3, "Append through b, so the shared list is now <code>[1, 2, 3, 4]<\/code>.", null], [4, "Look through a: it changed too.", "a: [1, 2, 3, 4]"], [5, "Same list.", "b: [1, 2, 3, 4]"], [6, "<code>is<\/code> confirms: one object, two names.", "same object? True"], [8, "<code>c<\/code> refers to a brand-new copy.", null], [9, "Change only the copy: c = <code>[1, 2, 3, 4, 99]<\/code>.", null], [10, "a is unaffected.", "a: [1, 2, 3, 4]"], [11, "The copy has 99.", "c: [1, 2, 3, 4, 99]"], [13, "<code>x<\/code> refers to 10.", null], [14, "<code>y<\/code> refers to the same 10.", null], [15, "y + 1 creates a new number 11; y now points there. x still points to 10.", null], [16, "Print both.", "x: 10 y: 11"]], "tip": "Assignment never copies; it attaches another name to the same object.", "tryit": ["Replace <code>a.copy()<\/code> with <code>a<\/code> on line 8. What changes?"], "file": null, "expected": {"out": "a: [1, 2, 3, 4]\nb: [1, 2, 3, 4]\nsame object? True\na: [1, 2, 3, 4]\nc: [1, 2, 3, 4, 99]\nx: 10 y: 11", "err": null, "line": null}, "stdin": null}, {"title": "Deleting variables & NameError", "code": "temp = \"temporary data\"\nprint(temp)\n\ndel temp\nprint(\"temp\" in globals())\n\ntotal = 100\nprint(total)\nprint(totl)", "explain": "<p><code>del name<\/code> removes a variable. Afterwards the name no longer exists, just as if it had never been assigned.<\/p>\n<p>Using a name that doesn't exist raises <b><code>NameError<\/code><\/b>. The most common causes:<\/p>\n<ol><li>A <b>typo<\/b>: <code>totl<\/code> instead of <code>total<\/code> (line 9).<\/li>\n<li>Using a variable <b>before<\/b> assigning it.<\/li>\n<li>Wrong <b>capitalisation<\/b>: <code>Total<\/code> vs <code>total<\/code>.<\/li>\n<li>Using a variable after <code>del<\/code>.<\/li>\n<li>Forgetting quotes, so Python reads the text as a name: <code>print(hello)<\/code>.<\/li><\/ol>\n<div class=\"note\">Read error messages from the bottom. <code>NameError: name 'totl' is not defined<\/code> tells you exactly which name Python couldn't find.<\/div>", "walk": [["1-2", "Create and use a variable."], ["4-5", "Delete it; it no longer exists."], ["7-8", "A correctly spelled variable."], ["9", "A typo: NameError."]], "trace": null, "tip": "NameError means Python can't find that name; check the spelling, capitals and order of your code.", "tryit": ["Fix the typo on line 9.", "Try <code>print(hello)<\/code> without quotes."], "file": null, "expected": {"out": "temporary data\nFalse\n100", "err": "NameError: name 'totl' is not defined", "line": 9}, "stdin": null}]}, {"title": "input(): Getting User Input", "level": "Beginner", "summary": "", "lessons": [{"title": "Your first input()", "code": "name = input(\"What is your name? \")\ncity = input(\"Which city do you live in? \")\n\nprint(f\"Hello, {name} from {city}!\")\nprint(\"Your name has\", len(name), \"letters\")", "explain": "<p><code>input(prompt)<\/code> <b>pauses<\/b> the program, shows the prompt, waits for the user to type a line and press Enter, then <b>returns<\/b> what they typed as a string.<\/p>\n<div class=\"order\"><span>show prompt<\/span>→<span>wait for typing<\/span>→<span>Enter<\/span>→<span>return the text<\/span>→<span>store it in a variable<\/span><\/div>\n<ul><li>End the prompt with a space (<code>\"name? \"<\/code>) so the answer doesn't touch the question.<\/li>\n<li>Always <b>store<\/b> the result in a variable, or it's lost.<\/li>\n<li>Each <code>input()<\/code> call reads <b>one line<\/b>.<\/li><\/ul>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1", "Ask, wait and store the answer in name."], ["2", "A second question reads the second line."], ["4-5", "Use the answers."]], "trace": [[1, "Show the prompt, read the first line of input, and store it: <code>name<\/code> = <code>&#x27;Asha&#x27;<\/code>.", "What is your name? Asha"], [2, "Read the next line: <code>city<\/code> = <code>&#x27;Pune&#x27;<\/code>.", "Which city do you live in? Pune"], [4, "Use both answers in an f-string.", "Hello, Asha from Pune!"], [5, "len() counts the characters typed.", "Your name has 4 letters"]], "tip": "input() shows a prompt, waits for a line of typing, and returns it as a string.", "tryit": ["Change the answers in the Program input box and run again.", "Delete the second line of input and run. What error do you get when input runs out?"], "file": null, "expected": {"out": "What is your name? Asha\nWhich city do you live in? Pune\nHello, Asha from Pune!\nYour name has 4 letters", "err": null, "line": null}, "stdin": "Asha\nPune"}, {"title": "input() always returns a string", "code": "age = input(\"Enter your age: \")\nprint(type(age))\nprint(age + age)\nprint(age * 3)\n\nnext_year = age + 1", "explain": "<p>This catches every beginner: <b><code>input()<\/code> always returns a <code>str<\/code><\/b>, even when the user types digits.<\/p>\n<ul><li><code>\"20\" + \"20\"<\/code> is <code>\"2020\"<\/code>, joining text, not adding numbers.<\/li>\n<li><code>\"20\" * 3<\/code> is <code>\"202020\"<\/code>.<\/li>\n<li><code>\"20\" + 1<\/code> is a <code>TypeError<\/code>, because you can't add text and a number.<\/li><\/ul>\n<p>The fix is to <b>convert<\/b> the text to a number, which is the next lesson.<\/p>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1", "The user types 20, but it's stored as the text \"20\"."], ["2", "Proof: it's a str."], ["3-4", "String joining and repetition, not maths."], ["6", "Text + number, so TypeError."]], "trace": null, "tip": "Whatever the user types, input() gives you text; convert it before doing maths.", "tryit": ["Wrap line 1 in <code>int(...)<\/code> and run again."], "file": null, "expected": {"out": "Enter your age: 20\n<class 'str'>\n2020\n202020", "err": "TypeError: can only concatenate str (not \"int\") to str", "line": 6}, "stdin": "20"}, {"title": "Converting input: int() and float()", "code": "age = int(input(\"Age: \"))\nheight = float(input(\"Height in metres: \"))\nweight = float(input(\"Weight in kg: \"))\n\nprint(\"Next year you will be\", age + 1)\nbmi = weight / height ** 2\nprint(f\"Your BMI is {bmi:.1f}\")", "explain": "<p>Wrap <code>input()<\/code> in a conversion function to get a number directly:<\/p>\n<table class=\"tbl\"><tr><th>Need<\/th><th>Write<\/th><\/tr>\n<tr><td>Whole number<\/td><td><code>int(input(\"…\"))<\/code><\/td><\/tr>\n<tr><td>Decimal number<\/td><td><code>float(input(\"…\"))<\/code><\/td><\/tr>\n<tr><td>Text<\/td><td><code>input(\"…\")<\/code> (it's already a string)<\/td><\/tr><\/table>\n<p>Python works <b>from the inside out<\/b>: first <code>input()<\/code> returns <code>\"20\"<\/code>, then <code>int(\"20\")<\/code> turns it into 20.<\/p>\n<div class=\"warn\">If the user types something that isn't a number (like <code>twenty<\/code> or <code>1.5<\/code> for an int), conversion raises <code>ValueError<\/code>. Lesson 3.5 shows how to handle that.<\/div>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1", "Read, then convert to int."], ["2-3", "Read, then convert to float."], ["5", "Real maths now works."], ["6-7", "BMI = weight ÷ height², shown with 1 decimal."]], "trace": null, "tip": "Wrap input() in int() or float() whenever you need a number.", "tryit": ["Type <code>twenty<\/code> as the age in the input box and run. Read the ValueError."], "file": null, "expected": {"out": "Age: 20\nHeight in metres: 1.68\nWeight in kg: 60\nNext year you will be 21\nYour BMI is 21.3", "err": null, "line": null}, "stdin": "20\n1.68\n60"}, {"title": "Several values on one line: split()", "code": "line = input(\"Enter three marks separated by spaces: \")\nparts = line.split()\nprint(\"Pieces:\", parts)\n\nmarks = [int(p) for p in parts]\nprint(\"As numbers:\", marks)\nprint(\"Total:\", sum(marks), \"| Average:\", round(sum(marks) / len(marks), 1))\n\na, b = map(int, input(\"Two numbers (a b): \").split())\nprint(f\"{a} x {b} = {a * b}\")\n\ndate = input(\"Date (dd-mm-yyyy): \")\nd, m, y = date.split(\"-\")\nprint(\"Day:\", d, \"Month:\", m, \"Year:\", y)", "explain": "<p>Often the user types several values on <b>one line<\/b>. <code>split()<\/code> breaks a string into a list of pieces:<\/p>\n<ul><li><code>\"78 92 85\".split()<\/code> → <code>['78', '92', '85']<\/code>. With no argument it splits on any spaces.<\/li>\n<li><code>\"10-11-2026\".split(\"-\")<\/code> splits on the character you give it.<\/li><\/ul>\n<p>The pieces are still <b>strings<\/b>, so convert them:<\/p>\n<ul><li>A list comprehension: <code>[int(p) for p in parts]<\/code><\/li>\n<li>Or <code>map(int, parts)<\/code>, which applies <code>int<\/code> to every piece. Unpacking it straight into names (<code>a, b = …<\/code>) is a classic competitive-programming idiom.<\/li><\/ul>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1-3", "One line of text, split into pieces."], ["5-7", "Convert each piece to int and do maths."], ["9-10", "map + unpack: two ints in one line."], ["12-14", "Split on a custom separator."]], "trace": null, "tip": "input().split() reads several values from one line; then convert each with int or map(int, …).", "tryit": ["Change the first input line to five marks. The code still works for any count."], "file": null, "expected": {"out": "Enter three marks separated by spaces: 78 92 85\nPieces: ['78', '92', '85']\nAs numbers: [78, 92, 85]\nTotal: 255 | Average: 85.0\nTwo numbers (a b): 6 7\n6 x 7 = 42\nDate (dd-mm-yyyy): 10-11-2026\nDay: 10 Month: 11 Year: 2026", "err": null, "line": null}, "stdin": "78 92 85\n6 7\n10-11-2026"}, {"title": "Handling bad input", "code": "while True:\n    text = input(\"Enter a positive whole number: \")\n    try:\n        n = int(text)\n    except ValueError:\n        print(\"  That's not a whole number, try again.\")\n        continue\n    if n <= 0:\n        print(\"  It must be positive, try again.\")\n        continue\n    break\n\nprint(\"Thanks! Its square is\", n * n)", "explain": "<p>Users make mistakes, so a robust program <b>validates<\/b> input and asks again until it gets something usable.<\/p>\n<ol><li><code>while True:<\/code> loops forever, until we <code>break<\/code> out.<\/li>\n<li><code>try<\/code> the conversion; if it raises <code>ValueError<\/code>, explain the problem and <code>continue<\/code> (ask again).<\/li>\n<li>Check any extra rules (here: positive).<\/li>\n<li>When everything is fine, <code>break<\/code> leaves the loop.<\/li><\/ol>\n<p>The sample input deliberately contains two bad answers (<code>abc<\/code> and <code>-5<\/code>) before a good one. Step through to watch the loop reject them.<\/p>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1", "Keep asking until a valid number arrives."], ["3-7", "Try to convert; on failure, complain and ask again."], ["8-10", "Reject numbers that break the rule."], ["11", "Valid: leave the loop."], ["13", "Use the validated number."]], "trace": [[1, "Start (or repeat) the loop.", null], [2, "Read a line: <code>text<\/code> = <code>&#x27;abc&#x27;<\/code>.", "Enter a positive whole number: abc"], [3, "Try the risky conversion…", null], [4, "int('abc') fails, so ValueError.", null], [5, "Caught the ValueError.", null], [6, "Explain the problem.", "  That's not a whole number, try again."], [7, "<code>continue<\/code>: back to the top to ask again.", null], [1, "Start (or repeat) the loop.", null], [2, "Read a line: <code>text<\/code> = <code>&#x27;-5&#x27;<\/code>.", "Enter a positive whole number: -5"], [3, "Try the risky conversion…", null], [4, "int('-5') worked: <code>n<\/code> = <code>-5<\/code>.", null], [8, "Is -5 ≤ 0? Yes, that breaks the rule.", null], [9, "Explain the rule.", "  It must be positive, try again."], [10, "Ask again.", null], [1, "Start (or repeat) the loop.", null], [2, "Read a line: <code>text<\/code> = <code>&#x27;12&#x27;<\/code>.", "Enter a positive whole number: 12"], [3, "Try the risky conversion…", null], [4, "int('12') worked: <code>n<\/code> = <code>12<\/code>.", null], [8, "Is 12 ≤ 0? No, it's fine.", null], [11, "<code>break<\/code>: a valid number, so leave the loop.", null], [13, "Use it.", "Thanks! Its square is 144"]], "tip": "Never trust input: try the conversion, check the rules, and ask again if needed.", "tryit": ["Change the rule to \"between 1 and 100\"."], "file": null, "expected": {"out": "Enter a positive whole number: abc\n  That's not a whole number, try again.\nEnter a positive whole number: -5\n  It must be positive, try again.\nEnter a positive whole number: 12\nThanks! Its square is 144", "err": null, "line": null}, "stdin": "abc\n-5\n12"}, {"title": "Cleaning input: strip(), lower(), defaults", "code": "answer = input(\"Do you want to continue? (yes/no) \")\nclean = answer.strip().lower()\nprint(f\"raw: {answer!r}  ->  clean: {clean!r}\")\n\nif clean in (\"yes\", \"y\"):\n    print(\"Continuing...\")\nelse:\n    print(\"Stopping.\")\n\ncolour = input(\"Favourite colour (Enter for blue): \").strip() or \"blue\"\nprint(\"Colour chosen:\", colour)", "explain": "<p>People type in unpredictable ways: extra spaces, CAPITALS, \"y\" instead of \"yes\", or nothing at all. Clean the text before checking it:<\/p>\n<table class=\"tbl\"><tr><th>Method<\/th><th>Does<\/th><\/tr>\n<tr><td><code>.strip()<\/code><\/td><td>Removes spaces (and tabs and new lines) from both ends<\/td><\/tr>\n<tr><td><code>.lower()<\/code><\/td><td>Makes it lowercase, so YES, Yes and yes all match<\/td><\/tr>\n<tr><td><code>in (\"yes\", \"y\")<\/code><\/td><td>Accepts several valid answers<\/td><\/tr>\n<tr><td><code>text or \"default\"<\/code><\/td><td>An empty answer (just Enter) is falsy, so the default is used<\/td><\/tr><\/table>\n<p><code>{answer!r}<\/code> in an f-string shows the value with quotes, so you can <em>see<\/em> the hidden spaces.<\/p>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1-3", "Read, clean, and show both versions."], ["5-8", "Accept several forms of yes."], ["10-11", "An empty answer falls back to a default."]], "trace": null, "tip": "Clean input with strip() and lower(), and use `or` to supply a default for empty answers.", "tryit": ["Make the second input line non-empty (e.g. <code>green<\/code>) and run."], "file": null, "expected": {"out": "Do you want to continue? (yes/no)    YES  \nraw: '   YES  '  ->  clean: 'yes'\nContinuing...\nFavourite colour (Enter for blue): \nColour chosen: blue", "err": null, "line": null}, "stdin": "   YES  \n"}, {"title": "Running out of input (EOFError)", "code": "first = input(\"First line: \")\nsecond = input(\"Second line: \")\nprint(\"Got:\", first, \"and\", second)\nthird = input(\"Third line: \")\nprint(\"Never reached:\", third)", "explain": "<p>Each <code>input()<\/code> reads the <b>next line<\/b>. If no more lines are available, Python raises <b><code>EOFError<\/code><\/b> (\"End Of File\").<\/p>\n<ul><li>In this lab, that means the Program input box has fewer lines than the number of <code>input()<\/code> calls.<\/li>\n<li>In real life, it happens when input comes from a file or another program (<code>python app.py &lt; answers.txt<\/code>), or when the user presses Ctrl+D (Mac/Linux) or Ctrl+Z (Windows).<\/li><\/ul>\n<p>Programs that read \"until the input ends\" catch it:<\/p>\n<pre class=\"snippet\">lines = []\nwhile True:\n    try:\n        lines.append(input())\n    except EOFError:\n        break<\/pre>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1-3", "Two lines of input are available, so these work."], ["4", "A third input() finds nothing left: EOFError."], ["5", "Never runs."]], "trace": null, "tip": "One input() call reads one line; ask for more lines than exist and you get EOFError.", "tryit": ["Add a third line to the Program input box and run again."], "file": null, "expected": {"out": "First line: alpha\nSecond line: beta\nGot: alpha and beta\nThird line: ", "err": "EOFError: EOF when reading a line", "line": 4}, "stdin": "alpha\nbeta"}]}, {"title": "Mini Projects", "level": "Project", "summary": "", "lessons": [{"title": "Project 1: Simple calculator", "code": "a = float(input(\"First number: \"))\nop = input(\"Operator (+ - * /): \").strip()\nb = float(input(\"Second number: \"))\n\nif op == \"+\":\n    result = a + b\nelif op == \"-\":\n    result = a - b\nelif op == \"*\":\n    result = a * b\nelif op == \"/\":\n    result = a / b if b != 0 else \"undefined (division by zero)\"\nelse:\n    result = \"unknown operator\"\n\nif isinstance(result, float):\n    print(f\"{a:g} {op} {b:g} = {result:g}\")\nelse:\n    print(f\"{a:g} {op} {b:g} = {result}\")", "explain": "<p>A classic first program that uses everything so far:<\/p>\n<ul><li><b>input + float()<\/b> to read numbers,<\/li>\n<li><b>input + strip()<\/b> to read the operator,<\/li>\n<li><b>variables<\/b> to hold the result,<\/li>\n<li><b>if / elif / else<\/b> to choose the operation,<\/li>\n<li><b>an f-string<\/b> to print. <code>:g<\/code> drops a needless \".0\", so 12.0 shows as 12. <code>isinstance(result, float)<\/code> checks whether we got a number or an error message.<\/li><\/ul>\n<p>Division guards against zero instead of crashing.<\/p>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1-3", "Read two numbers and an operator."], ["5-14", "Pick the calculation."], ["12", "Avoid dividing by zero."], ["16-19", "Show the full sum (numbers formatted with :g, messages as text)."]], "trace": [[1, "Read and convert: <code>a<\/code> = <code>12.0<\/code>.", "First number: 12"], [2, "Read the operator: <code>op<\/code> = <code>&#x27;*&#x27;<\/code>.", "Operator (+ - * /): *"], [3, "<code>b<\/code> = <code>4.0<\/code>.", "Second number: 4"], [5, "Is op \"+\"? No.", null], [7, "Is op \"-\"? No.", null], [9, "Is op \"*\"? Yes.", null], [10, "<code>result<\/code> = <code>48.0<\/code>.", null], [16, "Is the result a number? Yes, so format it with :g.", null], [17, "Print the equation.", "12 * 4 = 48"]], "tip": "Read → convert → decide → compute → print: the shape of most small programs.", "tryit": ["Add <code>**<\/code> for powers and <code>%<\/code> for remainders.", "Try <code>/<\/code> with 0 as the second number."], "file": null, "expected": {"out": "First number: 12\nOperator (+ - * /): *\nSecond number: 4\n12 * 4 = 48", "err": null, "line": null}, "stdin": "12\n*\n4"}, {"title": "Project 2: Bill splitter", "code": "print(\"=== Bill Splitter ===\")\nbill = float(input(\"Total bill (Rs): \"))\npeople = int(input(\"Number of people: \"))\ntip_percent = float(input(\"Tip % (e.g. 10): \"))\n\ntip = bill * tip_percent / 100\ntotal = bill + tip\neach = total / people\n\nprint()\nprint(f\"{'Bill':<12}Rs {bill:>9,.2f}\")\nprint(f\"{'Tip':<12}Rs {tip:>9,.2f}\")\nprint(f\"{'Total':<12}Rs {total:>9,.2f}\")\nprint(\"-\" * 24)\nprint(f\"{'Each pays':<12}Rs {each:>9,.2f}\")", "explain": "<p>A practical program with nicely formatted output:<\/p>\n<ol><li>Read three values, converting each to the right type: <b>float<\/b> for money and percentages, <b>int<\/b> for the number of people.<\/li>\n<li>Store the intermediate results in clearly named variables (<code>tip<\/code>, <code>total<\/code>, <code>each<\/code>).<\/li>\n<li>Print an aligned receipt. <code>:&gt;9,.2f<\/code> means right-align in 9 characters, with comma separators and 2 decimals.<\/li><\/ol>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["2-4", "Inputs, converted to the right types."], ["6-8", "Calculations in well-named variables."], ["10-15", "An aligned receipt."]], "trace": null, "tip": "Good variable names and f-string formatting turn a calculation into a readable report.", "tryit": ["Add a line showing how much tip each person pays.", "Round each share up to the next whole rupee with <code>math.ceil<\/code>."], "file": null, "expected": {"out": "=== Bill Splitter ===\nTotal bill (Rs): 2450\nNumber of people: 4\nTip % (e.g. 10): 10\n\nBill        Rs  2,450.00\nTip         Rs    245.00\nTotal       Rs  2,695.00\n------------------------\nEach pays   Rs    673.75", "err": null, "line": null}, "stdin": "2450\n4\n10"}, {"title": "Project 3: Temperature converter", "code": "print(\"1) Celsius → Fahrenheit\")\nprint(\"2) Fahrenheit → Celsius\")\nchoice = input(\"Choose 1 or 2: \").strip()\nvalue = float(input(\"Temperature: \"))\n\nif choice == \"1\":\n    converted = value * 9 / 5 + 32\n    print(f\"{value:g}°C = {converted:.1f}°F\")\nelif choice == \"2\":\n    converted = (value - 32) * 5 / 9\n    print(f\"{value:g}°F = {converted:.1f}°C\")\nelse:\n    print(\"Please choose 1 or 2\")", "explain": "<p>A tiny <b>menu-driven<\/b> program: print the options, read a choice, then act on it.<\/p>\n<ul><li>Keep the menu choice as text (<code>\"1\"<\/code>) and compare it with strings. There's no need to convert it.<\/li>\n<li>Convert the temperature to a float so decimals like 98.6 work.<\/li>\n<li>Formulas: °F = °C × 9/5 + 32, and °C = (°F − 32) × 5/9.<\/li><\/ul>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1-3", "Show the menu and read a choice."], ["4", "Read the temperature."], ["6-11", "Convert in the chosen direction."], ["12-13", "Handle invalid choices."]], "trace": null, "tip": "Menus are just print + input + if/elif.", "tryit": ["Change the input to <code>2<\/code> and <code>98.6<\/code>.", "Add option 3: Celsius → Kelvin."], "file": null, "expected": {"out": "1) Celsius → Fahrenheit\n2) Fahrenheit → Celsius\nChoose 1 or 2: 1\nTemperature: 37\n37°C = 98.6°F", "err": null, "line": null}, "stdin": "1\n37"}, {"title": "Project 4: Mini quiz", "code": "score = 0\nname = input(\"Your name: \").strip().title()\n\nanswer = input(\"Q1. What does print() do? (a) read (b) show  \").strip().lower()\nif answer == \"b\":\n    score += 1\n\nanswer = input(\"Q2. input() returns which type? (int/str)  \").strip().lower()\nif answer == \"str\":\n    score += 1\n\nanswer = int(input(\"Q3. What is 7 * 6?  \"))\nif answer == 42:\n    score += 1\n\nprint()\nprint(f\"{name}, you scored {score}/3 ({score / 3:.0%})\")\nprint(\"Great job!\" if score == 3 else \"Keep practising!\")", "explain": "<p>A quiz that keeps a <b>score variable<\/b> and updates it with <code>+=<\/code> after each correct answer.<\/p>\n<ul><li><code>.strip().lower()<\/code> makes answers like <code>\" B \"<\/code> count as correct.<\/li>\n<li><code>.title()<\/code> capitalises the name nicely.<\/li>\n<li>A score shown as a percentage uses <code>:.0%<\/code>.<\/li>\n<li>The final line uses a <b>conditional expression<\/b>: <code>A if condition else B<\/code>.<\/li><\/ul>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1-2", "A score counter and the player's name."], ["4-14", "Three questions; each correct answer adds 1."], ["16-18", "Results with a percentage."]], "trace": null, "tip": "A variable that you update with += is how programs keep score, count and total things.", "tryit": ["Add a fourth question and change <code>/3<\/code> to <code>/4<\/code>."], "file": null, "expected": {"out": "Your name: asha rao\nQ1. What does print() do? (a) read (b) show   B\nQ2. input() returns which type? (int/str)  str\nQ3. What is 7 * 6?  42\n\nAsha Rao, you scored 3/3 (100%)\nGreat job!", "err": null, "line": null}, "stdin": "asha rao\n B\nstr\n42"}, {"title": "Project 5: Student report card", "code": "name = input(\"Student name: \").strip()\nmarks = list(map(int, input(\"Marks for Maths Science English: \").split()))\nsubjects = [\"Maths\", \"Science\", \"English\"]\n\ntotal = sum(marks)\naverage = total / len(marks)\n\nif average >= 85:\n    grade = \"A\"\nelif average >= 70:\n    grade = \"B\"\nelif average >= 50:\n    grade = \"C\"\nelse:\n    grade = \"F\"\n\nprint()\nprint(f\"{'REPORT CARD':^26}\")\nprint(f\"Name: {name}\")\nprint(\"-\" * 26)\nfor subject, mark in zip(subjects, marks):\n    print(f\"{subject:<12}{mark:>5}  {'*' * (mark // 10)}\")\nprint(\"-\" * 26)\nprint(f\"{'Total':<12}{total:>5}\")\nprint(f\"{'Average':<12}{average:>5.1f}\")\nprint(f\"{'Grade':<12}{grade:>5}\")", "explain": "<p>The final project combines every skill from this lab:<\/p>\n<table class=\"tbl\"><tr><th>Skill<\/th><th>Where<\/th><\/tr>\n<tr><td><code>input()<\/code> + <code>strip()<\/code><\/td><td>Reading the name<\/td><\/tr>\n<tr><td><code>split()<\/code> + <code>map(int, …)<\/code><\/td><td>Three marks on one line<\/td><\/tr>\n<tr><td>Variables &amp; arithmetic<\/td><td><code>total<\/code>, <code>average<\/code><\/td><\/tr>\n<tr><td>Decisions<\/td><td>Choosing the grade<\/td><\/tr>\n<tr><td>f-string alignment<\/td><td>A neat, centred report with a star chart<\/td><\/tr><\/table>\n<div class=\"note\"><b>Program input box.<\/b> In a terminal you would type answers on the keyboard. Here, type them in the yellow <b>Program input<\/b> box above the output, one line per <code>input()<\/code> call, then press Run. The output shows each prompt followed by your answer, exactly as a terminal would.<\/div>", "walk": [["1-3", "Read the name and three marks; list the subjects."], ["5-6", "Compute total and average."], ["8-15", "Decide the grade."], ["17-26", "Print a formatted report card."]], "trace": null, "tip": "Input → variables → calculations → formatted print: you can now write complete interactive programs.", "tryit": ["Add a fourth subject (update both the input line and the <code>subjects<\/code> list).", "Print \"PASS\" or \"FAIL\" for each subject (pass mark 40)."], "file": null, "expected": {"out": "Student name: Asha Rao\nMarks for Maths Science English: 92 78 85\n\n       REPORT CARD        \nName: Asha Rao\n--------------------------\nMaths          92  *********\nScience        78  *******\nEnglish        85  ********\n--------------------------\nTotal         255\nAverage      85.0\nGrade           A", "err": null, "line": null}, "stdin": "Asha Rao\n92 78 85"}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, step = -1, walkSel = -1, errLine = null;
+const edits = {};
+const stdinEdits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pybasics-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield assert del async await match case".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs divmod pow hash bool hasattr getattr setattr delattr globals classmethod staticmethod super id".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0) hlLines.add(tr[step][0]);
+  if (walkSel >= 0) {
+    const r = L().walk[walkSel][0].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === errLine ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (errLine) mk += `<div class="mark err" style="${at(errLine)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+ta.addEventListener("scroll", syncScroll);
+$("stdin").addEventListener("input", () => { stdinEdits[key(mi, li)] = $("stdin").value; if (step >= 0) step = -1; renderStepper(); paintEditor(); });
+ta.addEventListener("input", () => {
+  edits[key(mi, li)] = ta.value; errLine = null;
+  if (step >= 0) step = -1;
+  renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+const isEdited = () => ta.value !== L().code || (L().stdin != null && $("stdin").value !== L().stdin);
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+
+/* ---------- output console ---------- */
+function showOutput(out, err, line, pill, meta, pillCls) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) h += `<span class="errl">${esc(err)}<small>${line ? "Raised on line " + line + " (highlighted in red)" : ""}</small></span>`;
+  o.innerHTML = h;
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  errLine = line || null; paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const cur = step >= 0 ? tr[step] : null;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${cur ? `<span class="ln">line ${cur[0]}</span>${cur[1]}` : "Watch Python move through the code one line at a time. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[2] !== null).map(t => t[2]);
+  const isNew = tr[step][2] !== null;
+  errLine = null;
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderStepper(); paintEditor(); scrollToLine(tr[step][0]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker, so a runaway loop can be stopped) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = `
+import sys, traceback, json, warnings
+warnings.filterwarnings("ignore", message=".*[Pp]yarrow.*")
+def __run(src, stdin=""):
+    _lines = iter(stdin.split("\\n")) if stdin else iter(())
+    def input(prompt=""):
+        print(prompt, end="")
+        try:
+            v = next(_lines)
+        except StopIteration:
+            print()
+            raise EOFError("EOF when reading a line") from None
+        print(v)
+        return v
+    g = {"__name__": "__main__", "input": input}
+    try:
+        exec(compile(src, "<lab>", "exec"), g)
+        return ""
+    except BaseException as e:
+        line = None
+        for fr in traceback.extract_tb(e.__traceback__):
+            if fr.filename == "<lab>": line = fr.lineno
+        if isinstance(e, SyntaxError):
+            line, msg = e.lineno, e.msg
+        else:
+            msg = str(e)
+        return json.dumps({"err": type(e).__name__ + ": " + msg, "line": line})
+`;
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  try { await py.loadPackagesFromImports(e.data.code); } catch (x) {}
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.code, e.data.stdin || ""); } catch (x) { r = JSON.stringify({err:String(x), line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+const HEAVY = /\b(numpy|pandas|sklearn)\b/;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); pending = null; setBusy(false);
+      let err = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; }
+      showOutput(d.out, err, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live");
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run() {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  pending = { id: ++runId, code: ta.value, stdin: $("stdin").value };
+  if (wReady) { setBusy(true, HEAVY.test(ta.value) ? "Loading libraries…" : null); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? (HEAVY.test(pending ? pending.code : "") ? 120000 : 8000) : 120000);
+}
+$("runBtn").onclick = run;
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; delete stdinEdits[key(mi, li)]; $("stdin").value = L().stdin || ""; ta.value = L().code; step = -1; errLine = null; renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pybasics-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${md.title}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${x.title}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("fname").textContent = l.file || `module${mi + 1}_lesson${li + 1}.py`;
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errLine = null;
+  ta.value = edits[key(mi, li)] ?? l.code; ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+  $("stdinBox").hidden = l.stdin == null;
+  $("stdin").value = stdinEdits[key(mi, li)] ?? (l.stdin || "");
+  $("stdin").rows = Math.max(2, $("stdin").value.split("\n").length);
+
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${w[0].includes("-") ? "lines " : "line "}${w[0]}</span><span>${w[1]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][0].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
