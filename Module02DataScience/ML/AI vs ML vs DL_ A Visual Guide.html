@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI vs ML vs DL: A Visual Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f0; --ink:#1d1b18; --muted:#5f5a52; --line:#e2ddd2; --card:#ffffff;
+  --ai:#6b4fd8; --ai-soft:#ece7fb;
+  --ml:#0f8a73; --ml-soft:#ddf3ee;
+  --dl:#d9541e; --dl-soft:#fde7dc;
+  --warn:#9a6b00; --warn-soft:#fff3d1;
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#14130f; --ink:#f1ede4; --muted:#a8a197; --line:#2e2b25; --card:#1d1b17;
+    --ai:#a08cff; --ai-soft:#262040; --ml:#3fd1b0; --ml-soft:#12302a; --dl:#ff8a5b; --dl-soft:#3a2016;
+    --warn:#f2c14e; --warn-soft:#332a10; }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em}
+h1{font-size:clamp(2.2rem,5vw,3.6rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);letter-spacing:-.01em}
+h3{font-size:1.25rem}
+p{margin:0 0 1em}
+code,.mono{font-family:"JetBrains Mono",monospace;font-size:.88em}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.kicker{font:600 .78rem/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.lead{font-size:1.15rem;color:var(--muted);max-width:680px}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:600}
+.ai{color:var(--ai)} .ml{color:var(--ml)} .dl{color:var(--dl)}
+.bg-ai{background:var(--ai-soft);color:var(--ai)} .bg-ml{background:var(--ml-soft);color:var(--ml)} .bg-dl{background:var(--dl-soft);color:var(--dl)}
+
+/* nav */
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+nav a{white-space:nowrap;color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:99px}
+nav a:hover{background:var(--card);color:var(--ink)}
+
+/* hero */
+.hero{padding:70px 0 50px;display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
+@media(max-width:820px){.hero{grid-template-columns:1fr}}
+.nest{width:100%;max-width:440px;margin:auto;display:block}
+.nest circle{transition:opacity .2s,stroke-width .2s;cursor:pointer}
+.nest text{pointer-events:none;font-family:Inter;font-weight:700}
+.nest-info{min-height:84px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:.95rem;margin-top:14px}
+
+/* cards */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:820px){.grid3{grid-template-columns:1fr}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+.card.top-ai{border-top:5px solid var(--ai)} .card.top-ml{border-top:5px solid var(--ml)} .card.top-dl{border-top:5px solid var(--dl)}
+.card ul{padding-left:18px;margin:.4em 0 0} .card li{margin:.25em 0}
+.def{font-size:1.05rem;font-weight:500}
+.eg{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:.92rem;color:var(--muted)}
+
+.note{border-left:4px solid var(--warn);background:var(--warn-soft);padding:14px 18px;border-radius:0 12px 12px 0;margin:22px 0;font-size:.95rem}
+.note b{color:var(--warn)}
+
+/* pipeline */
+.pipe{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-top:18px}
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0 4px}
+.box{padding:10px 14px;border-radius:10px;font-weight:600;font-size:.92rem;border:1.5px solid var(--line);background:var(--bg)}
+.box.human{border-style:dashed;border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.box.mlb{border-color:var(--ml);color:var(--ml);background:var(--ml-soft)}
+.box.dlb{border-color:var(--dl);color:var(--dl);background:var(--dl-soft);flex:1;min-width:240px;text-align:center}
+.arrow{color:var(--muted);font-weight:700}
+.layers{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.layers span{width:16px;height:34px;border-radius:5px;background:var(--dl);opacity:.25}
+.layers span.on{opacity:1}
+.backprop{font-size:.85rem;color:var(--dl);text-align:center;margin-top:6px;height:1.3em}
+.btn{font:600 .9rem Inter;padding:9px 16px;border-radius:10px;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:focus-visible,.opt:focus-visible,.tab:focus-visible{outline:3px solid var(--ai);outline-offset:2px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tab{font:600 .88rem Inter;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+.tab[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.panel{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.panel{grid-template-columns:1fr}}
+.side{border-radius:14px;padding:20px}
+.side.ml{background:var(--ml-soft)} .side.dl{background:var(--dl-soft)}
+.side h3{margin-bottom:.3em}
+.side .tag{font-family:Fraunces;font-size:1.35rem;font-weight:700;margin-bottom:6px;display:block}
+.side p{color:var(--ink);margin:0}
+
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);font-size:.94rem}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td:first-child{font-weight:600}
+.tscroll{overflow-x:auto}
+
+/* chart */
+.chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.legend{display:flex;gap:18px;font-size:.85rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+
+/* car */
+.toggle{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px;margin-bottom:18px}
+.toggle button{font:600 .9rem Inter;border:0;background:transparent;color:var(--muted);padding:8px 16px;border-radius:99px;cursor:pointer}
+.toggle button.on-ml{background:var(--ml);color:#fff} .toggle button.on-dl{background:var(--dl);color:#fff}
+.car-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:18px}
+@media(max-width:820px){.car-grid{grid-template-columns:1fr}}
+.inputs .in{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--card);border:1px solid var(--line);margin-bottom:10px}
+.inputs .ico{font-size:1.4rem;width:32px;text-align:center}
+.inputs small{display:block;color:var(--muted);font-size:.82rem}
+.decision{border-radius:14px;padding:20px;color:#fff;margin-top:6px}
+.decision.ml{background:var(--ml)} .decision.dl{background:var(--dl)}
+.decision .mono{opacity:.9}
+.road svg{width:100%;height:auto;display:block;background:var(--card);border:1px solid var(--line);border-radius:14px}
+
+/* chooser */
+.q{margin-bottom:18px}
+.q .qt{font-weight:600;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{font:500 .9rem Inter;padding:8px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.opt[aria-pressed=true]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.verdict{border-radius:var(--radius);padding:22px;border:1px solid var(--line);background:var(--card)}
+.meter{height:12px;border-radius:99px;background:linear-gradient(90deg,var(--ml),var(--dl));position:relative;margin:14px 0 6px}
+.meter b{position:absolute;top:-6px;width:24px;height:24px;border-radius:50%;background:var(--card);border:3px solid var(--ink);transform:translateX(-50%);transition:left .35s}
+.meter-l{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted)}
+
+/* quiz */
+.quiz .qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:14px}
+.quiz .ans{display:grid;gap:8px;margin-top:10px}
+.quiz .ans button{text-align:left;font:500 .95rem Inter;padding:10px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.quiz .ans button.right{border-color:var(--ml);background:var(--ml-soft)}
+.quiz .ans button.wrong{border-color:var(--dl);background:var(--dl-soft)}
+.quiz .why{font-size:.9rem;color:var(--muted);margin-top:10px;display:none}
+.score{font-family:Fraunces;font-size:1.3rem}
+
+.cheat{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:720px){.cheat{grid-template-columns:1fr}}
+.cheat div{padding:18px;border-radius:14px}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#big-picture">Big picture</a>
+  <a href="#definitions">AI · ML · DL</a>
+  <a href="#two-tasks">The 2 tasks</a>
+  <a href="#differences">5 differences</a>
+  <a href="#car">Car example</a>
+  <a href="#chooser">ML or DL?</a>
+  <a href="#quiz">Quiz</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="big-picture">
+  <div>
+    <div class="kicker">A visual guide</div>
+    <h1>AI, Machine Learning &amp; Deep Learning</h1>
+    <p class="lead">They're not three rival technologies. They are <b>circles inside circles</b>. Every deep learning model is a machine learning model, and every machine learning model is a kind of AI, but not the other way around.</p>
+    <p class="lead" style="font-size:1rem">Tap a circle to see what lives in it.</p>
+  </div>
+  <div>
+    <svg class="nest" viewBox="0 0 400 400" role="img" aria-label="Nested circles: AI contains ML, which contains DL">
+      <circle id="c-ai" cx="200" cy="200" r="190" fill="var(--ai-soft)" stroke="var(--ai)" stroke-width="2"/>
+      <circle id="c-ml" cx="215" cy="230" r="128" fill="var(--ml-soft)" stroke="var(--ml)" stroke-width="2"/>
+      <circle id="c-dl" cx="232" cy="262" r="68" fill="var(--dl-soft)" stroke="var(--dl)" stroke-width="2"/>
+      <text x="200" y="60" text-anchor="middle" fill="var(--ai)" font-size="22">AI</text>
+      <text x="200" y="80" text-anchor="middle" fill="var(--ai)" font-size="11" font-weight="500">Artificial Intelligence</text>
+      <text x="200" y="142" text-anchor="middle" fill="var(--ml)" font-size="20">ML</text>
+      <text x="200" y="160" text-anchor="middle" fill="var(--ml)" font-size="11" font-weight="500">Machine Learning</text>
+      <text x="232" y="262" text-anchor="middle" fill="var(--dl)" font-size="20">DL</text>
+      <text x="232" y="280" text-anchor="middle" fill="var(--dl)" font-size="10" font-weight="500">Deep Learning</text>
+    </svg>
+    <div class="nest-info" id="nest-info" aria-live="polite"><b class="ai">AI</b>: the whole field of making machines do things that seem intelligent. Includes hand-written rules <i>and</i> learning systems.</div>
+  </div>
+</header>
+</div>
+
+<!-- DEFINITIONS -->
+<section id="definitions"><div class="wrap">
+  <div class="kicker">Step 1 · Definitions</div>
+  <h2>What each one actually means</h2>
+  <p class="lead">Think of vehicles: AI is "transport", ML is "motor vehicles", and DL is a high-powered sports car. Same family, very different engines.</p>
+  <div class="grid3" style="margin-top:24px">
+    <div class="card top-ai">
+      <span class="pill bg-ai">Biggest circle</span>
+      <h3 style="margin-top:10px">Artificial Intelligence</h3>
+      <p class="def">Any technique that makes a computer act intelligently: decide, plan, recognise, converse.</p>
+      <ul>
+        <li>Can be <b>rule-based</b> ("if speed &lt; 10 km/h, it's a jam")</li>
+        <li>Or <b>learned</b> from data (that's ML)</li>
+      </ul>
+      <div class="eg"><b>Examples:</b> chess engines with search rules, expert systems, GPS shortest-path routing, chatbots.</div>
+    </div>
+    <div class="card top-ml">
+      <span class="pill bg-ml">Inside AI</span>
+      <h3 style="margin-top:10px">Machine Learning</h3>
+      <p class="def">AI that <b>learns patterns from data</b> instead of being told every rule.</p>
+      <ul>
+        <li>A human usually picks the <b>features</b> (the useful columns)</li>
+        <li>Algorithms: decision trees, random forest, gradient boosting, linear/logistic regression, SVM</li>
+      </ul>
+      <div class="eg"><b>Examples:</b> spam filters, loan approval, house-price prediction, predicting traffic delay from speed + time + rain flag.</div>
+    </div>
+    <div class="card top-dl">
+      <span class="pill bg-dl">Inside ML</span>
+      <h3 style="margin-top:10px">Deep Learning</h3>
+      <p class="def">ML using <b>deep neural networks</b> (many layers) that learn the features <b>by themselves</b> from raw data.</p>
+      <ul>
+        <li>Feed raw pixels, sound or text directly</li>
+        <li>Architectures: CNNs (images), RNNs/Transformers (sequences, language)</li>
+      </ul>
+      <div class="eg"><b>Examples:</b> face unlock, voice assistants, ChatGPT/Claude, self-driving camera perception, medical scan reading.</div>
+    </div>
+  </div>
+  <div class="note"><b>Common mix-up:</b> not all AI learns. A hand-coded rule like "if the road is red on the map, avoid it" is AI but <i>not</i> ML. It becomes ML when the system <i>learns</i> what "red" should mean from past trips.</div>
+</div></section>
+
+<!-- TWO TASKS -->
+<section id="two-tasks"><div class="wrap">
+  <div class="kicker">Step 2 · The key idea</div>
+  <h2>ML has two separate jobs. DL merges them into one.</h2>
+  <p class="lead">This is the most important insight on the page.</p>
+
+  <div class="grid2" style="margin-top:22px">
+    <div class="card">
+      <span class="pill" style="background:var(--warn-soft);color:var(--warn)">Job 1</span>
+      <h3 style="margin-top:10px">Feature engineering (representation)</h3>
+      <p>A <b>human</b> looks at raw data and decides what matters. For a handwritten digit: "count the loops, detect straight lines". For traffic: "average speed, hour of day, is it raining".</p>
+    </div>
+    <div class="card">
+      <span class="pill bg-ml">Job 2</span>
+      <h3 style="margin-top:10px">Prediction (classification / regression)</h3>
+      <p>An <b>algorithm</b> learns how those chosen features map to the answer: "jam / no jam", "take Route B", "delay = 18 min".</p>
+    </div>
+  </div>
+  <p style="margin-top:18px"><b>The weakness:</b> in traditional ML, these two jobs don't talk to each other. If the human picks weak features in Job 1, Job 2 can never fix it.</p>
+
+  <div class="pipe">
+    <div class="kicker" style="color:var(--ml)">Traditional ML: two disconnected steps</div>
+    <div class="flow">
+      <div class="box">Raw data</div><span class="arrow">→</span>
+      <div class="box human">👤 Human designs features</div><span class="arrow">→</span>
+      <div class="box">Feature table</div><span class="arrow">→</span>
+      <div class="box mlb">ML algorithm</div><span class="arrow">→</span>
+      <div class="box">Prediction</div>
+    </div>
+  </div>
+
+  <div class="pipe">
+    <div class="kicker" style="color:var(--dl)">Deep learning: one end-to-end pipeline</div>
+    <div class="flow">
+      <div class="box">Raw data</div><span class="arrow">→</span>
+      <div class="box dlb">
+        Deep neural network
+        <div class="layers" id="layers"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div style="display:flex;justify-content:space-between;font-size:.75rem;font-weight:500;margin-top:6px"><span>early layers = learn features</span><span>last layers = predict</span></div>
+        <div class="backprop" id="bp"></div>
+      </div><span class="arrow">→</span>
+      <div class="box">Prediction</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn" id="run-fwd">▶ Show a forward pass</button>
+      <button class="btn ghost" id="run-bp">↺ Show backpropagation</button>
+    </div>
+  </div>
+
+  <p style="margin-top:18px"><b>Why this matters:</b> during training, when the network guesses wrong, the error flows <i>backwards</i> through every layer (<b>backpropagation</b>). So the network doesn't just fix its final guess; it rewrites its early layers to look for <i>better features</i>. Job 1 now learns from the mistakes of Job 2. That feedback loop is what lets DL handle vision, speech and language, where no human could hand-write good features.</p>
+</div></section>
+
+<!-- DIFFERENCES -->
+<section id="differences"><div class="wrap">
+  <div class="kicker">Step 3 · Side by side</div>
+  <h2>Five differences that matter in practice</h2>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="panel" id="panel" role="tabpanel"></div>
+
+  <div class="chart-wrap" style="margin-top:26px">
+    <h3>Performance vs amount of data</h3>
+    <p style="color:var(--muted);font-size:.92rem;margin-bottom:8px">Illustrative shape, not real measurements. Classic ML tends to plateau; deep networks keep improving with more data, but do worse when data is scarce.</p>
+    <svg viewBox="0 0 600 260" width="100%" role="img" aria-label="Line sketch: ML rises fast then plateaus; DL starts lower and overtakes with more data">
+      <line x1="50" y1="220" x2="580" y2="220" stroke="var(--line)" stroke-width="2"/>
+      <line x1="50" y1="20" x2="50" y2="220" stroke="var(--line)" stroke-width="2"/>
+      <text x="315" y="252" text-anchor="middle" fill="var(--muted)" font-size="13" font-family="Inter">Amount of data →</text>
+      <text x="18" y="120" text-anchor="middle" fill="var(--muted)" font-size="13" font-family="Inter" transform="rotate(-90 18 120)">Performance →</text>
+      <path d="M50,200 C120,110 200,95 300,92 S500,90 580,90" fill="none" stroke="var(--ml)" stroke-width="3.5"/>
+      <path d="M50,215 C180,205 260,150 340,100 S500,40 580,30" fill="none" stroke="var(--dl)" stroke-width="3.5"/>
+      <line x1="318" y1="30" x2="318" y2="220" stroke="var(--muted)" stroke-dasharray="4 5"/>
+      <text x="324" y="44" fill="var(--muted)" font-size="12" font-family="Inter">crossover</text>
+      <text x="90" y="80" fill="var(--ml)" font-size="12" font-family="Inter" font-weight="600">ML wins with small data</text>
+      <text x="420" y="24" fill="var(--dl)" font-size="12" font-family="Inter" font-weight="600">DL wins with lots</text>
+    </svg>
+    <div class="legend"><span><i style="background:var(--ml)"></i>Traditional ML</span><span><i style="background:var(--dl)"></i>Deep learning</span></div>
+  </div>
+
+  <h3 style="margin-top:34px">Quick comparison table</h3>
+  <div class="tscroll">
+  <table>
+    <tr><th>Metric</th><th class="ml">Traditional ML</th><th class="dl">Deep Learning</th></tr>
+    <tr><td>Human effort on features</td><td>High: hand-crafted</td><td>Low: learned automatically</td></tr>
+    <tr><td>Best data type</td><td>Structured: spreadsheets, SQL tables, CSVs</td><td>Unstructured: images, video, audio, raw text</td></tr>
+    <tr><td>Typical data size</td><td>Hundreds to hundreds of thousands of rows</td><td>Large, often millions of examples (less with a pretrained model)</td></tr>
+    <tr><td>Hardware</td><td>Ordinary laptop CPU</td><td>GPUs / TPUs</td></tr>
+    <tr><td>Training time</td><td>Seconds to hours</td><td>Hours to weeks (big models: months)</td></tr>
+    <tr><td>Explainability</td><td>Often clear ("white box")</td><td>Hard to explain ("black box")</td></tr>
+    <tr><td>Core building block</td><td>Trees, regressions, distance/margin methods</td><td>Multi-layer artificial neural networks</td></tr>
+  </table>
+  </div>
+  <div class="note"><b>Two honest caveats.</b> (1) With <i>transfer learning</i> you can fine-tune a pretrained deep model on just a few hundred images, so "DL always needs millions" isn't strictly true. (2) On plain tabular data, well-tuned gradient boosting (XGBoost, LightGBM) still often beats deep learning. More power isn't always better.</div>
+</div></section>
+
+<!-- CAR -->
+<section id="car"><div class="wrap">
+  <div class="kicker">Step 4 · Your example, refined</div>
+  <h2>Teaching a car to reroute: where ML ends and DL begins</h2>
+  <p class="lead">The idea: <i>"ML can teach my car to spot a traffic jam and find another path, but I need DL to also handle weather, time and distance."</i> Close, with one correction:</p>
+  <div class="note" style="margin-top:6px"><b>The real dividing line isn't <i>which</i> variables you add. It's what <i>form</i> the data arrives in.</b> Weather as a number from an API ("rain = 1") is fine for ML. Weather as a camera image of a storm needs DL.</div>
+
+  <div class="toggle" role="group" aria-label="Choose approach">
+    <button id="t-ml" class="on-ml">Phase 1 · Traditional ML</button>
+    <button id="t-dl">Phase 2 · Deep Learning</button>
+  </div>
+
+  <div class="car-grid">
+    <div>
+      <div class="kicker" id="car-in-title">Inputs: clean numbers</div>
+      <div class="inputs" id="car-inputs"></div>
+      <div class="decision ml" id="car-decision"></div>
+    </div>
+    <div class="road">
+      <svg viewBox="0 0 420 320" id="road" aria-label="Map with two routes"></svg>
+      <p style="font-size:.9rem;color:var(--muted);margin-top:10px" id="car-explain"></p>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:24px">
+    <div class="card top-ml"><h3>Use ML when…</h3><p style="margin:0">you can boil traffic, weather, time and distance down to a neat table of numbers: speed 15 km/h, rain = yes, 17:30, Route B = 12 km.</p></div>
+    <div class="card top-dl"><h3>Use DL when…</h3><p style="margin:0">the car must <i>perceive</i>: see rain on the windscreen, glare on wet asphalt, fog, hear hydroplaning, read free-text driver alerts, and turn that straight into a driving decision.</p></div>
+  </div>
+</div></section>
+
+<!-- CHOOSER -->
+<section id="chooser"><div class="wrap">
+  <div class="kicker">Step 5 · Try it</div>
+  <h2>Do I need ML or DL for my problem?</h2>
+  <p class="lead">Answer four questions. The marker shows which side your project leans to.</p>
+  <div class="grid2" style="margin-top:22px;align-items:start">
+    <div id="qs"></div>
+    <div class="verdict">
+      <div class="meter"><b id="mk" style="left:50%"></b></div>
+      <div class="meter-l"><span class="ml">Traditional ML</span><span class="dl">Deep Learning</span></div>
+      <h3 id="v-title" style="margin-top:18px">Pick your answers</h3>
+      <p id="v-body" style="color:var(--muted);margin:0">Your recommendation will appear here.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- QUIZ -->
+<section id="quiz"><div class="wrap">
+  <div class="kicker">Step 6 · Check yourself</div>
+  <h2>Quick quiz</h2>
+  <p class="score" id="score">Score: 0 / 0</p>
+  <div class="quiz" id="quizbox"></div>
+
+  <h3 style="margin-top:34px">One-line cheat sheet</h3>
+  <div class="cheat">
+    <div class="bg-ai"><b>AI</b> = machines acting smart (rules <i>or</i> learning)</div>
+    <div class="bg-ml"><b>ML</b> = learn from data; <i>humans</i> pick the features</div>
+    <div class="bg-dl"><b>DL</b> = deep networks learn the features <i>and</i> the prediction together</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Teaching page on AI, ML and DL. Data curve is illustrative.</div></footer>
+
+<script>
+// Nested circles
+const info = {
+  ai:'<b class="ai">AI</b>: the whole field of making machines do things that seem intelligent. Includes hand-written rules <i>and</i> learning systems.',
+  ml:'<b class="ml">Machine Learning</b>: the part of AI that learns rules from data. Humans usually choose the input features.',
+  dl:'<b class="dl">Deep Learning</b>: the part of ML that uses many-layered neural networks to learn features straight from raw data.'
+};
+['ai','ml','dl'].forEach(k=>{
+  const c=document.getElementById('c-'+k);
+  c.addEventListener('click',e=>{e.stopPropagation();document.getElementById('nest-info').innerHTML=info[k];
+    ['ai','ml','dl'].forEach(j=>document.getElementById('c-'+j).setAttribute('stroke-width',j===k?5:2));});
+});
+
+// Pipeline animation
+const L=[...document.querySelectorAll('#layers span')], bp=document.getElementById('bp');
+let busy=false;
+function animate(order,msg){ if(busy)return; busy=true; L.forEach(s=>s.classList.remove('on')); bp.textContent=msg;
+  order.forEach((i,n)=>setTimeout(()=>{L.forEach(s=>s.classList.remove('on'));L[i].classList.add('on');
+    if(n===order.length-1)setTimeout(()=>{L.forEach(s=>s.classList.remove('on'));bp.textContent='';busy=false;},500);},n*260));}
+document.getElementById('run-fwd').onclick=()=>animate([0,1,2,3,4,5,6,7],'pixels → edges → shapes → objects → answer');
+document.getElementById('run-bp').onclick=()=>animate([7,6,5,4,3,2,1,0],'← error flows back, early layers update their features');
+
+// Tabs
+const diffs=[
+ {t:'1 · Features',ml:['Manual','A data scientist decides which variables matter and prepares them before training.'],dl:['Automatic','Raw pixels, audio or text go in; hidden layers discover the useful features themselves.']},
+ {t:'2 · Data',ml:['Plateaus','Great on small–medium datasets; after a point, more data stops helping much.'],dl:['Keeps scaling','Gets better with more data, but struggles when data is scarce.']},
+ {t:'3 · Hardware',ml:['Light','Runs in seconds or minutes on a normal laptop CPU.'],dl:['Heavy','Millions of matrix multiplications in parallel, so it relies on GPUs or TPUs.']},
+ {t:'4 · Training time',ml:['Fast','Seconds to a few hours.'],dl:['Slow','Hours to weeks; the largest models take months and lots of electricity.']},
+ {t:'5 · Explainability',ml:['White box','A decision tree or logistic regression can show exactly why it decided.'],dl:['Black box','Millions or billions of weights make the "why" hard to trace.']}
+];
+const tabs=document.getElementById('tabs'), panel=document.getElementById('panel');
+function showTab(i){ [...tabs.children].forEach((b,j)=>b.setAttribute('aria-selected',i===j));
+  const d=diffs[i]; panel.innerHTML=`<div class="side ml"><div class="kicker ml">Traditional ML</div><span class="tag ml">${d.ml[0]}</span><p>${d.ml[1]}</p></div>
+  <div class="side dl"><div class="kicker dl">Deep Learning</div><span class="tag dl">${d.dl[0]}</span><p>${d.dl[1]}</p></div>`;}
+diffs.forEach((d,i)=>{const b=document.createElement('button');b.className='tab';b.role='tab';b.textContent=d.t;b.onclick=()=>showTab(i);tabs.appendChild(b);});
+showTab(0);
+
+// Car example
+const car={
+ ml:{title:'Inputs: clean numbers (structured data)',inputs:[
+   ['🚦','Traffic','Avg speed on Route A: 15 km/h'],['📏','Distance','Route A 9 km · Route B 12 km'],
+   ['🕔','Time','17:30, Tuesday (peak hour)'],['🌧️','Weather API','rain = 1, temp = 24°C']],
+  decision:'<div class="mono">model = RandomForest / GradientBoosting</div><div style="font-family:Fraunces;font-size:1.4rem;margin-top:6px">"Take Route B: 6 min faster"</div>',
+  explain:'Every input is already a number, so a tree-based ML model learns from past trips which route is faster under these conditions. Weather is included here. No deep learning needed.'},
+ dl:{title:'Inputs: raw senses (unstructured data)',inputs:[
+   ['📹','Camera video','Raindrops on glass, glare on wet road, fog'],['🎙️','Microphone','Tyre spray, possible hydroplaning, thunder'],
+   ['💬','Free-text alerts','"water rising near underpass on B road"'],['🛰️','Satellite / radar images','Storm cell moving north-east']],
+  decision:'<div class="mono">model = CNN + Transformer (fused)</div><div style="font-family:Fraunces;font-size:1.4rem;margin-top:6px">"Slow down, flooding risk on B; take the lit Highway C"</div>',
+  explain:'No human can write rules for "how flooded does this pixel pattern look?". A deep network turns raw video, sound and text into its own features and links them straight to the routing decision.'}
+};
+function drawRoad(mode){
+  const dl=mode==='dl';
+  const rain = dl ? Array.from({length:40},(_,i)=>`<line x1="${(i*37)%420}" y1="${(i*53)%300}" x2="${(i*37)%420-6}" y2="${(i*53)%300+14}" stroke="var(--ai)" stroke-opacity=".35" stroke-width="1.5"/>`).join('') : '';
+  document.getElementById('road').innerHTML=`
+   ${rain}
+   <circle cx="50" cy="270" r="14" fill="var(--ink)"/><text x="50" y="305" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter">You</text>
+   <circle cx="370" cy="50" r="14" fill="var(--ink)"/><text x="370" y="30" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter">Destination</text>
+   <path d="M50,270 L200,200 L370,50" stroke="var(--dl)" stroke-width="8" fill="none" stroke-linecap="round" opacity="${dl?.35:.9}"/>
+   <text x="190" y="225" font-size="12" fill="var(--dl)" font-family="Inter" font-weight="600">A · jam</text>
+   <path d="M50,270 L90,120 L250,90 L370,50" stroke="${dl?'var(--muted)':'var(--ml)'}" stroke-width="${dl?5:9}" fill="none" stroke-linecap="round" stroke-dasharray="${dl?'6 6':'0'}"/>
+   <text x="70" y="110" font-size="12" fill="${dl?'var(--muted)':'var(--ml)'}" font-family="Inter" font-weight="600">B ${dl?'· flood risk ⚠':'· chosen ✓'}</text>
+   ${dl?`<ellipse cx="160" cy="105" rx="30" ry="12" fill="var(--ai)" opacity=".35"/>
+   <path d="M50,270 L260,280 L390,190 L370,50" stroke="var(--dl)" stroke-width="9" fill="none" stroke-linecap="round"/>
+   <text x="270" y="300" font-size="12" fill="var(--dl)" font-family="Inter" font-weight="600">C · lit highway ✓</text>`:''}`;
+}
+function setCar(mode){
+  const d=car[mode];
+  document.getElementById('car-in-title').textContent=d.title;
+  document.getElementById('car-inputs').innerHTML=d.inputs.map(x=>`<div class="in"><span class="ico">${x[0]}</span><div><b>${x[1]}</b><small>${x[2]}</small></div></div>`).join('');
+  const dec=document.getElementById('car-decision'); dec.className='decision '+mode; dec.innerHTML=d.decision;
+  document.getElementById('car-explain').textContent=d.explain;
+  document.getElementById('t-ml').className=mode==='ml'?'on-ml':''; document.getElementById('t-dl').className=mode==='dl'?'on-dl':'';
+  drawRoad(mode);
+}
+document.getElementById('t-ml').onclick=()=>setCar('ml'); document.getElementById('t-dl').onclick=()=>setCar('dl'); setCar('ml');
+
+// Chooser
+const Q=[
+ {q:'What does your data look like?',o:[['Rows & columns (CSV, SQL)',-2],['Images or video',3],['Audio',3],['Free text',2]]},
+ {q:'How much labelled data do you have?',o:[['Under ~10k examples',-2],['10k – 1M',0],['Millions',2]]},
+ {q:'What compute do you have?',o:[['Just a laptop',-1],['Cloud GPU access',1]]},
+ {q:'Must you explain each decision (bank, hospital, law)?',o:[['Yes, it must be explainable',-2],['Accuracy matters more',1]]}
+];
+const ans=Array(Q.length).fill(null), qs=document.getElementById('qs');
+Q.forEach((x,i)=>{const d=document.createElement('div');d.className='q';d.innerHTML=`<div class="qt">${i+1}. ${x.q}</div><div class="opts"></div>`;
+  x.o.forEach(([label,v],j)=>{const b=document.createElement('button');b.className='opt';b.textContent=label;b.setAttribute('aria-pressed','false');
+    b.onclick=()=>{ans[i]=v;[...d.querySelectorAll('.opt')].forEach((y,k)=>y.setAttribute('aria-pressed',k===j));verdict();};d.querySelector('.opts').appendChild(b);});
+  qs.appendChild(d);});
+function verdict(){
+  const s=ans.reduce((a,b)=>a+(b||0),0), done=ans.every(a=>a!==null);
+  const pct=Math.max(4,Math.min(96,50+s*7)); document.getElementById('mk').style.left=pct+'%';
+  const T=document.getElementById('v-title'),B=document.getElementById('v-body');
+  if(!done){T.textContent='Keep going…';B.textContent=`${ans.filter(a=>a!==null).length} of ${Q.length} answered.`;return;}
+  if(s<=-2){T.innerHTML='<span class="ml">Traditional ML</span>';B.textContent='Start with gradient boosting (XGBoost/LightGBM) or a random forest. It will be fast, cheap and explainable; deep learning would likely add cost without adding accuracy.';}
+  else if(s>=3){T.innerHTML='<span class="dl">Deep Learning</span>';B.textContent='Your data is unstructured or large enough that learned features will win. Begin by fine-tuning a pretrained model (transfer learning) rather than training from scratch.';}
+  else{T.textContent='It depends: try ML first';B.textContent='Build a quick ML baseline first. If it plateaus, or you need to work from raw images/text, move to a pretrained deep model and compare.';}
+}
+
+// Quiz
+const QZ=[
+ {q:'Which statement is correct?',a:['All AI is deep learning','All deep learning is machine learning','ML and DL are unrelated fields'],c:1,w:'DL sits inside ML, which sits inside AI.'},
+ {q:'Your car gets weather from an API as "rain = 1". Do you need deep learning to use it?',a:['Yes, weather always needs DL','No, it is a clean number that ML handles well'],c:1,w:'The form of the data matters, not the topic. Numbers → ML is fine.'},
+ {q:'What does a deep network do that traditional ML does not?',a:['Uses data','Learns its own features from raw input','Makes predictions'],c:1,w:'All ML uses data and predicts; DL also learns the features end to end.'},
+ {q:'What lets a network\'s early layers improve from its prediction mistakes?',a:['Feature engineering','Backpropagation','Random forest'],c:1,w:'Backpropagation sends the error backwards through every layer.'},
+ {q:'A bank needs a loan model on 20,000 rows of tabular data and must explain every rejection. Best start?',a:['A large CNN on GPUs','Gradient boosting or logistic regression'],c:1,w:'Small, structured, must be explainable: classic ML territory.'}
+];
+let right=0,tried=0; const qb=document.getElementById('quizbox');
+QZ.forEach((x,i)=>{const c=document.createElement('div');c.className='qcard';c.innerHTML=`<b>${i+1}. ${x.q}</b><div class="ans"></div><div class="why">${x.w}</div>`;
+  x.a.forEach((t,j)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>{
+    if(c.dataset.done)return;c.dataset.done=1;tried++;if(j===x.c)right++;
+    [...c.querySelectorAll('.ans button')].forEach((y,k)=>{if(k===x.c)y.classList.add('right');else if(k===j)y.classList.add('wrong');});
+    c.querySelector('.why').style.display='block';document.getElementById('score').textContent=`Score: ${right} / ${tried}`;};
+    c.querySelector('.ans').appendChild(b);});
+  qb.appendChild(c);});
+</script>
+</body>
+</html>
