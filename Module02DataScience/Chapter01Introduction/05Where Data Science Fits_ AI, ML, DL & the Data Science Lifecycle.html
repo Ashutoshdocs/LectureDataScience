@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Data Science Fits: AI, ML, DL &amp; the Data Science Lifecycle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f0; --ink:#1d1b18; --muted:#5f5a52; --line:#e2ddd2; --card:#ffffff; --soft:#efece5;
+  --ds:#1f6fd1; --ds-soft:#e0ecfb;
+  --ai:#6b4fd8; --ai-soft:#ece7fb;
+  --ml:#0f8a73; --ml-soft:#ddf3ee;
+  --dl:#d9541e; --dl-soft:#fde7dc;
+  --st:#c2337a; --st-soft:#fbe3ef;
+  --warn:#9a6b00; --warn-soft:#fff3d1;
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#14130f; --ink:#f1ede4; --muted:#a8a197; --line:#2e2b25; --card:#1d1b17; --soft:#24221d;
+    --ds:#6aa8ff; --ds-soft:#152842; --ai:#a08cff; --ai-soft:#262040; --ml:#3fd1b0; --ml-soft:#12302a;
+    --dl:#ff8a5b; --dl-soft:#3a2016; --st:#ff74b5; --st-soft:#3a1528; --warn:#f2c14e; --warn-soft:#332a10; }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);letter-spacing:-.01em}
+h3{font-size:1.22rem}
+p{margin:0 0 1em}
+.mono{font-family:"JetBrains Mono",monospace;font-size:.85em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.kicker{font:600 .78rem/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.lead{font-size:1.12rem;color:var(--muted);max-width:720px}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.76rem;font-weight:600}
+.c-ds{color:var(--ds)} .c-ai{color:var(--ai)} .c-ml{color:var(--ml)} .c-dl{color:var(--dl)} .c-st{color:var(--st)}
+.b-ds{background:var(--ds-soft);color:var(--ds)} .b-ai{background:var(--ai-soft);color:var(--ai)} .b-ml{background:var(--ml-soft);color:var(--ml)} .b-dl{background:var(--dl-soft);color:var(--dl)} .b-st{background:var(--st-soft);color:var(--st)}
+
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+nav a{white-space:nowrap;color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:99px}
+nav a:hover{background:var(--card);color:var(--ink)}
+
+.hero{padding:60px 0 44px}
+.map-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:30px;align-items:start;margin-top:26px}
+@media(max-width:880px){.map-grid{grid-template-columns:1fr}}
+.venn{width:100%;display:block}
+.venn text{font-family:Inter;font-weight:700;pointer-events:none}
+.zone{cursor:pointer}
+.zone circle{transition:r .15s}
+.zone:hover circle,.zone.sel circle{r:15}
+.zone-list{display:grid;gap:8px}
+.zbtn{display:flex;gap:12px;align-items:flex-start;text-align:left;font:inherit;color:inherit;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.zbtn.sel{border-color:var(--ink)}
+.zbtn .num{flex:none;width:26px;height:26px;border-radius:50%;color:#fff;font-weight:700;font-size:.85rem;display:grid;place-items:center}
+.zbtn b{display:block}
+.zbtn small{color:var(--muted);font-size:.86rem;display:block;margin-top:2px}
+.zbtn .ex{display:none;margin-top:6px;font-size:.88rem}
+.zbtn.sel .ex{display:block}
+
+.note{border-left:4px solid var(--warn);background:var(--warn-soft);padding:14px 18px;border-radius:0 12px 12px 0;margin:22px 0;font-size:.95rem}
+.note b{color:var(--warn)}
+
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:880px){.grid4{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.grid4{grid-template-columns:1fr}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.card.t{border-top:5px solid var(--k)}
+.card .q{font-family:Fraunces;font-size:1.05rem;font-style:italic;color:var(--k);margin:4px 0 8px}
+.card p{font-size:.93rem;margin:0}
+
+/* skills venn */
+.skills{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center}
+@media(max-width:760px){.skills{grid-template-columns:1fr}}
+.skills svg{width:100%;max-width:420px;display:block;margin:auto}
+.skills text{font-family:Inter;font-weight:700}
+
+/* lifecycle */
+.mode{display:inline-flex;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px;margin:6px 0 18px;flex-wrap:wrap}
+.mode button{font:600 .88rem Inter;border:0;background:transparent;color:var(--muted);padding:8px 14px;border-radius:99px;cursor:pointer}
+.mode button.on{background:var(--ink);color:var(--bg)}
+.cycle-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:26px;align-items:start}
+@media(max-width:900px){.cycle-grid{grid-template-columns:1fr}}
+.wheel svg{width:100%;max-width:460px;display:block;margin:auto}
+.wheel .node{cursor:pointer}
+.wheel .node circle{transition:all .2s}
+.wheel text{font-family:Inter;pointer-events:none}
+.wheel .off{opacity:.22}
+.mode-note{font-size:.9rem;color:var(--muted);text-align:center;margin-top:6px;min-height:2.6em}
+.detail{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;border-top:6px solid var(--k)}
+.detail .stepno{font:700 .78rem Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--k)}
+.detail h3{font-size:1.6rem;margin:6px 0 4px}
+.detail .goal{font-size:1.02rem;color:var(--muted);margin-bottom:14px}
+.detail .sub{font:700 .72rem Inter;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.detail ul{margin:0;padding-left:18px;font-size:.94rem} .detail li{margin:.22em 0}
+.ex-box{background:var(--bg);border-radius:12px;padding:14px 16px;font-size:.92rem;margin-top:6px}
+.ex-box .mono{display:block;white-space:pre-wrap;margin-top:8px;line-height:1.55}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{font:500 .8rem "JetBrains Mono",monospace;padding:3px 9px;border-radius:6px;background:var(--soft)}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+@media(max-width:520px){.meta{grid-template-columns:1fr}}
+.meta div{background:var(--bg);border-radius:10px;padding:10px 12px;font-size:.88rem}
+.meta b{display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.mistake{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--dl-soft);font-size:.9rem}
+.mistake b{color:var(--dl)}
+.nav-btns{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+.btn{font:600 .9rem Inter;padding:9px 16px;border-radius:10px;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn:focus-visible,.zbtn:focus-visible,.mode button:focus-visible,.node:focus-visible{outline:3px solid var(--ai);outline-offset:2px}
+
+/* effort bar */
+.effort{display:flex;height:42px;border-radius:12px;overflow:hidden;margin-top:12px;border:1px solid var(--line)}
+.effort div{display:grid;place-items:center;font-size:.78rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden}
+
+/* tables */
+.tscroll{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;background:var(--card);font-size:.92rem;min-width:820px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td:first-child{font-weight:700;white-space:nowrap}
+.dots{display:flex;gap:3px}
+.dots i{width:14px;height:14px;border-radius:4px;background:var(--soft)}
+.dots i.lead{background:var(--ink)} .dots i.sup{background:var(--muted);opacity:.45}
+
+/* quiz */
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px}
+.qcard .s{font-weight:600;margin-bottom:10px}
+.ans{display:flex;flex-wrap:wrap;gap:6px}
+.ans button{font:600 .85rem Inter;padding:7px 13px;border-radius:99px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.ans button.right{border-color:var(--ml);background:var(--ml-soft);color:var(--ml)}
+.ans button.wrong{border-color:var(--dl);background:var(--dl-soft);color:var(--dl);text-decoration:line-through}
+.why{display:none;margin-top:10px;font-size:.9rem;color:var(--muted)}
+.score{font-family:Fraunces;font-size:1.3rem}
+.series{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.series a{color:var(--ink);font-weight:600;text-decoration:none;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;font-size:.9rem}
+.series a:hover{border-color:var(--ink)}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#map">The map</a>
+  <a href="#what">What DS is</a>
+  <a href="#skills">Skills</a>
+  <a href="#lifecycle">Lifecycle</a>
+  <a href="#effort">Where time goes</a>
+  <a href="#roles">Roles</a>
+  <a href="#quiz">Quiz</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="map">
+  <div class="kicker">Part 3 · Data Science</div>
+  <h1>Where does Data Science fit with AI, ML &amp; DL?</h1>
+  <p class="lead"><b class="c-ai">AI</b> ⊃ <b class="c-ml">ML</b> ⊃ <b class="c-dl">DL</b> are nested like Russian dolls. <b class="c-ds">Data Science</b> is a <b>separate circle that overlaps them</b>. Part of it uses ML and DL, part of it uses no AI at all, and part of AI has nothing to do with data science.</p>
+
+  <div class="map-grid">
+    <svg class="venn" viewBox="0 0 560 400" role="img" aria-label="Data Science circle overlapping the nested AI, ML and DL circles, with five numbered zones">
+      <circle cx="340" cy="200" r="170" fill="var(--ai-soft)" stroke="var(--ai)" stroke-width="2"/>
+      <circle cx="360" cy="215" r="115" fill="var(--ml-soft)" stroke="var(--ml)" stroke-width="2"/>
+      <circle cx="375" cy="230" r="60" fill="var(--dl-soft)" stroke="var(--dl)" stroke-width="2"/>
+      <circle cx="190" cy="200" r="160" fill="var(--ds)" fill-opacity=".14" stroke="var(--ds)" stroke-width="3"/>
+      <text x="96" y="110" fill="var(--ds)" font-size="17">Data Science</text>
+      <text x="420" y="58" fill="var(--ai)" font-size="16">AI</text>
+      <text x="436" y="150" fill="var(--ml)" font-size="15">ML</text>
+      <text x="402" y="262" fill="var(--dl)" font-size="15">DL</text>
+      <g class="zone" data-z="0"><circle cx="100" cy="215" r="12" fill="var(--ds)"/><text x="100" y="220" text-anchor="middle" fill="#fff" font-size="12">1</text></g>
+      <g class="zone" data-z="1"><circle cx="223" cy="95" r="12" fill="var(--ai)"/><text x="223" y="100" text-anchor="middle" fill="#fff" font-size="12">2</text></g>
+      <g class="zone" data-z="2"><circle cx="290" cy="195" r="12" fill="var(--ml)"/><text x="290" y="200" text-anchor="middle" fill="#fff" font-size="12">3</text></g>
+      <g class="zone" data-z="3"><circle cx="332" cy="232" r="12" fill="var(--dl)"/><text x="332" y="237" text-anchor="middle" fill="#fff" font-size="12">4</text></g>
+      <g class="zone" data-z="4"><circle cx="470" cy="290" r="12" fill="var(--muted)"/><text x="470" y="295" text-anchor="middle" fill="#fff" font-size="12">5</text></g>
+    </svg>
+    <div class="zone-list" id="zones"></div>
+  </div>
+
+  <div class="note"><b>Correction to the text diagram you pasted:</b> it drew AI <i>completely inside</i> the Data Science box, which would mean all AI is data science. That's not right. A chess engine, a robot's path planner or a self-driving car's control system are AI, but nobody calls them data science. The two <b>overlap</b>; neither contains the other (zone 5 above).</div>
+</header>
+</div>
+
+<!-- WHAT -->
+<section id="what"><div class="wrap">
+  <div class="kicker">Step 1 · Four kinds of question</div>
+  <h2>What Data Science actually does</h2>
+  <p class="lead">Data Science is the <b>whole process</b> of turning raw data into decisions. It asks four kinds of questions, and only the last two usually need ML.</p>
+  <div class="grid4" style="margin-top:20px">
+    <div class="card t" style="--k:var(--ds)"><span class="pill b-ds">Descriptive</span><div class="q">“What happened?”</div><p>Sales fell 12% in March in Pune. SQL, dashboards, averages. <b>No ML.</b></p></div>
+    <div class="card t" style="--k:var(--st)"><span class="pill b-st">Diagnostic</span><div class="q">“Why did it happen?”</div><p>Late deliveries doubled after a courier partner changed. Statistics, drill-downs, A/B tests. <b>Usually no ML.</b></p></div>
+    <div class="card t" style="--k:var(--ml)"><span class="pill b-ml">Predictive</span><div class="q">“What will happen?”</div><p>Which customers will stop ordering next month? <b>ML</b> (random forest, XGBoost) or <b>DL</b> for text/images.</p></div>
+    <div class="card t" style="--k:var(--dl)"><span class="pill b-dl">Prescriptive</span><div class="q">“What should we do?”</div><p>Which customer gets which coupon to save the most money? ML + optimisation + experiments.</p></div>
+  </div>
+  <div class="grid2" style="margin-top:22px">
+    <div class="card"><h3>Data Science <i>is</i>…</h3><p>A <b>discipline / process</b> combining statistics, programming and business knowledge to answer questions with data. Output: insight, decisions, sometimes a model.</p></div>
+    <div class="card"><h3>ML <i>is</i>…</h3><p>A <b>tool</b> inside AI that learns patterns from data. Data scientists use it when the question is “predict”. ML engineers make it run reliably in production.</p></div>
+  </div>
+</div></section>
+
+<!-- SKILLS -->
+<section id="skills"><div class="wrap">
+  <div class="kicker">Step 2 · The three ingredients</div>
+  <h2>Data Science = maths + code + domain</h2>
+  <div class="skills">
+    <svg viewBox="0 0 420 380" role="img" aria-label="Three overlapping circles: Maths and Statistics, Programming, Domain knowledge; Data Science in the centre">
+      <circle cx="150" cy="140" r="105" fill="var(--st)" fill-opacity=".16" stroke="var(--st)" stroke-width="2"/>
+      <circle cx="270" cy="140" r="105" fill="var(--ml)" fill-opacity=".16" stroke="var(--ml)" stroke-width="2"/>
+      <circle cx="210" cy="240" r="105" fill="var(--ai)" fill-opacity=".16" stroke="var(--ai)" stroke-width="2"/>
+      <text x="100" y="95" text-anchor="middle" fill="var(--st)" font-size="14">Maths &amp;</text>
+      <text x="100" y="112" text-anchor="middle" fill="var(--st)" font-size="14">Statistics</text>
+      <text x="320" y="103" text-anchor="middle" fill="var(--ml)" font-size="14">Programming</text>
+      <text x="210" y="320" text-anchor="middle" fill="var(--ai)" font-size="14">Domain /</text>
+      <text x="210" y="337" text-anchor="middle" fill="var(--ai)" font-size="14">business</text>
+      <text x="210" y="85" text-anchor="middle" fill="var(--muted)" font-size="11" font-weight="600">Machine learning</text>
+      <text x="128" y="235" text-anchor="middle" fill="var(--muted)" font-size="11" font-weight="600">Traditional</text>
+      <text x="128" y="249" text-anchor="middle" fill="var(--muted)" font-size="11" font-weight="600">research</text>
+      <text x="292" y="235" text-anchor="middle" fill="var(--muted)" font-size="11" font-weight="600">Danger</text>
+      <text x="292" y="249" text-anchor="middle" fill="var(--muted)" font-size="11" font-weight="600">zone!</text>
+      <circle cx="210" cy="175" r="30" fill="var(--ds)"/>
+      <text x="210" y="172" text-anchor="middle" fill="#fff" font-size="12">Data</text>
+      <text x="210" y="187" text-anchor="middle" fill="#fff" font-size="12">Science</text>
+    </svg>
+    <div>
+      <p><b class="c-st">Maths &amp; statistics</b>: probability, distributions, hypothesis tests, regression. Stops you being fooled by noise.</p>
+      <p><b class="c-ml">Programming</b>: Python or R, SQL, pandas, scikit-learn, Git. Lets you work with real data at scale.</p>
+      <p><b class="c-ai">Domain knowledge</b>: understanding the business (food delivery, banking, health). Tells you which questions matter and whether an answer makes sense.</p>
+      <div class="note" style="margin-top:6px"><b>Read the overlaps:</b> stats + code without domain = ML that solves the wrong problem. Code + domain without stats = the “danger zone”: confident conclusions from flawed analysis. (Adapted from Drew Conway's well-known data science Venn diagram.)</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- LIFECYCLE -->
+<section id="lifecycle"><div class="wrap">
+  <div class="kicker">Step 3 · The heart of this page</div>
+  <h2>The Data Science lifecycle, step by step</h2>
+  <p class="lead">Ten steps, in a loop. Click any step on the wheel, or use Next. One running example goes through every step:</p>
+  <div class="card" style="background:var(--ink);color:var(--bg);border:0;margin:12px 0 18px"><span class="mono" style="opacity:.7">Running example (fictional)</span><br><b style="font-family:Fraunces;font-size:1.2rem">QuickBite</b>, a food-delivery app in Pune, is losing customers. “Why are people leaving, and can we stop them?”</div>
+
+  <div class="kicker" style="margin-bottom:6px">Which kind of project?</div>
+  <div class="mode" role="group" aria-label="Project type">
+    <button data-m="all" class="on">Full ML project</button>
+    <button data-m="bi">Analytics / BI only</button>
+    <button data-m="dl">Deep learning project</button>
+  </div>
+
+  <div class="cycle-grid">
+    <div class="wheel">
+      <svg viewBox="0 0 460 460" id="wheel" aria-label="Data science lifecycle wheel"></svg>
+      <div class="mode-note" id="modeNote"></div>
+    </div>
+    <div>
+      <div class="detail" id="detail"></div>
+      <div class="nav-btns"><button class="btn ghost" id="prev">← Previous</button><button class="btn" id="next">Next step →</button></div>
+    </div>
+  </div>
+
+  <div class="note"><b>It's a loop, not a straight line.</b> Bad evaluation results send you back to cleaning or features. Monitoring finds new questions, which restart step 1. This lifecycle is a practical version of <b>CRISP-DM</b>, the most widely used industry framework (Business understanding → Data understanding → Data preparation → Modelling → Evaluation → Deployment).</div>
+</div></section>
+
+<!-- EFFORT -->
+<section id="effort"><div class="wrap">
+  <div class="kicker">Step 4 · Reality check</div>
+  <h2>Where the time really goes</h2>
+  <p class="lead">Beginners imagine data science is mostly building models. In practice, getting the data right usually takes the biggest share of the work. The bar below is a rough, illustrative split for a typical project, not a measured statistic.</p>
+  <div class="effort">
+    <div style="flex:10;background:var(--ds)">Problem</div>
+    <div style="flex:40;background:var(--st)">Collect + clean + explore data</div>
+    <div style="flex:15;background:var(--ml)">Features</div>
+    <div style="flex:12;background:var(--dl)">Model</div>
+    <div style="flex:23;background:var(--ai)">Evaluate, communicate, deploy, monitor</div>
+  </div>
+  <p style="font-size:.88rem;color:var(--muted);margin-top:10px">Lesson: a simple model on clean, well-understood data almost always beats a fancy model on messy data.</p>
+</div></section>
+
+<!-- ROLES -->
+<section id="roles"><div class="wrap">
+  <div class="kicker">Step 5 · Who does what</div>
+  <h2>Data roles across the lifecycle</h2>
+  <p class="lead">Dark squares = leads that step, light = helps. Steps 1–10 match the wheel above.</p>
+  <div class="tscroll">
+  <table id="roleTable"></table>
+  </div>
+  <div class="grid2" style="margin-top:20px">
+    <div class="card t" style="--k:var(--ds)"><h3>Data Scientist</h3><p><b>Goal:</b> turn raw data into answers and decisions.<br><b>Focus:</b> cleaning, statistics, exploration, modelling, storytelling.<br><b>Output:</b> insights, reports, prototype models, recommendations.</p></div>
+    <div class="card t" style="--k:var(--ml)"><h3>ML Engineer</h3><p><b>Goal:</b> make models work reliably for millions of users.<br><b>Focus:</b> production code, pipelines, MLOps, scaling, latency.<br><b>Output:</b> a live API, automated retraining, a working product feature.</p></div>
+  </div>
+</div></section>
+
+<!-- QUIZ -->
+<section id="quiz"><div class="wrap">
+  <div class="kicker">Step 6 · Check yourself</div>
+  <h2>Data Science, ML, or both?</h2>
+  <p class="score" id="score">Score: 0 / 0</p>
+  <div id="quizEl"></div>
+
+  <h3 style="margin-top:34px">The whole series</h3>
+  <div class="series">
+    <a href="https://claude.ai/artifact/WBBkmf358mgWVpL8WrhCzc">Part 1 · AI vs ML vs DL →</a>
+    <a href="https://claude.ai/artifact/JzGUpF3weoeAWgsjDFFr9s">Part 2 · NLP, GenAI, LLM, Agents →</a>
+    <a href="#map">Part 3 · Data Science (this page)</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Teaching page, Part 3: Data Science. QuickBite and all numbers in the example are fictional, for illustration.</div></footer>
+
+<script>
+// ZONES
+const zones=[
+ {c:'var(--ds)',t:'Data Science without AI',s:'Analytics, statistics, BI dashboards',ex:'Cleaning a year of sales data, writing SQL, and building a Power BI dashboard of revenue by city. Or running an A/B test on a new app button. No machine learning anywhere.'},
+ {c:'var(--ai)',t:'Data Science + non-learning AI',s:'Knowledge graphs, rules, optimisation',ex:'Structuring product data into a knowledge graph, or feeding cleaned data into a rule-based fraud system ("flag if 5+ cards used from one device in 1 hour").'},
+ {c:'var(--ml)',t:'Data Science + Machine Learning',s:'Predictive modelling on tables',ex:'Predicting which customers will churn with a random forest, forecasting next week\'s orders with gradient boosting, credit-risk scoring.'},
+ {c:'var(--dl)',t:'Data Science + Deep Learning',s:'Text, images, audio, complex sequences',ex:'Using a pretrained transformer to read 50,000 customer reviews and find complaint themes; classifying food photos uploaded by restaurants.'},
+ {c:'var(--muted)',t:'AI that isn\'t Data Science',s:'Engineering-led AI systems',ex:'A chess engine, a robot arm\'s motion planner, a game AI, a self-driving car\'s real-time control loop. They are AI (some use ML), but they are built and run as engineering products, not data analysis.'}
+];
+const zl=document.getElementById('zones');
+function selZone(i){[...zl.children].forEach((b,j)=>b.classList.toggle('sel',i===j));document.querySelectorAll('.zone').forEach((g,j)=>g.classList.toggle('sel',i===j));}
+zones.forEach((z,i)=>{const b=document.createElement('button');b.className='zbtn';
+  b.innerHTML=`<span class="num" style="background:${z.c}">${i+1}</span><span><b>${z.t}</b><small>${z.s}</small><span class="ex">${z.ex}</span></span>`;
+  b.onclick=()=>selZone(i);zl.appendChild(b);});
+document.querySelectorAll('.zone').forEach(g=>g.addEventListener('click',()=>selZone(+g.dataset.z)));
+selZone(2);
+
+// LIFECYCLE
+const S=[
+ {n:'Define the problem',short:'Problem',c:'--ds',goal:'Turn a vague worry into a precise, measurable question that the business actually cares about.',
+  act:['Talk to stakeholders: what decision will this analysis change?','Define terms exactly. What counts as "churn"?','Pick a success metric and target','Check feasibility: is the data there? Is it allowed to be used?'],
+  ex:'"Customers are leaving" becomes:',code:'Churn  = no order in 30 days after last order\nKPI    = monthly churn rate (now 8%)\nTarget = bring it to 6% in 3 months\nAction = send retention offers to at-risk users',
+  tools:['Meetings','Docs','KPI trees'],out:'Problem statement + success metric',who:'Data Scientist + business team',
+  mistake:'Starting with "let\'s build a model" instead of "what decision are we trying to improve?" A perfect answer to the wrong question is worthless.'},
+ {n:'Collect the data',short:'Collect',c:'--ds',goal:'Find and gather every data source that could help answer the question.',
+  act:['List sources: databases, app logs, APIs, files, surveys','Write SQL queries / build pipelines to pull data','Load into one place (data warehouse or lake)','Check privacy, consent and legal rules (e.g. India\'s DPDP Act, 2023)'],
+  ex:'QuickBite pulls from 5 sources:',code:'orders_db      → 2.1M orders (SQL)\napp_events     → opens, searches, cart drops\ndelivery_logs  → promised vs actual time\nsupport_tickets→ complaint text\nratings        → 1–5 stars per order',
+  tools:['SQL','Python','Airflow','BigQuery / Snowflake','APIs'],out:'Raw dataset(s) in one place',who:'Data Engineer (leads), Data Scientist',
+  mistake:'Collecting only what is easy to get. If you only have orders data, you\'ll never discover that app crashes drive churn.'},
+ {n:'Clean & prepare',short:'Clean',c:'--st',goal:'Make the data correct, consistent and usable. Real data is always messy.',
+  act:['Remove duplicates','Handle missing values (fill, flag or drop)','Fix types, formats, units and time zones','Treat outliers; join tables on the right keys'],
+  ex:'Problems found and fixed:',code:'• 3% of orders missing delivery time → flagged\n• Customer IDs in 2 formats ("C123", "123") → unified\n• Test orders by staff → removed\n• Times stored in UTC vs IST → converted to IST\n• One order of ₹9,99,999 → data-entry error, removed',
+  tools:['pandas','SQL','Great Expectations','OpenRefine'],out:'Clean, joined analysis table',who:'Data Scientist / Analyst',
+  mistake:'Silently deleting all rows with missing values. Often the "missing" itself is a signal (e.g. users who never rated anything churn more).'},
+ {n:'Explore (EDA)',short:'Explore',c:'--st',goal:'Exploratory Data Analysis: understand the data with stats and charts, and form hypotheses.',
+  act:['Summary stats: mean, median, spread','Plot distributions and trends over time','Compare groups (churned vs stayed)','Look for correlations and surprises'],
+  ex:'What the charts revealed:',code:'• Churners had 2× more late deliveries in last month\n• Churn spikes within 7 days of a 1-star rating\n• Users who only order with coupons churn 3× more\n• Weekend-only users are the most loyal',
+  tools:['pandas','matplotlib / seaborn','Plotly','Tableau / Power BI','Jupyter'],out:'Insights + hypotheses',who:'Data Scientist / Analyst',
+  mistake:'Mixing up correlation and causation. Late deliveries go with churn, but you need an experiment to prove they cause it.'},
+ {n:'Feature engineering',short:'Features',c:'--ml',goal:'Turn clean data into the input columns (features) a model can learn from. This is Part 1\'s "Job 1".',
+  act:['Create new columns from raw data','Aggregate history per customer','Encode categories; scale numbers','Select the most useful features'],
+  ex:'One row per customer, with features like:',code:'days_since_last_order   = 12\norders_last_30d         = 2\navg_delivery_delay_min  = 14.5\ncomplaints_last_30d     = 1\npct_orders_with_coupon  = 0.80\nlast_rating             = 1',
+  tools:['pandas','scikit-learn','Feature stores'],out:'Feature table (model-ready)',who:'Data Scientist',
+  mistake:'Data leakage: using a feature only known after churn (like "account deleted reason"). The model looks brilliant in testing and fails in real life.'},
+ {n:'Build the model',short:'Model',c:'--ml',goal:'Train algorithms to learn the pattern between features and the outcome.',
+  act:['Split data by time: train / validation / test','Start with a simple baseline','Try stronger models; tune settings','Use DL only for text, images or audio'],
+  ex:'Models tried, simplest first:',code:'1. Baseline: "churn if no order in 20 days"\n2. Logistic regression (explainable)\n3. Random forest\n4. XGBoost (best on this table) ✓\n+ Transformer to read complaint text (DL)',
+  tools:['scikit-learn','XGBoost / LightGBM','PyTorch / TensorFlow','MLflow'],out:'Trained candidate model(s)',who:'Data Scientist',
+  mistake:'Jumping straight to deep learning on tabular data. Gradient boosting is usually faster, cheaper and as good or better here.'},
+ {n:'Evaluate',short:'Evaluate',c:'--ml',goal:'Check if the model is good enough, both statistically and for the business.',
+  act:['Measure on unseen test data','Choose metrics that fit the problem','Check fairness across user groups','Translate to business value (₹ saved vs ₹ spent)'],
+  ex:'Results (illustrative):',code:'Recall    = 0.72  → catches 72% of churners\nPrecision = 0.55  → 55% of flagged users would really churn\nAUC       = 0.84\nBusiness  : ₹100 coupon per flagged user\n            saves ~₹3 for every ₹1 spent ✓',
+  tools:['scikit-learn metrics','SHAP (explanations)','Confusion matrix'],out:'Go / no-go decision',who:'Data Scientist + business',
+  mistake:'Using accuracy on imbalanced data. If only 8% churn, a model that says "nobody churns" is 92% accurate and completely useless.'},
+ {n:'Communicate',short:'Communicate',c:'--ai',goal:'Explain what you found and what to do, in language decision-makers understand.',
+  act:['Tell a story: problem → finding → action','Use simple charts, not code','Be honest about uncertainty and limits','Give clear recommendations'],
+  ex:'Slide to leadership:',code:'"Late deliveries are our #1 churn signal.\n Action 1: fix the 3 worst delivery zones.\n Action 2: auto-send a ₹100 coupon to\n          high-risk users after a late order.\n Expected: churn 8% → ~6.5%."',
+  tools:['Slides','Dashboards','Notebooks','Plain language'],out:'Decision + approval',who:'Data Scientist (leads)',
+  mistake:'Showing the ROC curve to the CEO. Lead with the decision and the money, then show evidence if asked.'},
+ {n:'Deploy',short:'Deploy',c:'--ai',goal:'Put the model into the real product so it works automatically every day.',
+  act:['Package the model (container / API)','Schedule batch scoring or serve in real time','Connect to the app or CRM','Run an A/B test before full rollout'],
+  ex:'How it runs at QuickBite:',code:'Every night 2 AM:\n  score all active users → risk score 0–1\n  risk > 0.6 → push to CRM\n  CRM sends coupon next morning\nA/B test: 50% get coupon, 50% don\'t',
+  tools:['Docker','FastAPI','Cloud (AWS / GCP / Azure)','Airflow','CI/CD'],out:'Live model in production',who:'ML Engineer (leads), Data Engineer',
+  mistake:'"It worked in my notebook." Production needs logging, error handling, versioning and a rollback plan.'},
+ {n:'Monitor & improve',short:'Monitor',c:'--ai',goal:'Keep checking the model and the business result; retrain and ask new questions.',
+  act:['Track model accuracy over time','Watch for data drift (behaviour changes)','Measure business KPI from the A/B test','Retrain on fresh data; feed learnings back to step 1'],
+  ex:'Three months later:',code:'A/B result: churn 8.0% → 6.6% in coupon group ✓\nDiwali season: ordering patterns shift → drift alert\n→ retrain with festival data\nNew question: "Which restaurants cause late orders?"\n→ back to Step 1 🔁',
+  tools:['Evidently / monitoring','MLflow','Dashboards','Alerts'],out:'Healthy model + new questions',who:'ML Engineer + Data Scientist',
+  mistake:'Deploy and forget. User behaviour changes (festivals, price changes, competitors), and models quietly get worse.'}
+];
+const modes={
+ all:{on:[0,1,2,3,4,5,6,7,8,9],note:'A full ML project uses all 10 steps.'},
+ bi:{on:[0,1,2,3,7],note:'Analytics / BI stops after explore → communicate. No model needed (zone 1 on the map).'},
+ dl:{on:[0,1,2,3,4,5,6,7,8,9],light:[4],note:'Deep learning learns its own features, so step 5 shrinks (Part 1\'s big idea), but needs more data and GPUs in step 6.'}
+};
+let cur=0, mode='all';
+const W=document.getElementById('wheel'), cx=230, cy=230, R=170;
+function drawWheel(){
+  const m=modes[mode];
+  let h=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--line)" stroke-width="10"/>`;
+  h+=`<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="var(--muted)"/></marker></defs>`;
+  S.forEach((s,i)=>{const a1=(i/S.length)*2*Math.PI-Math.PI/2+.2, a2=((i+1)/S.length)*2*Math.PI-Math.PI/2-.2;
+    h+=`<path d="M${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)} A${R},${R} 0 0 1 ${cx+R*Math.cos(a2)},${cy+R*Math.sin(a2)}" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)" opacity=".5"/>`;});
+  h+=`<text x="${cx}" y="${cy-8}" text-anchor="middle" font-family="Fraunces" font-weight="700" font-size="20" fill="var(--ink)">Data Science</text><text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="12" fill="var(--muted)">lifecycle 🔁</text>`;
+  S.forEach((s,i)=>{const a=(i/S.length)*2*Math.PI-Math.PI/2, x=cx+R*Math.cos(a), y=cy+R*Math.sin(a);
+    const on=m.on.includes(i), light=(m.light||[]).includes(i), sel=i===cur;
+    const r=sel?30:24;
+    h+=`<g class="node ${on?'':'off'}" data-i="${i}" tabindex="0" role="button" aria-label="Step ${i+1}: ${s.n}">
+      <circle cx="${x}" cy="${y}" r="${r}" fill="${sel?`var(${s.c})`:'var(--card)'}" stroke="var(${s.c})" stroke-width="${sel?4:2.5}" ${light?'stroke-dasharray="4 4"':''}/>
+      <text x="${x}" y="${y+5}" text-anchor="middle" font-weight="700" font-size="${sel?16:14}" fill="${sel?'#fff':`var(${s.c})`}">${i+1}</text>
+      <text x="${x}" y="${y+(y<cy-20?-r-8:r+16)}" text-anchor="middle" font-size="11.5" font-weight="600" fill="var(--ink)">${s.short}</text></g>`;});
+  W.innerHTML=h;
+  W.querySelectorAll('.node').forEach(g=>{const go=()=>{cur=+g.dataset.i;render();};g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}});});
+  document.getElementById('modeNote').textContent=m.note;
+}
+function render(){
+  const s=S[cur], m=modes[mode], on=m.on.includes(cur);
+  const d=document.getElementById('detail'); d.style.setProperty('--k',`var(${s.c})`);
+  d.innerHTML=`<div class="stepno">Step ${cur+1} of 10 ${on?'':'· <span style="color:var(--muted)">skipped in this project type</span>'}</div>
+   <h3>${s.n}</h3><div class="goal">${s.goal}</div>
+   <div class="sub">Key activities</div><ul>${s.act.map(a=>`<li>${a}</li>`).join('')}</ul>
+   <div class="sub">QuickBite example</div><div class="ex-box">${s.ex}<span class="mono">${s.code}</span></div>
+   <div class="meta"><div><b>Output</b>${s.out}</div><div><b>Who leads</b>${s.who}</div></div>
+   <div class="sub">Common tools</div><div class="chips">${s.tools.map(t=>`<span>${t}</span>`).join('')}</div>
+   <div class="mistake"><b>⚠ Common mistake:</b> ${s.mistake}</div>`;
+  document.getElementById('prev').disabled=cur===0;
+  document.getElementById('next').textContent=cur===S.length-1?'Back to step 1 🔁':'Next step →';
+  drawWheel();
+}
+document.getElementById('prev').onclick=()=>{if(cur>0){cur--;render();}};
+document.getElementById('next').onclick=()=>{cur=(cur+1)%S.length;render();};
+document.querySelectorAll('.mode button').forEach(b=>b.onclick=()=>{mode=b.dataset.m;document.querySelectorAll('.mode button').forEach(x=>x.classList.toggle('on',x===b));render();});
+render();
+
+// ROLES
+const roles=[
+ ['Data Analyst','What happened & why; dashboards, reports',[1,0,1,2,0,0,0,2,0,0],'SQL, Excel, Power BI / Tableau'],
+ ['Data Engineer','Builds pipelines; data reliable & available',[0,2,1,0,0,0,0,0,1,1],'SQL, Spark, Airflow, cloud warehouses'],
+ ['Data Scientist','Questions → insights → models',[2,1,2,2,2,2,2,2,0,1],'Python, stats, pandas, scikit-learn'],
+ ['ML Engineer','Puts models into production, MLOps',[0,0,0,0,1,1,1,0,2,2],'Python, Docker, Kubernetes, MLflow'],
+ ['AI Engineer','Builds apps on LLMs & agents (Part 2)',[1,0,0,0,0,1,1,0,2,1],'LLM APIs, RAG, agent frameworks']
+];
+let th='<tr><th>Role</th><th>Main focus</th><th>Steps 1 → 10</th><th>Typical tools</th></tr>';
+roles.forEach(r=>{th+=`<tr><td>${r[0]}</td><td>${r[1]}</td><td><div class="dots">${r[2].map((v,i)=>`<i class="${v===2?'lead':v===1?'sup':''}" title="Step ${i+1}"></i>`).join('')}</div></td><td>${r[3]}</td></tr>`;});
+document.getElementById('roleTable').innerHTML=th;
+
+// QUIZ
+const Q=[
+ ['Building a Power BI dashboard of last quarter\'s revenue by city.',['Data Science only','ML only','Both DS + ML'],0,'Descriptive analytics: data science with no machine learning (zone 1).'],
+ ['Training a model to predict which customers will cancel next month.',['Data Science only','ML only','Both DS + ML'],2,'Predictive modelling on business data is where DS and ML overlap (zone 3).'],
+ ['A robot vacuum planning the shortest path around furniture.',['Data Science','AI but not Data Science','Neither'],1,'An engineering AI system, not data analysis (zone 5).'],
+ ['Which step usually takes the most time in a real project?',['Building the model','Collecting & cleaning data','Deployment'],1,'Getting data correct and usable is usually the biggest chunk of the work.'],
+ ['Only 8% of users churn. Your model is 92% accurate. Is it good?',['Yes, 92% is great','Not necessarily: it might just predict "no churn" for everyone','Accuracy is always the best metric'],1,'On imbalanced data, check recall and precision, not just accuracy.'],
+ ['You used "account-deletion reason" as a feature to predict churn. What went wrong?',['Overfitting','Data leakage','Too little data'],1,'That information only exists after churn happens, so the model is cheating.']
+];
+let right=0,tried=0;const qe=document.getElementById('quizEl');
+Q.forEach(([q,opts,a,why],i)=>{const c=document.createElement('div');c.className='qcard';
+  c.innerHTML=`<div class="s">${i+1}. ${q}</div><div class="ans"></div><div class="why">${why}</div>`;
+  opts.forEach((o,j)=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>{
+    if(c.dataset.done)return;c.dataset.done=1;tried++;if(j===a)right++;
+    [...c.querySelectorAll('.ans button')].forEach((y,k)=>{if(k===a)y.classList.add('right');else if(y===b)y.classList.add('wrong');});
+    c.querySelector('.why').style.display='block';document.getElementById('score').textContent=`Score: ${right} / ${tried}`;};
+    c.querySelector('.ans').appendChild(b);});
+  qe.appendChild(c);});
+</script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>History of AI: How We Got Here</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f0; --ink:#1d1b18; --muted:#5f5a52; --line:#e2ddd2; --card:#ffffff; --soft:#efece5;
+  --e0:#8a8378; --e1:#6b4fd8; --e2:#5c6b85; --e3:#1f6fd1; --e4:#5c6b85; --e5:#0f8a73; --e6:#d9541e; --e7:#c2337a; --e8:#b5179e; --e9:#9a6b00;
+  --winter:#5c6b85; --winter-soft:#e4e9f1;
+  --warn:#9a6b00; --warn-soft:#fff3d1;
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#14130f; --ink:#f1ede4; --muted:#a8a197; --line:#2e2b25; --card:#1d1b17; --soft:#24221d;
+    --e0:#9b948a; --e1:#a08cff; --e2:#8ea3c4; --e3:#6aa8ff; --e4:#8ea3c4; --e5:#3fd1b0; --e6:#ff8a5b; --e7:#ff74b5; --e8:#e070d0; --e9:#f2c14e;
+    --winter:#8ea3c4; --winter-soft:#1c2330; --warn:#f2c14e; --warn-soft:#332a10; }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em}
+h1{font-size:clamp(2.2rem,5.4vw,3.8rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);letter-spacing:-.01em}
+h3{font-size:1.2rem}
+p{margin:0 0 1em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.kicker{font:600 .78rem/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.lead{font-size:1.12rem;color:var(--muted);max-width:720px}
+.note{border-left:4px solid var(--warn);background:var(--warn-soft);padding:14px 18px;border-radius:0 12px 12px 0;margin:22px 0;font-size:.95rem}
+.note b{color:var(--warn)}
+
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+nav a{white-space:nowrap;color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:99px}
+nav a:hover{background:var(--card);color:var(--ink)}
+
+.hero{padding:64px 0 40px}
+.ribbon{display:flex;height:58px;border-radius:14px;overflow:hidden;margin-top:28px;border:1px solid var(--line)}
+.ribbon button{border:0;cursor:pointer;color:#fff;font:600 .72rem Inter;padding:0 4px;display:flex;flex-direction:column;justify-content:center;align-items:center;line-height:1.2;overflow:hidden;transition:filter .15s}
+.ribbon button:hover{filter:brightness(1.12)}
+.ribbon button span{opacity:.85;font-weight:500}
+.ribbon-note{font-size:.82rem;color:var(--muted);margin-top:8px}
+
+/* wave */
+.wave-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.wave-card svg{width:100%;display:block}
+.wave-card text{font-family:Inter}
+
+/* paradigms */
+.para{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:22px}
+@media(max-width:900px){.para{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.para{grid-template-columns:1fr}}
+.pcard{background:var(--card);border:1px solid var(--line);border-top:5px solid var(--k);border-radius:14px;padding:16px;position:relative}
+.pcard .yr{font:700 .74rem "JetBrains Mono",monospace;color:var(--k)}
+.pcard h4{font-family:Fraunces;font-size:1.08rem;margin:6px 0}
+.pcard p{font-size:.86rem;margin:0;color:var(--muted)}
+.pcard .who{margin-top:10px;font-size:.82rem;padding:6px 8px;border-radius:8px;background:var(--soft)}
+
+/* timeline */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 8px}
+.chip{font:600 .82rem Inter;padding:7px 13px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip:focus-visible,.ev:focus-visible,.ribbon button:focus-visible,.qa button:focus-visible{outline:3px solid var(--e1);outline-offset:2px}
+.tl{position:relative;margin-top:20px;padding-left:34px}
+.tl::before{content:"";position:absolute;left:11px;top:0;bottom:0;width:3px;background:var(--line);border-radius:3px}
+.era-h{position:relative;margin:34px 0 14px}
+.era-h:first-child{margin-top:0}
+.era-h::before{content:"";position:absolute;left:-31px;top:6px;width:20px;height:20px;border-radius:6px;background:var(--k)}
+.era-h h3{margin:0;color:var(--k)}
+.era-h .yrs{font:600 .8rem "JetBrains Mono",monospace;color:var(--muted)}
+.era-h p{font-size:.95rem;color:var(--muted);margin:6px 0 0;max-width:760px}
+.era-h.winter{background:var(--winter-soft);padding:14px 16px;border-radius:12px}
+.ev{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:border-color .15s}
+.ev:hover{border-color:var(--k)}
+.ev::before{content:"";position:absolute;left:-28px;top:20px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid var(--k)}
+.ev .top{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.ev .y{font:700 .95rem "JetBrains Mono",monospace;color:var(--k);min-width:46px}
+.ev .t{font-weight:700;flex:1}
+.ev .tags{display:flex;gap:4px}
+.ev .tag{font:600 .68rem Inter;letter-spacing:.04em;padding:2px 7px;border-radius:99px;background:var(--soft);color:var(--muted)}
+.ev .tag.india{background:#ffe7cf;color:#a14a00}
+@media (prefers-color-scheme: dark){.ev .tag.india{background:#3a2610;color:#ffb36b}}
+.ev .body{display:none;margin-top:10px;font-size:.93rem}
+.ev.open .body{display:block}
+.ev .why{margin-top:8px;padding:8px 12px;border-radius:8px;background:var(--soft);font-size:.88rem}
+.ev .why b{color:var(--k)}
+.ev .more{font-size:.78rem;color:var(--muted);margin-left:auto}
+.ev.open .more{display:none}
+.tl-ctrl{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:600 .85rem Inter;padding:7px 14px;border-radius:10px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.count{font-size:.85rem;color:var(--muted)}
+
+/* fuels */
+.tscroll{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;background:var(--card);font-size:.92rem;min-width:760px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td:first-child{font-weight:700;white-space:nowrap}
+.fuels{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}
+@media(max-width:760px){.fuels{grid-template-columns:1fr}}
+.fuel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.fuel .ic{font-size:2rem}
+.fuel h3{margin:8px 0 6px}
+.fuel p{font-size:.92rem;margin:0}
+
+.lessons{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:20px}
+.lesson{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.lesson .n{font:700 2rem Fraunces;color:var(--e6);line-height:1}
+.lesson h3{margin:8px 0 6px;font-size:1.08rem}
+.lesson p{font-size:.92rem;margin:0;color:var(--muted)}
+
+.qa{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px}
+.qa .s{font-weight:600;margin-bottom:10px}
+.qa .opts{display:flex;flex-wrap:wrap;gap:8px}
+.qa button{font:600 .88rem Inter;padding:9px 15px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.qa button.right{border-color:var(--e5);background:color-mix(in srgb,var(--e5) 15%,var(--card));color:var(--e5)}
+.qa button.wrong{border-color:var(--e6);background:color-mix(in srgb,var(--e6) 15%,var(--card));color:var(--e6);text-decoration:line-through}
+.qa .why{display:none;margin-top:10px;font-size:.9rem;color:var(--muted)}
+.score{font-family:Fraunces;font-size:1.3rem}
+.series{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.series a{color:var(--ink);font-weight:600;text-decoration:none;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;font-size:.9rem}
+.series a:hover{border-color:var(--ink)}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+footer a{color:var(--muted)}
+footer ul{padding-left:18px}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#top">Overview</a>
+  <a href="#waves">Booms &amp; winters</a>
+  <a href="#paradigms">5 big shifts</a>
+  <a href="#timeline">Timeline</a>
+  <a href="#fuels">Why now?</a>
+  <a href="#lessons">Lessons</a>
+  <a href="#quiz">Quiz</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="top">
+  <div class="kicker">Part 4 · History of AI</div>
+  <h1>How we got here: 80 years of AI</h1>
+  <p class="lead">From a 1943 paper describing a fake neuron, to chatbots used by hundreds of millions, to AI agents that do real work. AI's story has big dreams, two harsh “winters”, and one old idea that kept coming back: <b>neural networks</b>.</p>
+  <div class="ribbon" id="ribbon" aria-label="Eras of AI, click to jump"></div>
+  <div class="ribbon-note">Each block is an era. Click one to jump to it in the timeline. Grey blocks are the AI winters. (Widths are not to scale.)</div>
+</header>
+</div>
+
+<!-- WAVES -->
+<section id="waves"><div class="wrap">
+  <div class="kicker">Step 1 · The big pattern</div>
+  <h2>Hype, winter, comeback, repeat</h2>
+  <p class="lead">AI has gone through cycles: excitement and funding, then promises that didn't come true, then cuts (“AI winters”). Each comeback was powered by something new: better algorithms, more data, faster computers.</p>
+  <div class="wave-card">
+    <svg viewBox="0 0 1000 300" role="img" aria-label="Illustrative curve of AI excitement over time with peaks in the 1960s, 1980s and 2010s onward, and winters in the mid-1970s and late 1980s">
+      <rect x="250" y="20" width="85" height="230" fill="var(--winter-soft)"/>
+      <rect x="400" y="20" width="85" height="230" fill="var(--winter-soft)"/>
+      <text x="292" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="var(--winter)">1st winter</text>
+      <text x="442" y="40" text-anchor="middle" font-size="12" font-weight="700" fill="var(--winter)">2nd winter</text>
+      <line x1="40" y1="250" x2="980" y2="250" stroke="var(--line)" stroke-width="2"/>
+      <path d="M40,235 C100,230 140,200 180,140 C210,100 230,110 255,170 C280,225 310,232 340,215 C370,195 380,130 395,140 C410,160 420,215 460,222 C520,230 560,215 620,195 C680,175 720,160 760,120 C800,80 840,60 880,45 C920,32 950,28 980,26" fill="none" stroke="var(--e6)" stroke-width="4" stroke-linecap="round"/>
+      <g font-size="11.5" fill="var(--muted)" text-anchor="middle" font-weight="600">
+        <text x="60" y="272">1940s</text><text x="180" y="272">1956–70</text><text x="292" y="272">1974–80</text><text x="385" y="272">1980s</text><text x="442" y="272">1987–93</text><text x="600" y="272">1993–2011</text><text x="770" y="272">2012</text><text x="880" y="272">2022</text><text x="960" y="272">now</text>
+      </g>
+      <g font-size="11.5" fill="var(--ink)" font-weight="600">
+        <text x="150" y="122">Dartmouth optimism</text>
+        <text x="352" y="122">Expert systems</text>
+        <text x="540" y="185">Quiet ML progress</text>
+        <text x="690" y="108">Deep learning</text>
+        <text x="800" y="40">ChatGPT &amp; agents</text>
+      </g>
+      <text x="20" y="140" font-size="12" fill="var(--muted)" transform="rotate(-90 20 140)" text-anchor="middle">Excitement &amp; funding</text>
+    </svg>
+    <p style="font-size:.85rem;color:var(--muted);margin:8px 0 0">Illustrative shape only, not measured data.</p>
+  </div>
+</div></section>
+
+<!-- PARADIGMS -->
+<section id="paradigms"><div class="wrap">
+  <div class="kicker">Step 2 · Five big shifts</div>
+  <h2>Who supplies the “intelligence”?</h2>
+  <p class="lead">The clearest way to see AI's history: each era moved more of the work <b>from humans to the machine</b>. This ties together everything from Parts 1–3.</p>
+  <div class="para">
+    <div class="pcard" style="--k:var(--e1)"><div class="yr">1950s–80s</div><h4>Symbolic AI</h4><p>Humans write every rule: “IF fever AND rash THEN measles”.</p><div class="who">👤 Human writes the rules</div></div>
+    <div class="pcard" style="--k:var(--e5)"><div class="yr">1990s–2000s</div><h4>Machine Learning</h4><p>Machine learns rules from data, but humans pick the features.</p><div class="who">👤 Human picks the features</div></div>
+    <div class="pcard" style="--k:var(--e6)"><div class="yr">2012–</div><h4>Deep Learning</h4><p>Neural nets learn the features themselves from raw pixels, sound and text.</p><div class="who">🤖 Machine learns the features</div></div>
+    <div class="pcard" style="--k:var(--e7)"><div class="yr">2018–</div><h4>Foundation models</h4><p>One giant model (an LLM) learns from huge amounts of text and does many tasks.</p><div class="who">🤖 One model, many tasks</div></div>
+    <div class="pcard" style="--k:var(--e9)"><div class="yr">2024–</div><h4>Agents</h4><p>Models plan and use tools to act in the world, not just answer.</p><div class="who">🤖 Machine takes actions</div></div>
+  </div>
+</div></section>
+
+<!-- TIMELINE -->
+<section id="timeline"><div class="wrap">
+  <div class="kicker">Step 3 · The full story</div>
+  <h2>Timeline: 1843 → today</h2>
+  <p class="lead">Click any event for what happened and <b>why it mattered</b>. Use the filters to follow one thread.</p>
+  <div class="filters" id="filters"></div>
+  <div class="tl-ctrl"><button class="btn" id="expandAll">Expand all</button><span class="count" id="count"></span></div>
+  <div class="tl" id="tl"></div>
+</div></section>
+
+<!-- FUELS -->
+<section id="fuels"><div class="wrap">
+  <div class="kicker">Step 4 · Why did it work this time?</div>
+  <h2>The three fuels: data, compute, algorithms</h2>
+  <p class="lead">Neural networks were invented in the 1940s–50s. They only took off after 2012, because all three fuels finally arrived together.</p>
+  <div class="fuels">
+    <div class="fuel"><div class="ic">📚</div><h3>Data</h3><p>The internet, smartphones and cameras created oceans of text, photos and video. ImageNet (2009) gave researchers millions of labelled images; LLMs later learned from a large share of the public web.</p></div>
+    <div class="fuel"><div class="ic">⚡</div><h3>Compute</h3><p>GPUs, built for video games, turned out to be perfect for the matrix maths in neural nets. AlexNet (2012) was trained on two gaming GPUs. Today's models train on tens of thousands.</p></div>
+    <div class="fuel"><div class="ic">🧩</div><h3>Algorithms</h3><p>Backpropagation (1986), CNNs (1989), LSTMs (1997), then the Transformer (2017) made training deep networks practical and let them scale.</p></div>
+  </div>
+  <div class="tscroll">
+  <table>
+    <tr><th>Era</th><th>Data</th><th>Compute</th><th>Main method</th><th>Why it stalled / succeeded</th></tr>
+    <tr><td>1956–1973</td><td>Tiny, hand-typed</td><td>Room-sized computers</td><td>Logic, search, perceptron</td><td>Worked on toy problems; failed on messy real-world ones → 1st winter</td></tr>
+    <tr><td>1980–1987</td><td>Experts' knowledge, typed in as rules</td><td>Specialised Lisp machines</td><td>Expert systems</td><td>Rules were costly to maintain and brittle → 2nd winter</td></tr>
+    <tr><td>1993–2011</td><td>Digital records, early web</td><td>Cheap PCs</td><td>Statistical ML (SVMs, trees)</td><td>Solid, practical wins; quietly powered search, spam filters, recommendations</td></tr>
+    <tr><td>2012–2017</td><td>ImageNet, web photos</td><td>GPUs</td><td>Deep learning (CNNs, RNNs)</td><td>Huge accuracy leaps in vision and speech</td></tr>
+    <tr><td>2018–now</td><td>Much of the public internet</td><td>Huge GPU/TPU clusters</td><td>Transformers, LLMs, reasoning, agents</td><td>Scale + general-purpose models; AI enters daily life</td></tr>
+  </table>
+  </div>
+</div></section>
+
+<!-- LESSONS -->
+<section id="lessons"><div class="wrap">
+  <div class="kicker">Step 5 · What history teaches</div>
+  <h2>Six lessons from 80 years of AI</h2>
+  <div class="lessons">
+    <div class="lesson"><div class="n">1</div><h3>Old ideas come back</h3><p>The artificial neuron (1943) was ignored, revived (1986), ignored again, then conquered everything (2012). Good ideas can wait decades for the right hardware.</p></div>
+    <div class="lesson"><div class="n">2</div><h3>Over-promising causes winters</h3><p>Researchers in the 1960s predicted human-level AI within a generation. When it didn't happen, funding collapsed. Healthy scepticism is part of the field.</p></div>
+    <div class="lesson"><div class="n">3</div><h3>Learning beats hand-coding</h3><p>Again and again, methods that learn from data and scale with compute beat clever hand-written rules. Researcher Rich Sutton called this “The Bitter Lesson” (2019).</p></div>
+    <div class="lesson"><div class="n">4</div><h3>Games mark the milestones</h3><p>Checkers (1959), chess (1997), Jeopardy! (2011), Go (2016). Games gave clear, public scoreboards for progress.</p></div>
+    <div class="lesson"><div class="n">5</div><h3>Usefulness creates booms</h3><p>Expert systems boomed because XCON saved real money; ChatGPT exploded because anyone could use it. Adoption follows practical value.</p></div>
+    <div class="lesson"><div class="n">6</div><h3>Rules follow capability</h3><p>Laws and global agreements (EU AI Act, the AI summits from Bletchley to New Delhi) arrived only after AI became powerful and widespread.</p></div>
+  </div>
+</div></section>
+
+<!-- QUIZ -->
+<section id="quiz"><div class="wrap">
+  <div class="kicker">Step 6 · Check yourself</div>
+  <h2>Which came first?</h2>
+  <p class="score" id="score">Score: 0 / 0</p>
+  <div id="quizEl"></div>
+  <h3 style="margin-top:34px">The whole series</h3>
+  <div class="series">
+    <a href="https://claude.ai/artifact/WBBkmf358mgWVpL8WrhCzc">Part 1 · AI vs ML vs DL →</a>
+    <a href="https://claude.ai/artifact/JzGUpF3weoeAWgsjDFFr9s">Part 2 · NLP, GenAI, LLM, Agents →</a>
+    <a href="https://claude.ai/artifact/QbMJ3okPV1a787r6Axq34H">Part 3 · Data Science →</a>
+    <a href="#top">Part 4 · History of AI (this page)</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <p>Teaching page, Part 4: History of AI. Events through November 2026. Sources for the most recent entries:</p>
+  <ul>
+    <li><a href="https://negd.gov.in/press_release/ai-impact-summit-2026-concludes-with-adoption-of-new-delhi-declaration/">Government of India: AI Impact Summit 2026 concludes with New Delhi Declaration</a></li>
+    <li><a href="https://fortune.com/2026/02/23/indias-ai-impact-summit-closes-with-the-new-delhi-declaration-and-a-200-billion-boost/">Fortune: India's AI Impact Summit closes with the New Delhi Declaration</a></li>
+    <li><a href="https://www.kdnuggets.com/the-10-ai-developments-that-defined-2025">KDnuggets: The 10 AI developments that defined 2025</a></li>
+    <li><a href="https://ai-act-service-desk.ec.europa.eu/en/ai-act/eu-ai-act-implementation-timeline">EU AI Act Service Desk: implementation timeline</a></li>
+  </ul>
+</div></footer>
+
+<script>
+const eras=[
+ {id:'e0',name:'Seeds',yrs:'1843–1949',w:6,desc:'Before computers could think, people imagined whether they could, and built the maths for it.'},
+ {id:'e1',name:'Birth & big dreams',yrs:'1950–1973',w:10,desc:'The field gets its name. Early programs play checkers, prove theorems and chat, and researchers predict human-level AI within a generation.'},
+ {id:'e2',name:'1st AI winter',yrs:'1974–1980',w:7,winter:true,desc:'Promises go unmet. Computers are too weak, real-world problems too messy. Governments in the UK and US cut funding.'},
+ {id:'e3',name:'Expert systems boom',yrs:'1980–1987',w:8,desc:'AI turns commercial: systems that capture human experts\' knowledge as thousands of IF-THEN rules.'},
+ {id:'e4',name:'2nd AI winter',yrs:'1987–1993',w:7,winter:true,desc:'Expert systems prove costly and brittle; the special hardware market collapses. "AI" becomes an unfashionable word.'},
+ {id:'e5',name:'Quiet ML revolution',yrs:'1993–2011',w:12,desc:'Researchers switch from rules to statistics and learning from data. AI works quietly behind search, spam filters and recommendations.'},
+ {id:'e6',name:'Deep learning boom',yrs:'2012–2017',w:11,desc:'GPUs + big data + neural nets = a sudden leap in vision, speech and games.'},
+ {id:'e7',name:'LLMs & GenAI',yrs:'2018–2022',w:12,desc:'The Transformer enables huge language models. AI starts creating text and images, and then ChatGPT brings it to everyone.'},
+ {id:'e8',name:'Multimodal & reasoning',yrs:'2023–2024',w:12,desc:'Models see, hear and reason step by step. Governments begin writing rules; AI researchers win Nobel Prizes.'},
+ {id:'e9',name:'The agent era',yrs:'2025–now',w:15,desc:'Reasoning becomes standard, open models catch up, and AI moves from answering to doing: coding, browsing and running tasks.'}
+];
+const E=[
+ ['e0',1843,'Ada Lovelace\'s notes on the Analytical Engine','Lovelace imagines that a computing machine could work with symbols, even music, not just numbers, but argues it can only do what it is told.','First vision of a general-purpose computer. Turing later answered her "it can\'t originate anything" objection.',['idea']],
+ ['e0',1936,'Turing\'s "universal machine"','Alan Turing describes a theoretical machine that can carry out any calculation given the right instructions.','The foundation of every computer, and of the idea that thinking might be computation.',['idea']],
+ ['e0',1943,'The first artificial neuron','McCulloch & Pitts publish a mathematical model of a brain cell that switches on or off based on its inputs.','The great-grandparent of every neural network, including today\'s LLMs.',['idea','neural']],
+ ['e1',1950,'Turing asks "Can machines think?"','Turing\'s paper "Computing Machinery and Intelligence" proposes the Imitation Game, now called the Turing Test.','Gave AI its first clear goal: behave so a human can\'t tell it\'s a machine.',['idea']],
+ ['e1',1956,'Dartmouth workshop: "AI" is born','John McCarthy, Marvin Minsky, Claude Shannon and others meet for a summer project. McCarthy\'s proposal coined the term "artificial intelligence".','The official birth of AI as a field of research.',['milestone']],
+ ['e1',1958,'The Perceptron','Frank Rosenblatt builds a machine that learns to recognise simple patterns by adjusting weights, the first trainable neural network.','Huge media hype. The idea of learning from examples, not rules, starts here.',['breakthrough','neural']],
+ ['e1',1959,'"Machine learning" is named','Arthur Samuel at IBM builds a checkers program that improves by playing itself, and coins "machine learning".','The ML of Part 1 gets its name, and the self-play idea returns in AlphaGo 57 years later.',['breakthrough']],
+ ['e1',1966,'ELIZA, the first chatbot','Joseph Weizenbaum at MIT builds ELIZA, which mimics a therapist using simple pattern-matching rules. Some users felt it truly understood them.','Early NLP, and the first warning that people over-trust machines that talk.',['nlp']],
+ ['e1',1969,'"Perceptrons" book','Minsky & Papert prove that single-layer perceptrons can\'t learn even simple functions like XOR.','Interest and funding in neural networks dry up for over a decade.',['neural','setback']],
+ ['e2',1973,'The Lighthill Report','A UK government report concludes AI has failed to deliver on its promises. The UK cuts AI funding; US agencies also pull back.','Triggers the first AI winter.',['setback','policy']],
+ ['e3',1980,'XCON: expert systems make money','Digital Equipment Corporation uses XCON, a rule-based system, to configure computer orders. It reportedly saves the company millions per year.','Proved AI could earn real money. Companies rush to build expert systems.',['milestone']],
+ ['e3',1982,'Japan\'s Fifth Generation project','Japan launches a decade-long national programme to build intelligent computers; the US and UK respond with their own programmes.','AI becomes a matter of national competition for the first time.',['policy']],
+ ['e3',1986,'Backpropagation popularised','Rumelhart, Hinton & Williams show how multi-layer neural networks can learn by sending errors backwards through the layers.','The algorithm that trains virtually every deep network today (Part 1\'s feedback loop).',['breakthrough','neural']],
+ ['e4',1987,'Lisp machine market collapses','Cheaper desktop computers overtake the expensive specialised AI hardware, and expert systems prove hard to maintain.','Start of the second AI winter.',['setback']],
+ ['e5',1989,'Neural nets read handwritten digits','Yann LeCun\'s convolutional neural network (CNN) reads handwritten ZIP codes; a later version (LeNet, 1998) reads bank cheques.','The CNN design behind modern computer vision.',['breakthrough','neural']],
+ ['e5',1997,'Deep Blue beats Kasparov','IBM\'s Deep Blue defeats world chess champion Garry Kasparov using massive search plus expert-tuned evaluation, not learning.','A global symbol of machine intelligence. Same year: the LSTM network is published, later key for speech and translation.',['milestone']],
+ ['e5',2005,'Self-driving car wins DARPA challenge','Stanford\'s car "Stanley" autonomously drives 212 km through the Mojave Desert to win the DARPA Grand Challenge.','Machine learning on sensor data proves itself in the physical world.',['milestone']],
+ ['e5',2006,'"Deep learning" rebranded','Geoffrey Hinton and colleagues show how to train deeper networks layer by layer, reviving interest under the name "deep learning".','Sets the stage for the 2012 explosion.',['breakthrough','neural']],
+ ['e5',2009,'ImageNet','Fei-Fei Li\'s team releases ImageNet, millions of labelled images, and launches a yearly recognition competition.','The data fuel deep learning needed.',['data']],
+ ['e5',2011,'Watson wins Jeopardy!; Siri launches','IBM Watson beats champion players on the TV quiz Jeopardy!. Apple launches Siri on the iPhone.','NLP reaches the public: computers answering questions in natural language.',['milestone','nlp']],
+ ['e6',2012,'AlexNet: the big bang of deep learning','A deep CNN trained on two gaming GPUs wins ImageNet with an error rate far below the next-best entry.','The moment the field switched to deep learning. GPUs become AI\'s engine.',['breakthrough','neural']],
+ ['e6',2014,'GANs: AI starts to create','Ian Goodfellow introduces Generative Adversarial Networks: two networks compete, one creating fake images, one spotting fakes.','The beginning of modern generative AI (Part 2).',['breakthrough','genai']],
+ ['e6',2016,'AlphaGo beats Lee Sedol','DeepMind\'s AlphaGo beats one of the world\'s best Go players 4–1. Go has far too many positions to search like chess.','Showed deep learning + reinforcement learning could master intuition-heavy tasks.',['milestone']],
+ ['e6',2017,'The Transformer: "Attention Is All You Need"','Google researchers introduce the Transformer, which processes whole sequences in parallel using "attention".','The "T" in GPT. The architecture behind almost every modern LLM.',['breakthrough','nlp']],
+ ['e7',2018,'GPT-1 and BERT','OpenAI\'s GPT and Google\'s BERT show that pre-training on huge text, then fine-tuning, beats task-specific models.','The foundation-model recipe is born.',['nlp','genai']],
+ ['e7',2020,'GPT-3 and AlphaFold 2','GPT-3 (175 billion parameters) writes convincingly from just a few examples. AlphaFold 2 predicts protein shapes with near-lab accuracy.','Scale unlocks surprising abilities; AI starts solving real science problems.',['breakthrough','genai']],
+ ['e7',2022,'Image generators go mainstream; India launches Bhashini','DALL·E 2, Midjourney and the open Stable Diffusion turn text into images for millions. India launches Bhashini to build AI translation across Indian languages.','Generative AI moves from labs to the public.',['genai','india']],
+ ['e7',2022,'ChatGPT (30 November)','OpenAI releases ChatGPT, a chat interface on top of a GPT model. It becomes the fastest-growing consumer app the world had seen.','AI becomes something everyone uses, not just engineers.',['milestone','genai']],
+ ['e8',2023,'GPT-4, Claude, Llama, Gemini','A wave of powerful LLMs arrives, including open-weight models anyone can download. GPT-4 accepts images as well as text. The first AI Safety Summit is held at Bletchley Park, UK.','Competition explodes; AI safety becomes a global government topic.',['genai','policy']],
+ ['e8',2024,'IndiaAI Mission & EU AI Act','India approves the IndiaAI Mission (about ₹10,372 crore) for compute, datasets and startups. The EU AI Act, the first comprehensive AI law, enters into force.','Countries move from talking about AI to funding and regulating it.',['policy','india']],
+ ['e8',2024,'Nobel Prizes for AI pioneers','The Physics Nobel goes to Hopfield and Hinton for foundational neural-network work; Chemistry to Hassabis and Jumper (AlphaFold), shared with David Baker.','Science\'s highest honour recognises AI.',['milestone','neural']],
+ ['e8',2024,'Reasoning models & tool standards','OpenAI\'s o1 "thinks" step by step before answering. Anthropic releases the Model Context Protocol (MCP), a standard way for AI to connect to tools.','The two ingredients of agents: better reasoning, and easy access to tools.',['breakthrough','agents']],
+ ['e9',2025,'DeepSeek R1 shocks the industry','China\'s DeepSeek releases an open reasoning model in January that rivals top models at a fraction of the reported training cost.','Open models catch up; reasoning becomes cheap and widespread.',['breakthrough','genai']],
+ ['e9',2025,'Agents start doing real work','Coding agents, browser agents and computer-use tools spread through 2025; AI systems reach gold-medal level on International Math Olympiad problems; GPT-5 merges fast and reasoning modes.','AI shifts from answering questions to completing tasks (Part 2\'s agents).',['agents','milestone']],
+ ['e9',2026,'India hosts the AI Impact Summit','In February, New Delhi hosts the first global AI summit in the Global South; 88 countries and organisations, including the US and China, endorse the New Delhi Declaration on AI Impact.','Global AI governance widens beyond rich countries; focus shifts from "risk" to "impact".',['policy','india']],
+ ['e9',2026,'Agentic AI goes mainstream','Many EU AI Act obligations are scheduled to apply from August 2026. Businesses embed agents into everyday workflows.','We are here: AI that plans and acts, under growing rules and oversight.',['agents','policy']]
+];
+const tagNames={idea:'Idea',breakthrough:'Breakthrough',milestone:'Milestone',setback:'Setback',policy:'Policy',neural:'Neural nets',nlp:'Language',genai:'GenAI',agents:'Agents',data:'Data',india:'🇮🇳 India'};
+const filters=[['all','All'],['breakthrough','Breakthroughs'],['milestone','Milestones'],['neural','Neural nets thread'],['nlp','Language thread'],['genai','GenAI'],['agents','Agents'],['setback','Setbacks'],['policy','Policy & law'],['india','🇮🇳 India']];
+let filt='all', allOpen=false;
+
+// ribbon
+const rb=document.getElementById('ribbon');
+eras.forEach(e=>{const b=document.createElement('button');b.style.flex=e.w;b.style.background=`var(--${e.id})`;
+  b.innerHTML=`${e.name}<span>${e.yrs}</span>`;b.title=`${e.name} (${e.yrs})`;
+  b.onclick=()=>{filt='all';drawFilters();drawTL();document.getElementById('era-'+e.id).scrollIntoView({behavior:'smooth',block:'start'});};rb.appendChild(b);});
+
+// filters
+const fe=document.getElementById('filters');
+function drawFilters(){fe.innerHTML='';filters.forEach(([k,l])=>{const b=document.createElement('button');b.className='chip'+(filt===k?' on':'');b.textContent=l;b.onclick=()=>{filt=k;drawFilters();drawTL();};fe.appendChild(b);});}
+
+// timeline
+const tl=document.getElementById('tl');
+function drawTL(){
+  tl.innerHTML='';let n=0;
+  eras.forEach(er=>{
+    const evs=E.filter(e=>e[0]===er.id&&(filt==='all'||e[5].includes(filt)));
+    if(!evs.length&&filt!=='all')return;
+    const h=document.createElement('div');h.className='era-h'+(er.winter?' winter':'');h.id='era-'+er.id;h.style.setProperty('--k',`var(--${er.id})`);
+    h.innerHTML=`<div class="yrs">${er.yrs}</div><h3>${er.name}</h3><p>${er.desc}</p>`;tl.appendChild(h);
+    evs.forEach(e=>{n++;const d=document.createElement('div');d.className='ev'+(allOpen?' open':'');d.tabIndex=0;d.style.setProperty('--k',`var(--${er.id})`);
+      d.innerHTML=`<div class="top"><span class="y">${e[1]}</span><span class="t">${e[2]}</span><span class="tags">${e[5].map(t=>`<span class="tag ${t==='india'?'india':''}">${tagNames[t]}</span>`).join('')}</span><span class="more">tap to open ▾</span></div>
+        <div class="body">${e[3]}<div class="why"><b>Why it mattered:</b> ${e[4]}</div></div>`;
+      const tog=()=>d.classList.toggle('open');d.onclick=tog;d.onkeydown=k=>{if(k.key==='Enter'||k.key===' '){k.preventDefault();tog();}};
+      tl.appendChild(d);});
+  });
+  document.getElementById('count').textContent=`${n} events shown`;
+}
+document.getElementById('expandAll').onclick=e=>{allOpen=!allOpen;e.target.textContent=allOpen?'Collapse all':'Expand all';drawTL();};
+drawFilters();drawTL();
+
+// quiz
+const Q=[
+ [['The term "machine learning"','The term "deep learning" becomes popular'],0,'"Machine learning" was named in 1959; "deep learning" took off around 2006.'],
+ [['Deep Blue beats Kasparov at chess','AlphaGo beats Lee Sedol at Go'],0,'Chess fell in 1997; Go, much harder, in 2016.'],
+ [['ChatGPT launches','The Transformer architecture is published'],1,'Transformer: 2017. ChatGPT, built on it: November 2022.'],
+ [['The first artificial neuron (McCulloch & Pitts)','The first electronic chatbot (ELIZA)'],0,'The neuron model came in 1943, ELIZA in 1966.'],
+ [['Backpropagation is popularised','AlexNet wins ImageNet'],0,'Backprop: 1986. It took 26 more years, plus GPUs and ImageNet, before AlexNet in 2012.'],
+ [['The first AI winter','Expert systems boom'],0,'Winter 1974–80 came first; the expert-system boom followed in the early 1980s.'],
+ [['EU AI Act enters into force','India hosts the AI Impact Summit'],0,'EU AI Act: August 2024. New Delhi summit: February 2026.']
+];
+let right=0,tried=0;const qe=document.getElementById('quizEl');
+Q.forEach(([opts,a,why],i)=>{const c=document.createElement('div');c.className='qa';
+  c.innerHTML=`<div class="s">${i+1}. Which happened first?</div><div class="opts"></div><div class="why">${why}</div>`;
+  opts.forEach((o,j)=>{const b=document.createElement('button');b.textContent=o;b.onclick=()=>{
+    if(c.dataset.done)return;c.dataset.done=1;tried++;if(j===a)right++;
+    [...c.querySelectorAll('button')].forEach((y,k)=>{if(k===a)y.classList.add('right');else if(y===b)y.classList.add('wrong');});
+    c.querySelector('.why').style.display='block';document.getElementById('score').textContent=`Score: ${right} / ${tried}`;};
+    c.querySelector('.opts').appendChild(b);});
+  qe.appendChild(c);});
+</script>
+</body>
+</html>
