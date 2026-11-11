@@ -1,0 +1,5 @@
+Raw data report
+Characters: 3277
+Lines: 250
+Blank lines: 35
+First line: pty_dev_daily

@@ -1,0 +1,227 @@
+[
+    {
+        "username": "pty_dev_daily",
+        "posts": 1240,
+        "followers": 18600,
+        "following": 210,
+        "name": "PTY Dev Daily",
+        "category": "Media",
+        "bio": "💻 Daily dev news from Panama\npanamadevdaily.pa"
+    },
+    {
+        "username": "casco_coder_maria",
+        "posts": 312,
+        "followers": 4850,
+        "following": 190,
+        "name": "María Coder",
+        "category": "Developer",
+        "bio": "🐍 Python | Django\n📍 Casco Viejo"
+    },
+    {
+        "username": "canal_cloud_ops",
+        "posts": 98,
+        "followers": 2100,
+        "following": 75,
+        "name": "Canal Cloud Ops",
+        "category": "Tech",
+        "bio": "☁️ AWS | Azure\n📍 Ciudad del Saber"
+    },
+    {
+        "username": "obarrio_startup_club",
+        "posts": 560,
+        "followers": 12300,
+        "following": 340,
+        "name": "Obarrio Startup Club",
+        "category": "Community",
+        "bio": "🚀 Founders meetups every Friday\n📍 Obarrio"
+    },
+    {
+        "username": "ceviche_and_code",
+        "posts": 205,
+        "followers": 6700,
+        "following": 410,
+        "name": "Ceviche & Code",
+        "category": "Food & Drink",
+        "bio": "🐟 Mercado de Mariscos + laptops\ncevicheandcode.pa"
+    },
+    {
+        "username": "luis_fintech_pty",
+        "posts": 77,
+        "followers": 1200000,
+        "following": 88,
+        "name": "Luis Herrera",
+        "category": "Digital creator",
+        "bio": "💸 Fintech explained simply\n📩 collabs@luisherrera.pa"
+    },
+    {
+        "username": "costa_del_este_devs",
+        "posts": 430,
+        "followers": 9900,
+        "following": 120,
+        "name": "Costa del Este Devs",
+        "category": "Community",
+        "bio": "👩‍💻 Weekend hackathons\n📍 Costa del Este"
+    },
+    {
+        "username": "bocas_remote_worker",
+        "posts": 880,
+        "followers": 22000,
+        "following": 1050,
+        "name": "Andrea | Remote Life",
+        "category": "Lifestyle",
+        "bio": "🏝️ Coding from Bocas del Toro\n🌴 Island wifi reviews"
+    },
+    {
+        "username": "panama_ai_lab",
+        "posts": 150,
+        "followers": 31500,
+        "following": 60,
+        "name": "Panama AI Lab",
+        "category": "Education",
+        "bio": "🤖 Free AI workshops\npanamaailab.org"
+    },
+    {
+        "username": "react_pty",
+        "posts": 260,
+        "followers": 7400,
+        "following": 95,
+        "name": "React PTY",
+        "category": "Community",
+        "bio": "⚛️ React meetups\nreactpty.dev"
+    },
+    {
+        "username": "albrook_gamer_x",
+        "posts": 45,
+        "followers": 380,
+        "following": 620,
+        "name": "AlbrookGamer",
+        "category": "Gamer",
+        "bio": "🎮 Ranked grinder"
+    },
+    {
+        "username": "sanfran_designs",
+        "posts": 390,
+        "followers": 5200,
+        "following": 300,
+        "name": "San Francisco Design Studio",
+        "category": "Design",
+        "bio": "🎨 UI/UX freelance\n📍 San Francisco, PTY"
+    },
+    {
+        "username": "profe_jorge_python",
+        "posts": 120,
+        "followers": 3300,
+        "following": 45,
+        "name": "Profe Jorge",
+        "category": "Educator",
+        "bio": "🐍 Python para principiantes\nprofejorge.pa"
+    },
+    {
+        "username": "chiriqui_coffee_dev",
+        "posts": 64,
+        "followers": 1900,
+        "following": 210,
+        "name": "Café Dev Chiriquí",
+        "category": "Blogger",
+        "bio": "☕ Coffee farms + code\n📍 Boquete"
+    },
+    {
+        "username": "metro_linea_memes",
+        "posts": 1980,
+        "followers": 45200,
+        "following": 150,
+        "name": "Metro Línea Memes",
+        "category": "Comedy",
+        "bio": "😂 Memes from Línea 1 & 2"
+    },
+    {
+        "username": "pty_women_in_tech",
+        "posts": 340,
+        "followers": 14000,
+        "following": 280,
+        "name": "Women in Tech PTY",
+        "category": "Nonprofit organization",
+        "bio": "💜 Empowering women in tech\nwitpty.org"
+    },
+    {
+        "username": "venture_sofia_pty",
+        "posts": 110,
+        "followers": 28000,
+        "following": 730,
+        "name": "Sofía | Angel Investor",
+        "category": "Investor",
+        "bio": "💰 Investing in LatAm SaaS\n📍 Punta Pacífica"
+    },
+    {
+        "username": "el_cangrejo_qa",
+        "posts": 88,
+        "followers": 1450,
+        "following": 60,
+        "name": "Cangrejo QA",
+        "category": "Tech",
+        "bio": "🐞 Testing everything\n📍 El Cangrejo"
+    },
+    {
+        "username": "diego_builds",
+        "posts": 275,
+        "followers": 8800,
+        "following": 1320,
+        "name": "Diego | Founder",
+        "category": "Entrepreneur",
+        "bio": "🚀 Building a delivery app\n📍 Bella Vista"
+    },
+    {
+        "username": "pty_data_club",
+        "posts": 195,
+        "followers": 11100,
+        "following": 140,
+        "name": "PTY Data Club",
+        "category": "Community",
+        "bio": "📊 Kaggle nights\n📍 Calle 50"
+    },
+    {
+        "username": "cinta_costera_runner",
+        "posts": 150,
+        "followers": 2700,
+        "following": 90,
+        "name": "Running Dev",
+        "category": "Unknown",
+        "bio": ""
+    },
+    {
+        "username": "panama_tech_jobs",
+        "posts": 2450,
+        "followers": 39000,
+        "following": 35,
+        "name": "Panama Tech Jobs",
+        "category": "Media",
+        "bio": "💼 Tech jobs daily\npanamatechjobs.pa"
+    },
+    {
+        "username": "valeria_ux",
+        "posts": 70,
+        "followers": 990,
+        "following": 160,
+        "name": "Valeria UX",
+        "category": "Design",
+        "bio": "✏️ Wireframes & coffee"
+    },
+    {
+        "username": "pty_open_source",
+        "posts": 230,
+        "followers": 6100,
+        "following": 70,
+        "name": "PTY Open Source",
+        "category": "Community",
+        "bio": "🌐 OSS contributions\ngithub.com/ptyopensource"
+    },
+    {
+        "username": "david_tech_reviews",
+        "posts": 640,
+        "followers": 54700,
+        "following": 260,
+        "name": "David Reviews",
+        "category": "Digital creator",
+        "bio": "📱 Gadget reviews in Spanish"
+    }
+]
