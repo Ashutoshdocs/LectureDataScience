@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Modules & Packages Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.dir{display:grid;gap:8px;margin:.6em 0 1em}
+.dir div{display:grid;grid-template-columns:150px 70px 1fr 70px;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.dir b{font-family:var(--f-mono);color:var(--accent)}
+.dir span{font-weight:600;text-align:center;background:var(--accent-soft);border-radius:6px;padding:3px 6px}
+.dir i{font:normal 13px var(--f-mono);text-align:center;color:var(--muted)}
+@media (max-width:600px){.dir div{grid-template-columns:1fr}}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+/* file tabs (multi-file lessons) */
+.ftabs{display:flex;gap:2px;padding:6px 10px 0;background:#0d121d;overflow-x:auto;scrollbar-width:thin;border-bottom:1px solid #222b3c}
+.ftab{all:unset;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:6px 12px 7px;border-radius:7px 7px 0 0;font:500 12.5px var(--f-mono);color:var(--code-dim);white-space:nowrap;border:1px solid transparent;border-bottom:none}
+.ftab:hover{color:var(--code-ink)}
+.ftab:focus-visible{outline:2px solid #7aa5ff}
+.ftab.on{background:var(--code-bg);color:var(--code-ink);border-color:#2c374c}
+.ftab .fdir{color:var(--code-dim);font-weight:400}
+.ftab.on .fdir{color:#8b97ad}
+.ftab .run{font-size:9px;color:var(--yellow)}
+.ftab .ed{width:6px;height:6px;border-radius:50%;background:var(--yellow)}
+.ftab.err{color:#ff8a8a}
+.file .lbl{color:var(--code-dim);font-size:12px}
+.cmd{font:500 12px var(--f-mono);color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+.walk li button{grid-template-columns:124px 1fr}
+.walk .ln{word-break:break-all}
+.errjump{all:unset;cursor:pointer;color:var(--accent);text-decoration:underline;font-family:var(--f-mono)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Python <b>Modules &amp; Packages</b> Lab</h1><span>import · from · __name__ == "__main__" · packages · edit, run and step through every example</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span class="lbl">Runs:</span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore every file in this lesson">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn" id="runFileBtn" hidden title="Run the open tab as the main program">▷ Run this file</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="ftabs" id="ftabs" role="tablist" aria-label="Project files"></div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Every tab is a real file — Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="cmd" id="ocmd"></span><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "Modules", "level": "Beginner", "summary": "One .py file = one module.", "lessons": [{"title": "What is a module?", "files": [{"name": "main.py", "code": "import math\n\nprint(math.pi)\nprint(math.sqrt(49))\nprint(math.floor(7.8))\nprint(type(math))"}], "entry": "main.py", "kind": "path", "explain": "<p>A <b>module<\/b> is simply a <b>file of Python code<\/b> — functions, variables and classes — that other programs can <b>reuse<\/b>. Every <code>.py<\/code> file you write is a module.<\/p>\n<div class=\"analogy\"><div><span>module<\/span>A toolbox<small>a file full of ready-made tools<\/small><\/div><div><span>import<\/span>Bring it to your desk<small>load it once, use it anywhere in the file<\/small><\/div><div><span>math.sqrt<\/span>Pick one tool<small>the dot reaches inside the module<\/small><\/div><\/div>\n<p>Python ships with hundreds of modules called the <b>standard library<\/b>. You don't install them — just <code>import<\/code> them.<\/p>\n<table class=\"tbl\"><tr><th>Module<\/th><th>Used for<\/th><th>Example<\/th><\/tr>\n<tr><td><code>math<\/code><\/td><td>Maths functions and constants<\/td><td><code>math.sqrt(49)<\/code><\/td><\/tr>\n<tr><td><code>random<\/code><\/td><td>Random numbers and choices<\/td><td><code>random.randint(1, 6)<\/code><\/td><\/tr>\n<tr><td><code>datetime<\/code><\/td><td>Dates and times<\/td><td><code>datetime.date.today()<\/code><\/td><\/tr>\n<tr><td><code>statistics<\/code><\/td><td>Mean, median, mode<\/td><td><code>statistics.mean([1, 2, 3])<\/code><\/td><\/tr>\n<tr><td><code>os<\/code>, <code>sys<\/code><\/td><td>Files, folders, the running Python<\/td><td><code>os.listdir()<\/code><\/td><\/tr><\/table>\n<p>After <code>import math<\/code>, the name <code>math<\/code> refers to a <b>module object<\/b> — line 7 proves it.<\/p>\n<div class=\"note\">Why bother with modules? <b>Reuse<\/b> (write once, import anywhere), <b>organisation<\/b> (split a big program into small files) and <b>namespaces<\/b> (<code>math.floor<\/code> and your own <code>floor<\/code> can't clash).<\/div>", "walk": [[0, "1", "Load the <code>math<\/code> module and create the name <code>math<\/code>."], [0, "3", "A <b>variable<\/b> that lives inside the module."], [0, "4", "A <b>function<\/b> inside the module, reached with the dot."], [0, "6", "Modules are objects too: <code>&lt;class 'module'&gt;<\/code>."]], "trace": null, "tip": "A module is a .py file you can import to reuse its code.", "tryit": ["Add <code>print(math.ceil(7.2))<\/code>. What's the difference from <code>floor<\/code>?", "Delete line 1 and press Run. Read the <code>NameError<\/code>."], "expected": {"out": "3.141592653589793\n7.0\n7\n<class 'module'>", "err": null, "file": null, "line": null}}, {"title": "Making your own module", "files": [{"name": "main.py", "code": "import greetings\n\nprint(greetings.hello(\"Priya\"))\nprint(greetings.bye(\"Rahul\"))\nprint(greetings.SCHOOL)"}, {"name": "greetings.py", "code": "\"\"\"Small helpers for greeting people.\"\"\"\n\nSCHOOL = \"Sunrise Public School\"\n\ndef hello(name):\n    \"\"\"Return a friendly greeting.\"\"\"\n    return f\"Hello, {name}!\"\n\ndef bye(name):\n    return f\"Goodbye, {name}. See you tomorrow.\""}], "entry": "main.py", "kind": "path", "explain": "<p>To make a module, just <b>save Python code in a .py file<\/b>. Here <code>greetings.py<\/code> sits in the <b>same folder<\/b> as <code>main.py<\/code> — click the tabs above the editor to switch files.<\/p>\n<pre class=\"snippet\">project/\n├── main.py         ← the file you run\n└── greetings.py    ← the module (import greetings)<\/pre>\n<p>The <b>module name<\/b> is the file name <b>without<\/b> <code>.py<\/code>. So <code>greetings.py<\/code> → <code>import greetings<\/code>.<\/p>\n<h4>What happens on <code>import greetings<\/code><\/h4>\n<ol><li>Python finds <code>greetings.py<\/code>.<\/li><li>It <b>runs the whole file, top to bottom<\/b> — creating <code>SCHOOL<\/code>, <code>hello<\/code> and <code>bye<\/code>.<\/li><li>It wraps everything in a module object and binds it to the name <code>greetings<\/code> in <code>main.py<\/code>.<\/li><\/ol>\n<div class=\"warn\"><b>Naming rules:<\/b> a module name must be a valid identifier. <code>my-tools.py<\/code>, <code>2nd.py<\/code> or <code>my tools.py<\/code> can't be imported. Use <code>my_tools.py<\/code>.<\/div>", "walk": [[0, "1", "Runs <code>greetings.py<\/code> and binds the module to <code>greetings<\/code>."], [1, "3", "A module-level variable."], [1, "5-7", "A function defined in the module."], [0, "3", "Call it with <code>module.function()<\/code>."], [0, "5", "Read a variable with <code>module.variable<\/code>."]], "trace": [[0, 1, "Python finds greetings.py and starts running it from the top.", null], [1, 3, "Now inside greetings.py: create the variable SCHOOL.", null], [1, 5, "def only <b>defines<\/b> hello — its body doesn't run yet.", null], [1, 9, "Same for bye. The end of the file — the import is complete.", null], [0, 3, "Back in main.py. greetings.hello(\"Priya\") runs the function and prints its result.", "Hello, Priya!"], [0, 4, "Same for bye.", "Goodbye, Rahul. See you tomorrow."], [0, 5, "Variables come through the dot too.", "Sunrise Public School"]], "tip": "Your own file greetings.py is imported as: import greetings.", "tryit": ["In <code>greetings.py<\/code>, add <code>def shout(name): return name.upper() + \"!!!\"<\/code>. Call it from <code>main.py<\/code>.", "Change <code>SCHOOL<\/code> in greetings.py and run main.py again."], "expected": {"out": "Hello, Priya!\nGoodbye, Rahul. See you tomorrow.\nSunrise Public School", "err": null, "file": null, "line": null}}, {"title": "Giving a module a nickname: import … as", "files": [{"name": "main.py", "code": "import temperature_converter as tc\nimport statistics as stats\n\nprint(tc.c_to_f(100))\nprint(round(tc.f_to_c(98.6), 1))\n\nmarks = [72, 88, 95, 64]\nprint(stats.mean(marks))\nprint(stats.median(marks))"}, {"name": "temperature_converter.py", "code": "def c_to_f(c):\n    return c * 9 / 5 + 32\n\ndef f_to_c(f):\n    return (f - 32) * 5 / 9"}], "entry": "main.py", "kind": "path", "explain": "<p><code>import long_name as short<\/code> imports the module but binds it to a <b>shorter name<\/b> (an <b>alias<\/b>).<\/p>\n<p>It's handy for long names and is a strong convention for some popular libraries:<\/p>\n<table class=\"tbl\"><tr><th>You'll often see<\/th><th>Library<\/th><\/tr>\n<tr><td><code>import numpy as np<\/code><\/td><td>NumPy (numbers, arrays)<\/td><\/tr>\n<tr><td><code>import pandas as pd<\/code><\/td><td>pandas (tables of data)<\/td><\/tr>\n<tr><td><code>import matplotlib.pyplot as plt<\/code><\/td><td>Matplotlib (charts)<\/td><\/tr><\/table>\n<div class=\"warn\">After <code>import temperature_converter as tc<\/code>, <b>only<\/b> <code>tc<\/code> exists. Writing <code>temperature_converter.c_to_f(0)<\/code> raises <code>NameError<\/code>.<\/div>", "walk": [[0, "1", "Your own module, nicknamed <code>tc<\/code>."], [0, "2", "A standard-library module, nicknamed <code>stats<\/code>."], [0, "4", "100 °C → 212.0 °F."], [0, "8", "Average of the four marks."]], "trace": null, "tip": "import module as alias — same module, shorter name.", "tryit": ["Add <code>print(temperature_converter.c_to_f(0))<\/code> and read the error.", "Change line 2 to <code>import statistics<\/code> (no alias). What else must you change?"], "expected": {"out": "212.0\n37.0\n79.75\n80.0", "err": null, "file": null, "line": null}}, {"title": "A module runs only once", "files": [{"name": "main.py", "code": "import settings\nimport settings\nimport settings as s\n\nprint(\"THEME:\", settings.THEME)\nprint(\"same object?\", s is settings)\n\nimport sys\nprint(\"cached:\", \"settings\" in sys.modules)"}, {"name": "settings.py", "code": "print(\"Loading settings.py ...\")\n\nTHEME = \"dark\"\nLANGUAGE = \"en\""}], "entry": "main.py", "kind": "path", "explain": "<p><code>settings<\/code> is imported <b>three times<\/b>, yet \"Loading settings.py ...\" prints <b>once<\/b>. Why?<\/p>\n<p>The first import runs the file and stores the module object in a cache called <code>sys.modules<\/code> (a dictionary: name → module). Every later import of the same name just <b>looks it up<\/b> in that cache — no re-running.<\/p>\n<pre class=\"snippet\">sys.modules = {\n    \"math\":     &lt;module 'math'&gt;,\n    \"settings\": &lt;module 'settings'&gt;,   ← added by the first import\n    ...\n}<\/pre>\n<p>That's why <code>s is settings<\/code> is <code>True<\/code>: both names point to the <b>same<\/b> module object.<\/p>\n<div class=\"note\">Because of this cache, every file that imports <code>settings<\/code> shares one copy. Change <code>settings.THEME<\/code> in one file and every other file sees it — a simple way to share configuration.<\/div>\n<div class=\"warn\">If you edit a module while a long-running program (like a Jupyter notebook) is open, re-importing won't pick up the change. Use <code>importlib.reload(settings)<\/code> or restart.<\/div>", "walk": [[0, "1", "First import: runs settings.py and caches it."], [0, "2-3", "Already in <code>sys.modules<\/code> — nothing runs."], [0, "6", "Two names, one object."], [0, "9", "The cache really contains it."]], "trace": [[0, 1, "settings isn't in sys.modules yet, so Python runs settings.py.", null], [1, 1, "The print at the top of the module runs.", "Loading settings.py ..."], [1, 3, "Variables created; the module is cached in sys.modules.", null], [0, 2, "Found in the cache — settings.py does <b>not<\/b> run again.", null], [0, 3, "Also from the cache. s is just another name for the same module.", null], [0, 5, "", "THEME: dark"], [0, 6, "", "same object? True"], [0, 9, "", "cached: True"]], "tip": "Python runs a module once and caches it in sys.modules.", "tryit": ["Add a fourth <code>import settings<\/code> at the bottom. Does anything new print?", "Add <code>s.THEME = \"light\"<\/code> then <code>print(settings.THEME)<\/code>."], "expected": {"out": "Loading settings.py ...\nTHEME: dark\nsame object? True\ncached: True", "err": null, "file": null, "line": null}}, {"title": "Where Python looks: ModuleNotFoundError", "files": [{"name": "main.py", "code": "import sys\n\nprint(\"Search path entries:\", len(sys.path) > 0)\n\nimport greeting      # oops: the file is greetings.py\n\nprint(greeting.hello(\"Asha\"))"}, {"name": "greetings.py", "code": "\"\"\"Small helpers for greeting people.\"\"\"\n\nSCHOOL = \"Sunrise Public School\"\n\ndef hello(name):\n    \"\"\"Return a friendly greeting.\"\"\"\n    return f\"Hello, {name}!\"\n\ndef bye(name):\n    return f\"Goodbye, {name}. See you tomorrow.\""}], "entry": "main.py", "kind": "path", "explain": "<p>When you write <code>import name<\/code>, Python searches a list of folders stored in <code>sys.path<\/code>, <b>in order<\/b>, for <code>name.py<\/code> (or a package folder <code>name/<\/code>). The first match wins.<\/p>\n<table class=\"tbl\"><tr><th>#<\/th><th>Where<\/th><th>What's there<\/th><\/tr>\n<tr><td>1<\/td><td>The folder of the script you ran<\/td><td>Your own modules, like <code>greetings.py<\/code><\/td><\/tr>\n<tr><td>2<\/td><td>Folders in the <code>PYTHONPATH<\/code> environment variable<\/td><td>Optional extras<\/td><\/tr>\n<tr><td>3<\/td><td>The standard library<\/td><td><code>math<\/code>, <code>random<\/code>, <code>json<\/code>…<\/td><\/tr>\n<tr><td>4<\/td><td><code>site-packages<\/code><\/td><td>Anything you installed with <code>pip install<\/code><\/td><\/tr><\/table>\n<p>If no folder has it, you get <code>ModuleNotFoundError<\/code>. Here it's a simple typo: <code>greeting<\/code> vs <code>greetings<\/code>.<\/p>\n<div class=\"note\"><b>Checklist when you see ModuleNotFoundError:<\/b><br>1. Is the spelling right (and the case — <code>Greetings<\/code> ≠ <code>greetings<\/code>)?<br>2. Is the file in the same folder as the script you ran?<br>3. For a third-party library — did you <code>pip install<\/code> it into the <b>same<\/b> Python you're running?<\/div>", "walk": [[0, "3", "<code>sys.path<\/code> is an ordinary list of folder paths."], [0, "5", "No <code>greeting.py<\/code> anywhere on the path → error."]], "trace": null, "tip": "ModuleNotFoundError = Python searched every folder in sys.path and found nothing with that name.", "tryit": ["Fix the spelling on line 5 and run again.", "Add <code>for p in sys.path: print(p)<\/code> to see the real search path."], "expected": {"out": "Search path entries: True", "err": "ModuleNotFoundError: No module named 'greeting'", "file": 0, "line": 5}}, {"title": "Peeking inside: dir(), __name__, __doc__", "files": [{"name": "main.py", "code": "import greetings\n\nprint(greetings.__name__)\nprint(greetings.__doc__)\n\npublic = [n for n in dir(greetings) if not n.startswith(\"_\")]\nprint(public)\n\nprint(greetings.hello.__doc__)"}, {"name": "greetings.py", "code": "\"\"\"Small helpers for greeting people.\"\"\"\n\nSCHOOL = \"Sunrise Public School\"\n\ndef hello(name):\n    \"\"\"Return a friendly greeting.\"\"\"\n    return f\"Hello, {name}!\"\n\ndef bye(name):\n    return f\"Goodbye, {name}. See you tomorrow.\""}], "entry": "main.py", "kind": "path", "explain": "<p>Every module carries some built-in information, stored in names that start and end with two underscores (<b>\"dunder\"<\/b> names).<\/p>\n<table class=\"tbl\"><tr><th>Attribute<\/th><th>Holds<\/th><\/tr>\n<tr><td><code>module.__name__<\/code><\/td><td>The module's name — <code>\"greetings\"<\/code><\/td><\/tr>\n<tr><td><code>module.__doc__<\/code><\/td><td>The <b>docstring<\/b>: the string on the first line of the file<\/td><\/tr>\n<tr><td><code>module.__file__<\/code><\/td><td>The path of the <code>.py<\/code> file it was loaded from<\/td><\/tr>\n<tr><td><code>dir(module)<\/code><\/td><td>A list of every name defined inside<\/td><\/tr><\/table>\n<p><code>dir()<\/code> also lists the dunder names, so line 6 filters out anything starting with <code>_<\/code>.<\/p>\n<div class=\"note\">Exploring a new module? Try <code>dir(module)<\/code> and <code>help(module)<\/code> in the Python shell — <code>help<\/code> prints the docstrings nicely.<\/div>\n<p>Keep <code>__name__<\/code> in mind — it's the key to <code>if __name__ == \"__main__\"<\/code> in Module 3.<\/p>", "walk": [[0, "3", "The module's own name."], [0, "4", "The docstring from line 1 of greetings.py."], [0, "6", "Public names only (no leading underscore)."], [0, "9", "Functions have docstrings too."]], "trace": null, "tip": "dir(module) lists what's inside; __name__ and __doc__ describe it.", "tryit": ["Add a docstring to <code>bye<\/code> and print it.", "Print <code>dir(greetings)<\/code> without the filter."], "expected": {"out": "greetings\nSmall helpers for greeting people.\n['SCHOOL', 'bye', 'hello']\nReturn a friendly greeting.", "err": null, "file": null, "line": null}}]}, {"title": "from … import", "level": "Beginner → Intermediate", "summary": "Importing specific names.", "lessons": [{"title": "from module import name", "files": [{"name": "main.py", "code": "from geometry import area_circle, PI\n\nprint(area_circle(2))\nprint(PI)\n\nprint(area_rect(3, 4))"}, {"name": "geometry.py", "code": "PI = 3.14159\n\ndef area_circle(r):\n    return PI * r * r\n\ndef area_rect(w, h):\n    return w * h"}], "entry": "main.py", "kind": "path", "explain": "<p><code>from module import name<\/code> copies <b>just the names you list<\/b> straight into your file — so you can use them <b>without the module prefix<\/b>.<\/p>\n<div class=\"cmp\"><div><h5>import geometry<\/h5><ul><li>Brings in the module.<\/li><li>Use <code>geometry.area_circle(2)<\/code>.<\/li><li>Every name is reachable through the dot.<\/li><\/ul><\/div><div><h5>from geometry import area_circle<\/h5><ul><li>Brings in one name.<\/li><li>Use <code>area_circle(2)<\/code>.<\/li><li><b>Only<\/b> the listed names exist in your file.<\/li><\/ul><\/div><\/div>\n<p>That's why line 6 fails: <code>area_rect<\/code> was never imported, so the name doesn't exist in <code>main.py<\/code>.<\/p>\n<div class=\"note\">The <b>whole<\/b> module still runs on a <code>from<\/code> import — Python can't run \"half a file\". <code>from<\/code> only controls which names appear in <b>your<\/b> file.<\/div>", "walk": [[0, "1", "Import two names: a function and a variable."], [0, "3", "Called directly — no <code>geometry.<\/code> prefix."], [0, "6", "Not imported → <code>NameError<\/code>."]], "trace": null, "tip": "from module import name puts that name straight into your file.", "tryit": ["Fix line 6 by adding <code>area_rect<\/code> to the import on line 1.", "Try <code>print(geometry.PI)<\/code>. Why does it fail?"], "expected": {"out": "12.56636\n3.14159", "err": "NameError: name 'area_rect' is not defined", "file": 0, "line": 6}}, {"title": "Several names and aliases", "files": [{"name": "main.py", "code": "from math import sqrt, pow as power, pi\nfrom datetime import date\nfrom geometry import (\n    area_circle as circle,\n    area_rect as rect,\n)\n\nprint(sqrt(81))\nprint(power(2, 10))\nprint(round(pi, 2))\nprint(circle(1))\nprint(rect(5, 2))\nprint(date(2026, 1, 26).strftime(\"%d %B %Y\"))"}, {"name": "geometry.py", "code": "PI = 3.14159\n\ndef area_circle(r):\n    return PI * r * r\n\ndef area_rect(w, h):\n    return w * h"}], "entry": "main.py", "kind": "path", "explain": "<p>You can import several names at once, and rename any of them with <code>as<\/code>.<\/p>\n<table class=\"tbl\"><tr><th>Form<\/th><th>Creates the name(s)<\/th><\/tr>\n<tr><td><code>from math import sqrt<\/code><\/td><td><code>sqrt<\/code><\/td><\/tr>\n<tr><td><code>from math import sqrt, pi<\/code><\/td><td><code>sqrt<\/code>, <code>pi<\/code><\/td><\/tr>\n<tr><td><code>from math import pow as power<\/code><\/td><td><code>power<\/code> (not <code>pow<\/code>)<\/td><\/tr>\n<tr><td><code>from geometry import (a, b)<\/code><\/td><td><code>a<\/code>, <code>b<\/code> — brackets let you split a long list over lines<\/td><\/tr><\/table>\n<p>Line 2 is a common pattern: <code>datetime<\/code> is the module, <code>date<\/code> is a class inside it.<\/p>\n<div class=\"note\">Why alias <code>pow<\/code>? Python already has a built-in <code>pow()<\/code>. Renaming to <code>power<\/code> keeps the built-in untouched.<\/div>", "walk": [[0, "1", "Three names; one renamed."], [0, "3-6", "Brackets let the import span lines; each name renamed."], [0, "9", "2¹⁰ = 1024.0 (math.pow always returns a float)."], [0, "13", "A <code>date<\/code> object, formatted as text."]], "trace": null, "tip": "from module import a, b as c — import many names, rename any.", "tryit": ["Add <code>floor<\/code> to line 1 and print <code>floor(9.9)<\/code>."], "expected": {"out": "9.0\n1024.0\n3.14\n3.14159\n10\n26 January 2026", "err": null, "file": null, "line": null}}, {"title": "from module import * and __all__", "files": [{"name": "main.py", "code": "from tools import *\n\nprint(add(2, 3))\nprint(multiply(4, 5))\n\nimport tools\nprint(tools._secret())\nprint(tools.debug_dump())\n\nprint(debug_dump())"}, {"name": "tools.py", "code": "__all__ = [\"add\", \"multiply\"]\n\ndef add(a, b):\n    return a + b\n\ndef multiply(a, b):\n    return a * b\n\ndef _secret():\n    return \"hidden helper\"\n\ndef debug_dump():\n    return \"not listed in __all__\""}], "entry": "main.py", "kind": "path", "explain": "<p><code>from tools import *<\/code> means \"import <b>every public name<\/b>\". What counts as public?<\/p>\n<table class=\"tbl\"><tr><th>Does the module define <code>__all__<\/code>?<\/th><th>What <code>*<\/code> imports<\/th><\/tr>\n<tr><td>No<\/td><td>Every name that does <b>not<\/b> start with <code>_<\/code><\/td><\/tr>\n<tr><td>Yes<\/td><td><b>Only<\/b> the names listed in <code>__all__<\/code><\/td><\/tr><\/table>\n<p>Here <code>__all__ = [\"add\", \"multiply\"]<\/code>, so <code>debug_dump<\/code> is skipped and line 10 fails.<\/p>\n<p>Lines 7–8 show that <code>_secret<\/code> and <code>debug_dump<\/code> still exist — <code>*<\/code> just doesn't copy them. A leading underscore is a polite \"internal, please don't use\" sign, not a lock.<\/p>\n<div class=\"warn\"><b>Avoid <code>import *<\/code> in real code.<\/b> Readers can't tell where a name came from, and it can silently overwrite your own names (or built-ins). It's OK for quick experiments in the shell.<\/div>", "walk": [[1, "1", "The module's public list."], [0, "1", "Imports <code>add<\/code> and <code>multiply<\/code> only."], [0, "7", "Private names are still reachable through the module."], [0, "10", "Not in <code>__all__<\/code> → <code>NameError<\/code>."]], "trace": null, "tip": "import * takes __all__ if it exists, otherwise every name without a leading _.", "tryit": ["Delete the <code>__all__<\/code> line in tools.py and run again. Which call still fails?"], "expected": {"out": "5\n20\nhidden helper\nnot listed in __all__", "err": "NameError: name 'debug_dump' is not defined", "file": 0, "line": 10}}, {"title": "Gotcha: name clashes", "files": [{"name": "main.py", "code": "from csv_export import save\nfrom pdf_export import save\n\nrows = [1, 2, 3]\nprint(save(rows))            # which save?\n\nimport csv_export, pdf_export\nprint(csv_export.save(rows))\nprint(pdf_export.save(rows))\n\nfrom csv_export import save as save_csv\nfrom pdf_export import save as save_pdf\nprint(save_csv(rows), \"|\", save_pdf(rows))"}, {"name": "csv_export.py", "code": "def save(data):\n    return f\"saved {len(data)} rows as CSV\""}, {"name": "pdf_export.py", "code": "def save(data):\n    return f\"saved {len(data)} rows as PDF\""}], "entry": "main.py", "kind": "path", "explain": "<p>Two modules each have a function called <code>save<\/code>. Line 2 <b>silently replaces<\/b> the <code>save<\/code> from line 1 — no error, no warning. The CSV version is lost.<\/p>\n<p>Two clean fixes:<\/p>\n<ol><li><b>Keep the module prefix<\/b> (lines 7–9): <code>csv_export.save<\/code> and <code>pdf_export.save<\/code> can never clash. This is the main advantage of plain <code>import<\/code>.<\/li>\n<li><b>Rename on import<\/b> (lines 11–13): <code>save as save_csv<\/code>.<\/li><\/ol>\n<div class=\"warn\">The same trap hits built-ins: <code>from os import *<\/code> brings in an <code>open<\/code> that is <b>not<\/b> the built-in <code>open()<\/code>. Another reason to avoid <code>*<\/code>.<\/div>", "walk": [[0, "1", "<code>save<\/code> → the CSV function…"], [0, "2", "…now <code>save<\/code> → the PDF function. CSV one is gone."], [0, "7-9", "Fix 1: keep the prefix."], [0, "11-13", "Fix 2: rename with <code>as<\/code>."]], "trace": [[0, 1, "The name save now points to csv_export.save.", null], [0, 2, "The name save is <b>rebound<\/b> to pdf_export.save. No warning!", null], [0, 4, "", null], [0, 5, "save is the PDF one.", "saved 3 rows as PDF"], [0, 7, "Both modules are already cached; this just binds their names.", null], [0, 8, "The prefix makes it unambiguous.", "saved 3 rows as CSV"], [0, 9, "", "saved 3 rows as PDF"], [0, 11, "Rename on import…", null], [0, 12, "…so both can live side by side.", null], [0, 13, "", "saved 3 rows as CSV | saved 3 rows as PDF"]], "tip": "The last import of a name wins. Use the module prefix or 'as' to keep both.", "tryit": ["Swap lines 1 and 2. What does line 5 print now?"], "expected": {"out": "saved 3 rows as PDF\nsaved 3 rows as CSV\nsaved 3 rows as PDF\nsaved 3 rows as CSV | saved 3 rows as PDF", "err": null, "file": null, "line": null}}, {"title": "Gotcha: from-import copies the name", "files": [{"name": "main.py", "code": "import config\nfrom config import count, bump\n\nbump()\nbump()\n\nprint(\"config.count:\", config.count)\nprint(\"count       :\", count)"}, {"name": "config.py", "code": "count = 0\n\ndef bump():\n    global count\n    count += 1"}], "entry": "main.py", "kind": "path", "explain": "<p>Surprised that <code>count<\/code> is still 0? This trips up even experienced programmers.<\/p>\n<p><code>from config import count<\/code> creates a <b>new name<\/b> <code>count<\/code> in <code>main.py<\/code> that points to the value config's <code>count<\/code> had <b>at import time<\/b> (0). It is <b>not<\/b> a live link.<\/p>\n<p>When <code>bump()<\/code> does <code>count += 1<\/code>, it rebinds <b>config's<\/b> <code>count<\/code> to a new integer. Your copy in main.py still points to the old 0.<\/p>\n<div class=\"def2\"><div><b>config.count<\/b><span>Looks inside the module <u>every time<\/u> → always current.<\/span><\/div><div><b>count (from-import)<\/b><span>A snapshot taken <u>once<\/u>, at import time.<\/span><\/div><\/div>\n<div class=\"note\"><b>Rule of thumb:<\/b> for a module-level value that <b>changes<\/b> (a counter, a setting, a connection), use <code>import config<\/code> and read <code>config.count<\/code>. Use <code>from<\/code> imports for functions, classes and constants.<\/div>", "walk": [[0, "2", "<code>count<\/code> here → 0 (snapshot)."], [0, "4-5", "Each call rebinds <code>config.count<\/code>: 1, then 2."], [0, "7", "Reads the module's current value → 2."], [0, "8", "Still the old snapshot → 0."]], "trace": [[0, 1, "config.py runs: config.count = 0.", null], [0, 2, "main.count → the same 0 object. bump is copied too.", null], [0, 4, "config.count becomes 1. main.count is untouched.", null], [0, 5, "config.count becomes 2.", null], [0, 7, "Look inside the module — live value.", "config.count: 2"], [0, 8, "The snapshot in main.py.", "count       : 0"]], "tip": "from x import y takes a snapshot of y. Use x.y when the value can change.", "tryit": ["In config.py change <code>count = 0<\/code> to <code>count = []<\/code> and <code>count += 1<\/code> to <code>count.append(1)<\/code>. Now both lines agree — why? (Hint: mutating vs rebinding.)"], "expected": {"out": "config.count: 2\ncount       : 0", "err": null, "file": null, "line": null}}, {"title": "import vs from — which should I use?", "files": [{"name": "main.py", "code": "import json\nfrom json import dumps\n\ndata = {\"name\": \"Asha\", \"marks\": 91}\n\nprint(json.dumps(data))\nprint(dumps(data, indent=2))\nprint(json.loads('{\"ok\": true}'))"}], "entry": "main.py", "kind": "path", "explain": "<p>Both styles load the same module. They differ only in <b>which names<\/b> land in your file.<\/p>\n<div class=\"cmp\"><div><h5>import module<\/h5><ul><li>✔ Always clear where a name comes from (<code>json.dumps<\/code>)<\/li><li>✔ No name clashes<\/li><li>✔ Always sees current values<\/li><li>✘ More typing<\/li><\/ul><\/div><div><h5>from module import name<\/h5><ul><li>✔ Short, readable calls (<code>dumps(…)<\/code>)<\/li><li>✔ Great for things used often<\/li><li>✘ Can clash with your own names<\/li><li>✘ Snapshot of changing values<\/li><\/ul><\/div><\/div>\n<h4>Good import habits (PEP 8 style guide)<\/h4>\n<ul><li>Put all imports at the <b>top<\/b> of the file.<\/li><li>Group them: <b>standard library<\/b>, then <b>third-party<\/b>, then <b>your own<\/b> — separated by blank lines.<\/li><li>One module per <code>import<\/code> line.<\/li><li>Avoid <code>from x import *<\/code>.<\/li><\/ul>\n<pre class=\"snippet\">import json\nimport os\nfrom datetime import date\n\nimport requests            # third-party (pip install)\n\nfrom shop import billing   # your own package<\/pre>", "walk": [[0, "1-2", "Both styles, side by side."], [0, "6", "Dict → JSON text."], [0, "7", "Same function, no prefix, pretty-printed."], [0, "8", "JSON text → dict."]], "trace": null, "tip": "Use import module by default; use from for names you use a lot.", "tryit": ["Rewrite line 8 using a from-import of <code>loads<\/code>."], "expected": {"out": "{\"name\": \"Asha\", \"marks\": 91}\n{\n  \"name\": \"Asha\",\n  \"marks\": 91\n}\n{'ok': True}", "err": null, "file": null, "line": null}}]}, {"title": "if __name__ == \"__main__\"", "level": "Intermediate", "summary": "Script or module? The same file can be both.", "lessons": [{"title": "What is __name__?", "files": [{"name": "main.py", "code": "print(\"main.py sees __name__ =\", __name__)\n\nimport helper\n\nprint(helper.tool())"}, {"name": "helper.py", "code": "print(\"helper.py sees __name__ =\", __name__)\n\ndef tool():\n    return \"tool ready\""}], "entry": "main.py", "kind": "path", "explain": "<p>Python gives every module a built-in variable called <code>__name__<\/code>. Its value depends on <b>how<\/b> the file is being used:<\/p>\n<table class=\"tbl\"><tr><th>How the file is used<\/th><th>Its <code>__name__<\/code><\/th><\/tr>\n<tr><td>You <b>ran<\/b> it: <code>python main.py<\/code><\/td><td><code>\"__main__\"<\/code><\/td><\/tr>\n<tr><td>Another file <b>imported<\/b> it: <code>import helper<\/code><\/td><td><code>\"helper\"<\/code> (its module name)<\/td><\/tr><\/table>\n<p>So <code>__name__<\/code> answers the question <b>\"Am I the program being run, or am I being imported?\"<\/b><\/p>\n<div class=\"note\">Try it: open the <code>helper.py<\/code> tab and press <b>Run this file<\/b>. Now helper.py is the program, so it prints <code>__main__<\/code>.<\/div>", "walk": [[0, "1", "main.py was run → <code>__main__<\/code>."], [0, "3", "Runs helper.py as a module…"], [1, "1", "…so inside it, <code>__name__<\/code> is <code>\"helper\"<\/code>."]], "trace": [[0, 1, "main.py is the file Python was asked to run, so its __name__ is \"__main__\".", "main.py sees __name__ = __main__"], [0, 3, "Import helper: Python runs helper.py with __name__ set to \"helper\".", null], [1, 1, "Same variable name, different value!", "helper.py sees __name__ = helper"], [1, 3, "Define tool. Import done.", null], [0, 5, "", "tool ready"]], "tip": "__name__ is \"__main__\" in the file you run, and the module name everywhere else.", "tryit": ["Open <code>helper.py<\/code> and press <b>Run this file<\/b>. Compare the output."], "expected": {"out": "main.py sees __name__ = __main__\nhelper.py sees __name__ = helper\ntool ready", "err": null, "file": null, "line": null}}, {"title": "The problem: test code runs on import", "files": [{"name": "main.py", "code": "import calculator\n\nscore = calculator.percent(412, 500)\nprint(\"Your score:\", score, \"%\")"}, {"name": "calculator.py", "code": "def add(a, b):\n    return a + b\n\ndef percent(part, whole):\n    return round(part / whole * 100, 1)\n\n# quick tests while writing the module\nprint(\"Testing add:\", add(2, 3))\nprint(\"Testing percent:\", percent(45, 60))"}], "entry": "main.py", "kind": "path", "explain": "<p>While writing <code>calculator.py<\/code>, you added a couple of <code>print<\/code> lines to test it. Sensible! But now <code>main.py<\/code> imports it…<\/p>\n<p>…and the test lines print inside <b>your<\/b> program. Remember: <b>import runs the whole module, top to bottom<\/b> — including those test prints.<\/p>\n<div class=\"warn\">This gets worse with real code: a module that starts a game loop, asks for <code>input()<\/code>, or writes files at the top level will do all of that the moment someone imports it.<\/div>\n<p>We need a way to say: <b>\"run these lines only when this file is the main program.\"<\/b> That's exactly what <code>__name__<\/code> lets us check — next lesson.<\/p>", "walk": [[1, "7-9", "Top-level code — runs on every import."], [0, "1", "Importing triggers those prints."]], "trace": [[0, 1, "Python runs calculator.py from top to bottom.", null], [1, 1, "Define add.", null], [1, 4, "Define percent.", null], [1, 8, "Top-level code — it runs during the import!", "Testing add: 5"], [1, 9, "Another unwanted line in main.py's output.", "Testing percent: 75.0"], [0, 3, "Back in main.py. 412/500 = 82.4%.", null], [0, 4, "Finally, the output we actually wanted.", "Your score: 82.4 %"]], "tip": "Importing a module runs all of its top-level code.", "tryit": ["Add <code>print(\"I am top-level code\")<\/code> as the last line of calculator.py and run main.py."], "expected": {"out": "Testing add: 5\nTesting percent: 75.0\nYour score: 82.4 %", "err": null, "file": null, "line": null}}, {"title": "The fix: if __name__ == \"__main__\":", "files": [{"name": "main.py", "code": "import calculator\n\nscore = calculator.percent(412, 500)\nprint(\"Your score:\", score, \"%\")"}, {"name": "calculator.py", "code": "def add(a, b):\n    return a + b\n\ndef percent(part, whole):\n    return round(part / whole * 100, 1)\n\nif __name__ == \"__main__\":\n    # runs only when you run calculator.py itself\n    print(\"Testing add:\", add(2, 3))\n    print(\"Testing percent:\", percent(45, 60))"}], "entry": "main.py", "kind": "path", "explain": "<p>Wrap the test code in a check on <code>__name__<\/code>:<\/p>\n<pre class=\"snippet\">if __name__ == \"__main__\":\n    # only when this file is run directly\n    ...<\/pre>\n<table class=\"tbl\"><tr><th>You run…<\/th><th>calculator's <code>__name__<\/code><\/th><th>Test prints?<\/th><\/tr>\n<tr><td><code>python main.py<\/code><\/td><td><code>\"calculator\"<\/code><\/td><td>No — condition is False<\/td><\/tr>\n<tr><td><code>python calculator.py<\/code><\/td><td><code>\"__main__\"<\/code><\/td><td>Yes<\/td><\/tr><\/table>\n<p>Now the same file is both a <b>reusable module<\/b> and a <b>runnable script<\/b>. This line appears at the bottom of a huge number of Python files — now you know why.<\/p>\n<div class=\"note\">Open the <code>calculator.py<\/code> tab and press <b>Run this file<\/b> to see the tests run.<\/div>", "walk": [[1, "7", "True only when calculator.py is the program being run."], [1, "8-10", "Indented → skipped on import."], [0, "4", "Clean output: only main.py's line."]], "trace": [[0, 1, "Python runs calculator.py with __name__ = \"calculator\".", null], [1, 1, "", null], [1, 4, "", null], [1, 7, "\"calculator\" == \"__main__\" → False. The indented block is skipped.", null], [0, 3, "", null], [0, 4, "Only the output we wanted.", "Your score: 82.4 %"]], "tip": "Put \"run me\" code under if __name__ == \"__main__\": so imports stay silent.", "tryit": ["Open calculator.py and press <b>Run this file<\/b>.", "Remove the <code>if<\/code> line (and un-indent) — you're back to the problem."], "expected": {"out": "Your score: 82.4 %", "err": null, "file": null, "line": null}}, {"title": "The main() function pattern", "files": [{"name": "app.py", "code": "def load_marks():\n    return {\"Asha\": 91, \"Ravi\": 78, \"Meena\": 85}\n\ndef best_student(marks):\n    return max(marks, key=marks.get)\n\ndef main():\n    marks = load_marks()\n    top = best_student(marks)\n    print(\"Students:\", len(marks))\n    print(\"Topper  :\", top, marks[top])\n\nif __name__ == \"__main__\":\n    main()"}, {"name": "check.py", "code": "from app import best_student\n\nresult = best_student({\"x\": 10, \"y\": 50, \"z\": 30})\nprint(\"best_student works?\", result == \"y\")"}], "entry": "app.py", "kind": "path", "explain": "<p>Most well-organised Python scripts look like this:<\/p>\n<ol><li><b>Imports<\/b> at the top.<\/li><li><b>Functions<\/b> (and classes) that do the work.<\/li><li>A <code>main()<\/code> function that ties them together.<\/li><li>The guard at the bottom calling <code>main()<\/code>.<\/li><\/ol>\n<p>Why not just put the main code under the <code>if<\/code>?<\/p>\n<ul><li>Variables inside <code>main()<\/code> are <b>local<\/b>, so they can't accidentally leak into other functions.<\/li><li>Other files can import the useful pieces (<code>best_student<\/code>) <b>without<\/b> running the program — see <code>check.py<\/code>.<\/li><li>You can call <code>main()<\/code> from tests or another script.<\/li><\/ul>\n<div class=\"note\">This lesson's entry file is <code>app.py<\/code>. Open <code>check.py<\/code> and press <b>Run this file<\/b>: it imports <code>best_student<\/code> without printing the report.<\/div>", "walk": [[0, "1-5", "Small, reusable functions."], [0, "7-11", "<code>main()<\/code> runs the program."], [0, "13-14", "Call <code>main()<\/code> only when run directly."], [1, "1", "Another file reuses one function — the report doesn't print."]], "trace": [[0, 1, "Define the helper functions…", null], [0, 4, "", null], [0, 7, "…and main. Nothing has run yet.", null], [0, 13, "We ran app.py, so __name__ is \"__main__\" → True.", null], [0, 14, "Call main().", null], [0, 8, "Inside main: get the data.", null], [0, 9, "Find the key with the highest value → \"Asha\".", null], [0, 10, "", "Students: 3"], [0, 11, "", "Topper  : Asha 91"]], "tip": "Write a main() function and call it under the __name__ guard.", "tryit": ["Run <code>check.py<\/code> from its tab.", "Add a student with 95 marks to <code>load_marks<\/code>."], "expected": {"out": "Students: 3\nTopper  : Asha 91", "err": null, "file": null, "line": null}}, {"title": "Common mistakes with the guard", "files": [{"name": "main.py", "code": "def main():\n    print(\"Program started\")\n\nif __name__ == \"main\":          # mistake: missing underscores\n    print(\"This never prints\")\n\nif __name__ == \"__main__\":      # correct\n    main()"}], "entry": "main.py", "kind": "path", "explain": "<p>The guard is easy to mistype — and most mistakes give <b>no error<\/b>, the code just silently never runs.<\/p>\n<table class=\"tbl\"><tr><th>Written as<\/th><th>What happens<\/th><\/tr>\n<tr><td><code>if __name__ == \"main\":<\/code><\/td><td>Never true — no underscores in the string<\/td><\/tr>\n<tr><td><code>if __name__ == __main__:<\/code><\/td><td><code>NameError<\/code> — missing quotes, so <code>__main__<\/code> is treated as a variable<\/td><\/tr>\n<tr><td><code>if name == \"__main__\":<\/code><\/td><td><code>NameError<\/code> — the variable needs underscores too<\/td><\/tr>\n<tr><td><code>if __name__ = \"__main__\":<\/code><\/td><td><code>SyntaxError<\/code> — <code>=<\/code> assigns, <code>==<\/code> compares<\/td><\/tr>\n<tr><td><code>if __name__ == \"__main__\":<\/code><br><code>main<\/code><\/td><td>Nothing — <code>main<\/code> without <code>()<\/code> doesn't call it<\/td><\/tr><\/table>\n<div class=\"note\">Two underscores on <b>each<\/b> side, both for the variable and inside the string: <code>__name__ == \"__main__\"<\/code>.<\/div>", "walk": [[0, "4-5", "Wrong string → always False, silently."], [0, "7-8", "The correct guard."]], "trace": null, "tip": "Exactly: if __name__ == \"__main__\": — and remember the () on main().", "tryit": ["Remove the quotes around <code>\"__main__\"<\/code> on line 7 and read the error.", "Change <code>main()<\/code> on line 8 to <code>main<\/code>. What prints?"], "expected": {"out": "Program started", "err": null, "file": null, "line": null}}]}, {"title": "Packages", "level": "Intermediate", "summary": "Folders of modules.", "lessons": [{"title": "What is a package?", "files": [{"name": "main.py", "code": "import shop.cart\nfrom shop import billing\nfrom shop.billing import GST_RATE\n\nitems = [250, 120, 80]\nsubtotal = shop.cart.total(items)\n\nprint(\"Subtotal:\", subtotal)\nprint(\"GST rate:\", GST_RATE)\nprint(\"To pay  :\", billing.with_gst(subtotal))"}, {"name": "shop/__init__.py", "code": "# This file marks the \"shop\" folder as a package."}, {"name": "shop/cart.py", "code": "def total(prices):\n    return sum(prices)"}, {"name": "shop/billing.py", "code": "GST_RATE = 0.18\n\ndef with_gst(amount):\n    return round(amount * (1 + GST_RATE), 2)"}], "entry": "main.py", "kind": "path", "explain": "<p>As a project grows, one folder full of modules gets messy. A <b>package<\/b> is a <b>folder of modules<\/b> that you import as a group.<\/p>\n<pre class=\"snippet\">project/\n├── main.py\n└── shop/              ← package\n    ├── __init__.py    ← marks the folder as a package\n    ├── cart.py        ← module  shop.cart\n    └── billing.py     ← module  shop.billing<\/pre>\n<div class=\"def2\"><div><b>Module<\/b><span>A single <u>.py file<\/u>.<\/span><\/div><div><b>Package<\/b><span>A <u>folder<\/u> of modules (and maybe sub-folders).<\/span><\/div><\/div>\n<p>You reach modules inside a package with <b>dots<\/b>, just like a file path uses slashes: <code>shop/billing.py<\/code> → <code>shop.billing<\/code>.<\/p>\n<table class=\"tbl\"><tr><th>Import<\/th><th>Then use<\/th><\/tr>\n<tr><td><code>import shop.cart<\/code><\/td><td><code>shop.cart.total(…)<\/code> — full dotted name<\/td><\/tr>\n<tr><td><code>from shop import billing<\/code><\/td><td><code>billing.with_gst(…)<\/code><\/td><\/tr>\n<tr><td><code>from shop.billing import GST_RATE<\/code><\/td><td><code>GST_RATE<\/code><\/td><\/tr><\/table>\n<div class=\"note\"><code>__init__.py<\/code> can be empty. Since Python 3.3 a folder without it still imports (a \"namespace package\"), but always adding one is the clear, standard choice.<\/div>", "walk": [[0, "1", "Import a module inside the package."], [0, "2", "Import a module from the package."], [0, "3", "Import one name from a module in the package."], [0, "6", "Full dotted path to the function."]], "trace": null, "tip": "A package is a folder of modules; reach inside with dots: package.module.", "tryit": ["Add <code>shop/discount.py<\/code>? (You can't add files here — instead, add a function to billing.py and call it.)"], "expected": {"out": "Subtotal: 450\nGST rate: 0.18\nTo pay  : 531.0", "err": null, "file": null, "line": null}}, {"title": "__init__.py runs first — and can re-export", "files": [{"name": "main.py", "code": "import shop\n\nprint(shop.__version__)\nprint(shop.total([100, 200]))\nprint(shop.with_gst(300))\n\nfrom shop import cart\nprint(cart.total([1, 2, 3]))"}, {"name": "shop/__init__.py", "code": "print(\"Initialising the shop package\")\n\nfrom .cart import total\nfrom .billing import with_gst\n\n__version__ = \"1.0\""}, {"name": "shop/cart.py", "code": "def total(prices):\n    return sum(prices)"}, {"name": "shop/billing.py", "code": "GST_RATE = 0.18\n\ndef with_gst(amount):\n    return round(amount * (1 + GST_RATE), 2)"}], "entry": "main.py", "kind": "path", "explain": "<p><code>__init__.py<\/code> is the package's own module. It runs <b>once<\/b>, the first time anything in the package is imported — <b>before<\/b> any of its sub-modules.<\/p>\n<p>A common use is <b>re-exporting<\/b>: import the important names into <code>__init__.py<\/code> so users can write the short form.<\/p>\n<div class=\"cmp\"><div><h5>Without re-export<\/h5><ul><li><code>from shop.cart import total<\/code><\/li><li>Users must know which file holds what.<\/li><\/ul><\/div><div><h5>With re-export<\/h5><ul><li><code>from shop import total<\/code><\/li><li>A tidy \"front door\" to the package.<\/li><\/ul><\/div><\/div>\n<p>The leading dot in <code>from .cart import total<\/code> means \"from <b>this<\/b> package\" — a <b>relative import<\/b>, covered in lesson 4.4.<\/p>\n<p><code>__version__<\/code> is a common convention for a package's version number.<\/p>", "walk": [[1, "1", "Runs once, on the first import of the package."], [1, "3-4", "Re-export: lift names up to <code>shop<\/code>."], [0, "4", "Short path thanks to the re-export."], [0, "7", "Sub-modules are still available directly."]], "trace": [[0, 1, "Importing a package runs its __init__.py.", null], [1, 1, "", "Initialising the shop package"], [1, 3, "Loads shop/cart.py and copies total into shop.", null], [1, 4, "Loads shop/billing.py and copies with_gst.", null], [1, 6, "Package ready.", null], [0, 3, "", "1.0"], [0, 4, "", "300"], [0, 5, "300 × 1.18", "354.0"], [0, 7, "Already loaded — __init__.py does not run again.", null], [0, 8, "", "6"]], "tip": "__init__.py runs first; use it to expose a package's main names.", "tryit": ["Add <code>GST_RATE<\/code> to the billing import in <code>__init__.py<\/code> and print <code>shop.GST_RATE<\/code>."], "expected": {"out": "Initialising the shop package\n1.0\n300\n354.0\n6", "err": null, "file": null, "line": null}}, {"title": "Sub-packages", "files": [{"name": "main.py", "code": "from school.students.records import STUDENTS\nfrom school.exams.grading import grade\nimport school.exams.grading as g\n\nfor name, marks in STUDENTS.items():\n    print(f\"{name:<6} {marks:>3}  {grade(marks)}\")\n\nprint(g.grade(45))"}, {"name": "school/__init__.py", "code": "# school package"}, {"name": "school/students/__init__.py", "code": "# school.students sub-package"}, {"name": "school/students/records.py", "code": "STUDENTS = {\"Asha\": 93, \"Ravi\": 71, \"Meena\": 82}"}, {"name": "school/exams/__init__.py", "code": "# school.exams sub-package"}, {"name": "school/exams/grading.py", "code": "def grade(marks):\n    if marks >= 90:\n        return \"A\"\n    elif marks >= 75:\n        return \"B\"\n    elif marks >= 50:\n        return \"C\"\n    return \"F\""}], "entry": "main.py", "kind": "path", "explain": "<p>Packages can contain <b>other packages<\/b> — just nest folders, each with its own <code>__init__.py<\/code>.<\/p>\n<pre class=\"snippet\">school/\n├── __init__.py\n├── students/\n│   ├── __init__.py\n│   └── records.py       → school.students.records\n└── exams/\n    ├── __init__.py\n    └── grading.py       → school.exams.grading<\/pre>\n<p>Each level adds one more dot. When you import <code>school.exams.grading<\/code>, Python runs <code>school/__init__.py<\/code>, then <code>school/exams/__init__.py<\/code>, then <code>grading.py<\/code>.<\/p>\n<p>Line 3 shows a neat trick: long dotted paths can be shortened with <code>as<\/code>.<\/p>\n<div class=\"note\">This is how large libraries are organised. For example <code>matplotlib.pyplot<\/code>, <code>os.path<\/code> and <code>xml.etree.ElementTree<\/code> are all dotted paths into packages.<\/div>", "walk": [[0, "1", "Three levels deep: package → sub-package → module."], [0, "3", "Alias a long dotted path."], [0, "5-6", "Format each row: name, marks, grade."]], "trace": null, "tip": "Nest folders for sub-packages; each level adds a dot.", "tryit": ["Add <code>\"Kabir\": 48<\/code> to STUDENTS.", "Add an <code>A+<\/code> band for 95 and above in grading.py."], "expected": {"out": "Asha    93  A\nRavi    71  C\nMeena   82  B\nF", "err": null, "file": null, "line": null}}, {"title": "Absolute vs relative imports", "files": [{"name": "main.py", "code": "from shop.checkout import pay\n\nprint(pay([500, 500]))\nprint(pay([500, 500], coupon=10))"}, {"name": "shop/__init__.py", "code": "# shop package"}, {"name": "shop/checkout.py", "code": "from . import discount          # relative: a module in this package\nfrom .billing import with_gst   # relative: a name from a sibling module\nfrom shop.cart import total     # absolute: full path from the top\n\ndef pay(prices, coupon=0):\n    amount = total(prices)\n    amount = discount.apply(amount, coupon)\n    return with_gst(amount)"}, {"name": "shop/discount.py", "code": "def apply(amount, percent):\n    return amount - amount * percent / 100"}, {"name": "shop/cart.py", "code": "def total(prices):\n    return sum(prices)"}, {"name": "shop/billing.py", "code": "GST_RATE = 0.18\n\ndef with_gst(amount):\n    return round(amount * (1 + GST_RATE), 2)"}], "entry": "main.py", "kind": "path", "explain": "<p>Inside a package, a module can import its siblings in two ways:<\/p>\n<table class=\"tbl\"><tr><th>Style<\/th><th>Example<\/th><th>Meaning<\/th><\/tr>\n<tr><td><b>Absolute<\/b><\/td><td><code>from shop.cart import total<\/code><\/td><td>Full path from the top-level package<\/td><\/tr>\n<tr><td><b>Relative<\/b><\/td><td><code>from .billing import with_gst<\/code><\/td><td><code>.<\/code> = this package (<code>shop<\/code>)<\/td><\/tr>\n<tr><td><b>Relative<\/b><\/td><td><code>from . import discount<\/code><\/td><td>The module <code>discount<\/code> in this package<\/td><\/tr>\n<tr><td><b>Relative<\/b><\/td><td><code>from ..utils import log<\/code><\/td><td><code>..<\/code> = the parent package<\/td><\/tr><\/table>\n<div class=\"cmp\"><div><h5>Absolute<\/h5><ul><li>Clear and explicit<\/li><li>Works anywhere<\/li><li>Recommended by PEP 8 by default<\/li><\/ul><\/div><div><h5>Relative<\/h5><ul><li>Short<\/li><li>Survives renaming the package<\/li><li>Only works <b>inside<\/b> a package<\/li><\/ul><\/div><\/div>\n<div class=\"warn\"><b>Classic error:<\/b> running a module that uses relative imports <b>directly<\/b> (<code>python shop/checkout.py<\/code>) gives <code>ImportError: attempted relative import with no known parent package<\/code>. Run directly, the file is just <code>__main__<\/code> — Python doesn't know it belongs to <code>shop<\/code>. Open the <code>shop/checkout.py<\/code> tab and press <b>Run this file<\/b> to see it. The fix is <code>python -m shop.checkout<\/code> — next lesson.<\/div>", "walk": [[2, "1", "Relative: sibling module."], [2, "2", "Relative: one name from a sibling."], [2, "3", "Absolute: full path."], [0, "4", "1000 − 10% = 900, + 18% GST = 1062.0."]], "trace": null, "tip": "Absolute = full path from the top; relative = dots from the current package.", "tryit": ["Open <code>shop/checkout.py<\/code> and press <b>Run this file<\/b>. Read the error.", "Change line 3 of checkout.py to a relative import."], "expected": {"out": "1180.0\n1062.0", "err": null, "file": null, "line": null}}, {"title": "__main__.py and python -m", "files": [{"name": "shop/__main__.py", "code": "from .cart import total\n\ndef main():\n    print(\"Shop command-line tool\")\n    print(\"Demo total:\", total([10, 20, 30]))\n\nif __name__ == \"__main__\":\n    main()"}, {"name": "shop/__init__.py", "code": "# shop package"}, {"name": "shop/cart.py", "code": "def total(prices):\n    return sum(prices)"}], "entry": "shop", "kind": "module", "explain": "<p><code>python -m name<\/code> runs a module <b>by its import name<\/b> instead of by its file path.<\/p>\n<table class=\"tbl\"><tr><th>Command<\/th><th>Runs<\/th><\/tr>\n<tr><td><code>python shop/cart.py<\/code><\/td><td>A file, by path. Relative imports fail.<\/td><\/tr>\n<tr><td><code>python -m shop.cart<\/code><\/td><td>The module <code>shop.cart<\/code> — the package is set up, so relative imports work.<\/td><\/tr>\n<tr><td><code>python -m shop<\/code><\/td><td>The package's <code>__main__.py<\/code><\/td><\/tr><\/table>\n<p>So a package becomes <b>runnable<\/b> by adding a <code>__main__.py<\/code>. This lesson runs <code>python -m shop<\/code> (see the command above the output).<\/p>\n<div class=\"note\">You already use this: <code>python -m pip install requests<\/code>, <code>python -m venv .venv<\/code> and <code>python -m http.server<\/code> all run a package's <code>__main__<\/code>.<\/div>", "walk": [[0, "1", "Relative import works because we ran with <code>-m<\/code>."], [0, "7-8", "Under <code>-m<\/code>, this file's <code>__name__<\/code> is <code>\"__main__\"<\/code>."]], "trace": null, "tip": "python -m package runs package/__main__.py, with relative imports working.", "tryit": ["Change the demo prices and run again.", "Open <code>shop/__main__.py<\/code> and press <b>Run this file<\/b> — running by path breaks the relative import."], "expected": {"out": "Shop command-line tool\nDemo total: 60", "err": null, "file": null, "line": null}}]}, {"title": "Import errors & fixes", "level": "Intermediate", "summary": "Reading and fixing the common import errors.", "lessons": [{"title": "ImportError: cannot import name", "files": [{"name": "main.py", "code": "import geometry\n\nprint([n for n in dir(geometry) if not n.startswith(\"_\")])\n\nfrom geometry import area_square"}, {"name": "geometry.py", "code": "PI = 3.14159\n\ndef area_circle(r):\n    return PI * r * r\n\ndef area_rect(w, h):\n    return w * h"}], "entry": "main.py", "kind": "path", "explain": "<p>Three errors look alike but mean different things. Knowing which one you got tells you where to look:<\/p>\n<table class=\"tbl\"><tr><th>Error<\/th><th>Means<\/th><th>Typical cause<\/th><\/tr>\n<tr><td><code>ModuleNotFoundError<\/code><\/td><td>Python can't find the <b>module<\/b><\/td><td>Typo, wrong folder, not installed<\/td><\/tr>\n<tr><td><code>ImportError: cannot import name<\/code><\/td><td>Module found, but the <b>name<\/b> isn't in it<\/td><td>Typo in the name, wrong module, circular import<\/td><\/tr>\n<tr><td><code>AttributeError: module … has no attribute<\/code><\/td><td>Same, but reached with a <b>dot<\/b><\/td><td><code>geometry.area_square<\/code>; or a shadowed module (5.2)<\/td><\/tr><\/table>\n<p>Here the module is found but has no <code>area_square<\/code>. Line 3 lists what <b>does<\/b> exist — a quick way to debug.<\/p>", "walk": [[0, "3", "Debug trick: list the public names."], [0, "5", "Module found, name missing → <code>ImportError<\/code>."]], "trace": null, "tip": "ModuleNotFoundError = no such module; ImportError = no such name in the module.", "tryit": ["Add <code>def area_square(s): return s * s<\/code> to geometry.py.", "Replace line 5 with <code>geometry.area_square(2)<\/code>. Which error now?"], "expected": {"out": "['PI', 'area_circle', 'area_rect']", "err": "ImportError: cannot import name 'area_square' from 'geometry' (geometry.py)", "file": 0, "line": 5}}, {"title": "Gotcha: naming your file like a standard module", "files": [{"name": "main.py", "code": "import statistics\n\nmarks = [70, 80, 90]\nprint(statistics.mean(marks))"}, {"name": "statistics.py", "code": "# My own helper file... accidentally named like\n# Python's built-in statistics module!\n\ndef average(nums):\n    return sum(nums) / len(nums)"}], "entry": "main.py", "kind": "path", "explain": "<p>The search order from lesson 1.5 strikes: the <b>script's folder comes first<\/b>. So <code>import statistics<\/code> finds <b>your<\/b> <code>statistics.py<\/code> before Python's real one — and your file has no <code>mean<\/code>.<\/p>\n<p>This <b>shadowing<\/b> is one of the most common beginner bugs. Classic culprits:<\/p>\n<ul><li><code>random.py<\/code> → <code>random.randint<\/code> \"doesn't exist\"<\/li><li><code>math.py<\/code>, <code>json.py<\/code>, <code>csv.py<\/code>, <code>email.py<\/code>, <code>test.py<\/code><\/li><li><code>turtle.py<\/code> — while learning turtle graphics!<\/li><\/ul>\n<div class=\"note\"><b>Fix:<\/b> rename your file (<code>my_stats.py<\/code>) — and delete any <code>__pycache__<\/code> folder left beside it. Then <code>import statistics<\/code> finds the real one again.<\/div>", "walk": [[0, "1", "Finds the local <code>statistics.py<\/code> first."], [0, "4", "Your file has no <code>mean<\/code> → <code>AttributeError<\/code>."]], "trace": null, "tip": "Never name your files after standard modules (random.py, math.py, statistics.py…).", "tryit": ["Use your file correctly: <code>print(statistics.average(marks))<\/code>.", "Python 3.13+ adds a hint to this error suggesting you rename the file."], "expected": {"out": "", "err": "AttributeError: module 'statistics' has no attribute 'mean'", "file": 0, "line": 4}}, {"title": "Circular imports", "files": [{"name": "main.py", "code": "from models import Student\n\ns = Student(\"asha verma\")\nprint(s.label())"}, {"name": "models.py", "code": "from helpers import format_name\n\nclass Student:\n    def __init__(self, name):\n        self.name = name\n\n    def label(self):\n        return format_name(self.name)"}, {"name": "helpers.py", "code": "from models import Student\n\ndef format_name(name):\n    return name.title()\n\ndef make(name):\n    return Student(name)"}], "entry": "main.py", "kind": "path", "explain": "<p><code>models<\/code> imports <code>helpers<\/code>, and <code>helpers<\/code> imports <code>models<\/code>. That's a <b>circular import<\/b>.<\/p>\n<ol><li>main.py starts importing <code>models<\/code>. Python creates an <b>empty<\/b> module object for it and starts running models.py.<\/li>\n<li>Line 1 of models.py imports <code>helpers<\/code> → Python starts running helpers.py.<\/li>\n<li>Line 1 of helpers.py wants <code>Student<\/code> from <code>models<\/code>. <code>models<\/code> exists but is only <b>partially initialised<\/b> — it hasn't reached <code>class Student<\/code> yet. 💥<\/li><\/ol>\n<h4>Ways to fix it<\/h4>\n<ul><li><b>Best:<\/b> rethink the design — move shared code into a third module both can import.<\/li>\n<li>Use <code>import models<\/code> and write <code>models.Student<\/code> inside the function, so the name is looked up <b>later<\/b>, when it's ready.<\/li>\n<li>Move the import <b>inside the function<\/b> that needs it.<\/li><\/ul>", "walk": [[1, "1", "models → helpers…"], [2, "1", "…helpers → models. A loop."], [2, "7", "helpers only needs Student when <code>make()<\/code> is called."]], "trace": null, "tip": "Two modules importing each other at the top is a circular import — break the loop.", "tryit": ["In helpers.py, change line 1 to <code>import models<\/code> and the last line to <code>return models.Student(name)<\/code>. Run again."], "expected": {"out": "", "err": "ImportError: cannot import name 'Student' from partially initialized module 'models' (most likely due to a circular import) (models.py)", "file": 2, "line": 1}}]}, {"title": "Putting it together", "level": "Project", "summary": "Every import style, and a small package project.", "lessons": [{"title": "Cheat sheet: every import style", "files": [{"name": "main.py", "code": "import math                          # 1. whole module\nimport datetime as dt                # 2. module with an alias\nfrom math import sqrt                # 3. one name\nfrom math import floor, ceil         # 4. several names\nfrom statistics import mean as avg   # 5. a name with an alias\nfrom string import *                 # 6. every public name (avoid!)\n\nprint(math.pi > 3)\nprint(dt.date(2026, 8, 15).year)\nprint(sqrt(16))\nprint(floor(2.7), ceil(2.1))\nprint(avg([1, 2, 3, 4]))\nprint(ascii_uppercase[:5])"}], "entry": "main.py", "kind": "path", "explain": "<table class=\"tbl\"><tr><th>#<\/th><th>Statement<\/th><th>Names created<\/th><th>Use as<\/th><\/tr>\n<tr><td>1<\/td><td><code>import math<\/code><\/td><td><code>math<\/code><\/td><td><code>math.sqrt(16)<\/code><\/td><\/tr>\n<tr><td>2<\/td><td><code>import datetime as dt<\/code><\/td><td><code>dt<\/code><\/td><td><code>dt.date(…)<\/code><\/td><\/tr>\n<tr><td>3<\/td><td><code>from math import sqrt<\/code><\/td><td><code>sqrt<\/code><\/td><td><code>sqrt(16)<\/code><\/td><\/tr>\n<tr><td>4<\/td><td><code>from math import floor, ceil<\/code><\/td><td><code>floor<\/code>, <code>ceil<\/code><\/td><td><code>floor(2.7)<\/code><\/td><\/tr>\n<tr><td>5<\/td><td><code>from statistics import mean as avg<\/code><\/td><td><code>avg<\/code><\/td><td><code>avg([…])<\/code><\/td><\/tr>\n<tr><td>6<\/td><td><code>from string import *<\/code><\/td><td>everything public<\/td><td><code>ascii_uppercase<\/code><\/td><\/tr>\n<tr><td>7<\/td><td><code>import shop.cart<\/code><\/td><td><code>shop<\/code><\/td><td><code>shop.cart.total(…)<\/code><\/td><\/tr>\n<tr><td>8<\/td><td><code>from shop import cart<\/code><\/td><td><code>cart<\/code><\/td><td><code>cart.total(…)<\/code><\/td><\/tr>\n<tr><td>9<\/td><td><code>from .cart import total<\/code><\/td><td><code>total<\/code><\/td><td>inside a package only<\/td><\/tr><\/table>\n<h4>Vocabulary<\/h4>\n<table class=\"tbl\"><tr><th>Term<\/th><th>Meaning<\/th><\/tr>\n<tr><td>Module<\/td><td>One <code>.py<\/code> file<\/td><\/tr>\n<tr><td>Package<\/td><td>A folder of modules with <code>__init__.py<\/code><\/td><\/tr>\n<tr><td>Library<\/td><td>Informal: a collection of packages you install (e.g. <code>requests<\/code>)<\/td><\/tr>\n<tr><td><code>__name__<\/code><\/td><td><code>\"__main__\"<\/code> if run, the module name if imported<\/td><\/tr>\n<tr><td><code>sys.path<\/code><\/td><td>The folders Python searches<\/td><\/tr>\n<tr><td><code>sys.modules<\/code><\/td><td>The cache of already-imported modules<\/td><\/tr><\/table>", "walk": [[0, "1-6", "Six import styles."], [0, "13", "Came from <code>from string import *<\/code> — hard to trace, which is why <code>*<\/code> is discouraged."]], "trace": null, "tip": "import brings a module; from brings names; as renames; dots go into packages.", "tryit": ["Replace line 6 with an explicit <code>from string import ascii_uppercase<\/code>."], "expected": {"out": "True\n2026\n4.0\n2 3\n2.5\nABCDE", "err": null, "file": null, "line": null}}, {"title": "Project: report card package", "files": [{"name": "main.py", "code": "from data import MARKS\nimport reportcard as rc\n\ndef print_report(marks):\n    print(\"Name     Marks  Grade\")\n    print(\"-\" * 21)\n    for name, m in marks.items():\n        print(f\"{name:<8} {m:>5}  {rc.grade(m):>5}\")\n    print(\"-\" * 21)\n    print(\"Class average:\", rc.class_average(marks))\n    name, best = rc.topper(marks)\n    print(\"Topper:\", name, best)\n\ndef main():\n    print_report(MARKS)\n\nif __name__ == \"__main__\":\n    main()"}, {"name": "reportcard/__init__.py", "code": "\"\"\"reportcard - a tiny package for school results.\"\"\"\n\nfrom .grading import grade\nfrom .stats import class_average, topper\n\n__all__ = [\"grade\", \"class_average\", \"topper\"]"}, {"name": "reportcard/grading.py", "code": "BANDS = [(90, \"A+\"), (80, \"A\"), (70, \"B\"), (60, \"C\"), (40, \"D\")]\n\ndef grade(marks):\n    for cutoff, letter in BANDS:\n        if marks >= cutoff:\n            return letter\n    return \"F\"\n\nif __name__ == \"__main__\":\n    for m in (95, 72, 30):\n        print(m, \"->\", grade(m))"}, {"name": "reportcard/stats.py", "code": "from statistics import mean\n\ndef class_average(marks):\n    return round(mean(marks.values()), 1)\n\ndef topper(marks):\n    name = max(marks, key=marks.get)\n    return name, marks[name]"}, {"name": "data.py", "code": "MARKS = {\n    \"Asha\": 93,\n    \"Ravi\": 67,\n    \"Meena\": 81,\n    \"Kabir\": 74,\n    \"Zoya\": 38,\n}"}], "entry": "main.py", "kind": "path", "explain": "<p>Everything from this lab in one small project:<\/p>\n<pre class=\"snippet\">project/\n├── main.py              ← entry point: main() + __name__ guard\n├── data.py              ← a plain module holding data\n└── reportcard/          ← a package\n    ├── __init__.py      ← re-exports grade, class_average, topper\n    ├── grading.py       ← has its own self-test under the guard\n    └── stats.py         ← uses the standard-library statistics module<\/pre>\n<table class=\"tbl\"><tr><th>Concept<\/th><th>Where<\/th><\/tr>\n<tr><td>Own module + <code>from<\/code> import<\/td><td><code>from data import MARKS<\/code><\/td><\/tr>\n<tr><td>Package with alias<\/td><td><code>import reportcard as rc<\/code><\/td><\/tr>\n<tr><td>Re-exporting in <code>__init__.py<\/code><\/td><td><code>rc.grade<\/code> instead of <code>rc.grading.grade<\/code><\/td><\/tr>\n<tr><td>Relative imports<\/td><td><code>from .grading import grade<\/code><\/td><\/tr>\n<tr><td><code>__all__<\/code><\/td><td>The package's public names<\/td><\/tr>\n<tr><td>Standard library<\/td><td><code>from statistics import mean<\/code><\/td><\/tr>\n<tr><td><code>main()<\/code> + guard<\/td><td>main.py and grading.py<\/td><\/tr><\/table>", "walk": [[0, "1-2", "Import our data module and our package."], [1, "3-4", "The package's front door."], [0, "7-8", "One formatted row per student."], [0, "17-18", "Run the report only when main.py is the program."], [2, "9-11", "A self-test that only runs when grading.py runs directly."]], "trace": null, "tip": "Small modules, a package with a clean __init__.py, and a main() behind the guard.", "tryit": ["Add a student to data.py.", "Open <code>reportcard/grading.py<\/code> and press <b>Run this file<\/b> to run its self-test.", "Add a <code>lowest(marks)<\/code> function to stats.py, export it in <code>__init__.py<\/code>, and print it from main.py."], "expected": {"out": "Name     Marks  Grade\n---------------------\nAsha        93     A+\nRavi        67      C\nMeena       81      A\nKabir       74      B\nZoya        38      F\n---------------------\nClass average: 70.6\nTopper: Asha 93", "err": null, "file": null, "line": null}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, fi = 0, step = -1, walkSel = -1, errFile = null, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pymod-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const F = () => L().files;
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const cur = i => (edits[key(mi, li)] || {})[i] ?? F()[i].code;
+const fileEdited = i => cur(i) !== F()[i].code;
+const isEdited = () => F().some((_, i) => fileEdited(i));
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+const base = n => n.split("/").pop();
+const cmdFor = (entry, kind) => kind === "module" ? `$ python -m ${entry}` : `$ python ${entry}`;
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs dir help".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def" || w === "class"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else if (/^__\w+__$/.test(w)) out += `<span class="tk-f">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0 && tr[step][0] === fi) hlLines.add(tr[step][1]);
+  if (walkSel >= 0 && L().walk[walkSel][0] === fi) {
+    const r = L().walk[walkSel][1].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  const eL = errFile === fi ? errLine : null;
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === eL ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (eL) mk += `<div class="mark err" style="${at(eL)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+function renderTabs() {
+  const l = L();
+  $("ftabs").innerHTML = F().map((f, i) => {
+    const parts = f.name.split("/"), file = parts.pop(), dir = parts.length ? parts.join("/") + "/" : "";
+    const isEntry = l.kind === "module" ? i === 0 : f.name === l.entry;
+    return `<button role="tab" aria-selected="${i === fi}" class="ftab ${i === fi ? "on" : ""} ${i === errFile ? "err" : ""}" data-f="${i}" title="${f.name}">${isEntry ? '<span class="run">▶</span>' : ""}<span><span class="fdir">${dir}</span>${file}</span>${fileEdited(i) ? '<span class="ed" title="edited"></span>' : ""}</button>`;
+  }).join("");
+  $("ftabs").querySelectorAll(".ftab").forEach(b => b.onclick = () => openFile(+b.dataset.f));
+  const on = $("ftabs").querySelector(".ftab.on"); if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
+  $("fname").textContent = l.kind === "module" ? `python -m ${l.entry}` : l.entry;
+  const nm = F()[fi].name, isEntry = l.kind === "module" ? false : nm === l.entry;
+  $("runFileBtn").hidden = isEntry || !nm.endsWith(".py");
+  $("runFileBtn").textContent = `▷ Run ${base(nm)}`;
+  $("runFileBtn").title = `Run ${nm} directly: python ${nm}`;
+}
+function openFile(i) {
+  if (i === fi) return;
+  fi = i; ta.value = cur(i); ta.scrollTop = 0; ta.scrollLeft = 0;
+  renderTabs(); paintEditor();
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  const k = key(mi, li); (edits[k] = edits[k] || {})[fi] = ta.value;
+  errFile = errLine = null;
+  if (step >= 0) step = -1;
+  renderTabs(); renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+
+/* ---------- output console ---------- */
+function showOutput(out, err, file, line, pill, meta, pillCls, cmd) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) {
+    const where = file !== null && file !== undefined && F()[file]
+      ? `Raised in <button class="errjump" data-f="${file}">${esc(F()[file].name)}</button>${line ? ", line " + line : ""} (highlighted in red)` : "";
+    h += `<span class="errl">${esc(err)}<small>${where}</small></span>`;
+  }
+  o.innerHTML = h;
+  const j = o.querySelector(".errjump");
+  if (j) j.onclick = () => { openFile(+j.dataset.f); if (errLine) scrollToLine(errLine); };
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  $("ocmd").textContent = cmd || cmdFor(L().entry, L().kind);
+  errFile = err && file !== undefined ? file : null; errLine = err ? (line || null) : null;
+  renderTabs(); paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.file, x.line, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const c = step >= 0 ? tr[step] : null;
+  const multi = F().length > 1;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${c ? `<span class="ln">${multi ? esc(F()[c[0]].name) + " · " : ""}line ${c[1]}</span>${c[2]}` : "Watch Python move through the code one line at a time — and jump between files on each import. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[3] !== null).map(t => t[3]);
+  const isNew = tr[step][3] !== null;
+  errFile = errLine = null;
+  if (tr[step][0] !== fi) { fi = tr[step][0]; ta.value = cur(fi); }
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderTabs(); renderStepper(); paintEditor(); scrollToLine(tr[step][1]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker; each run writes the lesson's files into a fresh folder) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = "import sys, os, json, runpy, traceback, importlib, re\n_n = [0]\ndef __run(files_json, entry, kind, base=\"/lab\"):\n    _n[0] += 1\n    files = json.loads(files_json)\n    root = f\"{base}/r{_n[0]}\"\n    for p, src in files.items():\n        full = os.path.join(root, p)\n        os.makedirs(os.path.dirname(full), exist_ok=True)\n        with open(full, \"w\") as f:\n            f.write(src)\n    tops = {p.split(\"/\")[0][:-3] if p.endswith(\".py\") and \"/\" not in p else p.split(\"/\")[0] for p in files}\n    for name in list(sys.modules):\n        if name.split(\".\")[0] in tops:\n            del sys.modules[name]\n    old_path, old_cwd, old_argv = sys.path[:], os.getcwd(), sys.argv[:]\n    sys.dont_write_bytecode = True\n    os.chdir(root)\n    importlib.invalidate_caches()\n    res = \"\"\n    try:\n        if kind == \"module\":\n            sys.path.insert(0, root)\n            sys.argv = [\"-m\"]\n            runpy.run_module(entry, run_name=\"__main__\", alter_sys=True)\n        else:\n            full = os.path.join(root, entry)\n            sys.path.insert(0, os.path.dirname(full))\n            sys.argv = [entry]\n            runpy.run_path(full, run_name=\"__main__\")\n    except SystemExit:\n        pass\n    except BaseException as e:\n        file = line = None\n        for fr in traceback.extract_tb(e.__traceback__):\n            if fr.filename.startswith(root + \"/\"):\n                file, line = fr.filename[len(root) + 1:], fr.lineno\n        if isinstance(e, SyntaxError):\n            msg = e.msg\n            if e.filename and e.filename.startswith(root + \"/\"):\n                file, line = e.filename[len(root) + 1:], e.lineno\n        else:\n            msg = str(e)\n        msg = msg.replace(root + \"/\", \"\")\n        msg = re.sub(r\" \\(consider renaming .*$\", \"\", msg)\n        res = json.dumps({\"err\": type(e).__name__ + \": \" + msg, \"file\": file, \"line\": line})\n    finally:\n        sys.path[:] = old_path\n        sys.argv[:] = old_argv\n        os.chdir(old_cwd)\n        for name, m in list(sys.modules.items()):\n            f = getattr(m, \"__file__\", None) or \"\"\n            if f.startswith(root + \"/\") or name.split(\".\")[0] in tops:\n                del sys.modules[name]\n    return res\n";
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.files, e.data.entry, e.data.kind); } catch (x) { r = JSON.stringify({err:String(x), file:null, line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); const cmd = pending.cmd; pending = null; setBusy(false);
+      let err = null, file = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; if (j.file) { const k = F().findIndex(f => f.name === j.file); file = k >= 0 ? k : null; } }
+      showOutput(d.out, err, file, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live", cmd);
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.file, x.line, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b; $("runFileBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run(direct) {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  const l = L(), files = {};
+  F().forEach((f, i) => files[f.name] = cur(i));
+  const entry = direct ? F()[fi].name : l.entry, kind = direct ? "path" : l.kind;
+  pending = { id: ++runId, files: JSON.stringify(files), entry, kind, cmd: cmdFor(entry, kind) };
+  $("ocmd").textContent = pending.cmd;
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? 8000 : 60000);
+}
+$("runBtn").onclick = () => run(false);
+$("runFileBtn").onclick = () => run(true);
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = cur(fi); step = -1; errFile = errLine = null; renderTabs(); renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pymod-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${esc(md.title)}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${esc(x.title)}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errFile = errLine = null;
+  fi = Math.max(0, l.files.findIndex(f => f.name === l.entry));
+  ta.value = cur(fi); ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  const multi = l.files.length > 1;
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${multi ? esc(base(l.files[w[0]].name)) + "<br>" : ""}${w[1].includes("-") ? "lines " : "line "}${w[1]}</span><span>${w[2]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    if (walkSel >= 0 && l.walk[i][0] !== fi) { fi = l.walk[i][0]; ta.value = cur(fi); renderTabs(); }
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][1].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderTabs(); renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
