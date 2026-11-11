@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python pathlib & shutil Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.dir{display:grid;gap:8px;margin:.6em 0 1em}
+.dir div{display:grid;grid-template-columns:150px 70px 1fr 70px;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.dir b{font-family:var(--f-mono);color:var(--accent)}
+.dir span{font-weight:600;text-align:center;background:var(--accent-soft);border-radius:6px;padding:3px 6px}
+.dir i{font:normal 13px var(--f-mono);text-align:center;color:var(--muted)}
+@media (max-width:600px){.dir div{grid-template-columns:1fr}}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+/* file tabs (multi-file lessons) */
+.ftabs{display:flex;gap:2px;padding:6px 10px 0;background:#0d121d;overflow-x:auto;scrollbar-width:thin;border-bottom:1px solid #222b3c}
+.ftab{all:unset;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:6px 12px 7px;border-radius:7px 7px 0 0;font:500 12.5px var(--f-mono);color:var(--code-dim);white-space:nowrap;border:1px solid transparent;border-bottom:none}
+.ftab:hover{color:var(--code-ink)}
+.ftab:focus-visible{outline:2px solid #7aa5ff}
+.ftab.on{background:var(--code-bg);color:var(--code-ink);border-color:#2c374c}
+.ftab .fdir{color:var(--code-dim);font-weight:400}
+.ftab.on .fdir{color:#8b97ad}
+.ftab .run{font-size:9px;color:var(--yellow)}
+.ftab .ed{width:6px;height:6px;border-radius:50%;background:var(--yellow)}
+.ftab.err{color:#ff8a8a}
+.file .lbl{color:var(--code-dim);font-size:12px}
+.cmd{font:500 12px var(--f-mono);color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+.walk li button{grid-template-columns:124px 1fr}
+.walk .ln{word-break:break-all}
+.ftree{margin:0;font:13px/1.65 var(--f-mono);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 14px;overflow-x:auto;white-space:pre}
+.ftree .g{color:var(--muted)}
+.ftree .d{color:var(--accent);font-weight:600}
+.ftree .new{background:#d9f5e3;color:#14663a;border-radius:3px;padding:0 3px}
+.ftree .gone{color:var(--err);text-decoration:line-through;opacity:.75}
+.ftree .tag{font:600 10px var(--f-body);text-transform:uppercase;letter-spacing:.05em;margin-left:8px;padding:1px 6px;border-radius:999px}
+.ftree .tag.n{background:var(--ok);color:#fff}.ftree .tag.x{background:var(--err);color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ftree .new{background:#16391f;color:#7fe0a4}}
+.errjump{all:unset;cursor:pointer;color:var(--accent);text-decoration:underline;font-family:var(--f-mono)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Python <b>pathlib &amp; shutil</b> Lab</h1><span>Paths · reading &amp; writing · folders · copy, move, delete, zip · edit, run and watch the folder change</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span class="lbl">Runs:</span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore every file in this lesson">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn" id="runFileBtn" hidden title="Run the open tab as the main program">▷ Run this file</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="ftabs" id="ftabs" role="tablist" aria-label="Project files"></div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Every tab is a real file — Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="cmd" id="ocmd"></span><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card" id="treeCard"><h3>Folder after running</h3><p class="hint" id="treeHint"></p><pre class="ftree" id="tree"></pre></div>
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "pathlib basics", "level": "Beginner", "summary": "Paths as objects, not strings.", "lessons": [{"title": "Your first Path", "files": [{"name": "main.py", "code": "from pathlib import Path\n\np = Path(\"data\") / \"reports\" / \"jan.csv\"\n\nprint(p)\nprint(type(p).__name__)\nprint(p.parts)\n\nfolder = Path(\"data\", \"reports\")\nprint(folder / \"feb.csv\")\nprint(str(p))"}], "entry": "main.py", "kind": "path", "explain": "<p>A <b>path<\/b> is the address of a file or folder, like <code>data/reports/jan.csv<\/code>. The <code>pathlib<\/code> module (Python 3.4+) turns that address into a <b>Path object<\/b> with handy properties and methods.<\/p>\n<div class=\"analogy\"><div><span>Path(\"data\")<\/span>An address card<small>describes a location — doesn't open anything<\/small><\/div><div><span>/ \"reports\"<\/span>Add a step<small>the / operator joins path parts<\/small><\/div><div><span>p.name, p.exists()<\/span>Ask questions<small>about the path or the real file<\/small><\/div><\/div>\n<p>The <code>/<\/code> operator <b>joins<\/b> path parts — no need to fiddle with slashes yourself. <code>Path(\"data\", \"reports\")<\/code> does the same thing.<\/p>\n<table class=\"tbl\"><tr><th>System<\/th><th>Separator<\/th><th><code>type(p)<\/code><\/th><\/tr>\n<tr><td>Linux / macOS<\/td><td><code>/<\/code><\/td><td><code>PosixPath<\/code><\/td><\/tr>\n<tr><td>Windows<\/td><td><code>\\<\/code><\/td><td><code>WindowsPath<\/code><\/td><\/tr><\/table>\n<p>You write the same code everywhere — pathlib picks the right separator for the computer it's running on.<\/p>\n<div class=\"note\">Creating a <code>Path<\/code> never touches the disk. <code>data/reports/jan.csv<\/code> doesn't exist here, and that's fine — it's just an address until you read, write or check it.<\/div>", "walk": [[0, "1", "Import the <code>Path<\/code> class."], [0, "3", "Build a path from three parts with <code>/<\/code>."], [0, "7", "The pieces, as a tuple."], [0, "10", "Join a Path and a string → a new Path."], [0, "11", "Convert to a plain string when you need one."]], "trace": null, "tip": "Path objects join with / and work the same on every operating system.", "tryit": ["Build <code>Path(\"music\") / \"2026\" / \"song.mp3\"<\/code> and print its parts."], "expected": {"out": "data/reports/jan.csv\nPosixPath\n('data', 'reports', 'jan.csv')\ndata/reports/feb.csv\ndata/reports/jan.csv", "err": null, "file": null, "line": null, "tree": ["main.py"]}}, {"title": "Taking a path apart", "files": [{"name": "main.py", "code": "from pathlib import Path\n\np = Path(\"photos/2026/goa/beach.final.jpg\")\n\nprint(\"name    :\", p.name)\nprint(\"stem    :\", p.stem)\nprint(\"suffix  :\", p.suffix)\nprint(\"suffixes:\", p.suffixes)\nprint(\"parent  :\", p.parent)\nprint(\"parents :\", [str(x) for x in p.parents])\n\nprint(p.with_suffix(\".png\"))\nprint(p.with_name(\"sunset.jpg\"))\nprint(p.with_stem(\"beach\"))"}], "entry": "main.py", "kind": "path", "explain": "<pre class=\"snippet\">photos/2026/goa/beach.final.jpg\n└──── parent ───┘└──── name ────┘\n                 └─ stem ──┘└suffix┘<\/pre>\n<table class=\"tbl\"><tr><th>Property / method<\/th><th>Gives<\/th><\/tr>\n<tr><td><code>.name<\/code><\/td><td>The last part: file name with extension<\/td><\/tr>\n<tr><td><code>.stem<\/code><\/td><td>The name <b>without<\/b> the last extension<\/td><\/tr>\n<tr><td><code>.suffix<\/code><\/td><td>The last extension, with the dot<\/td><\/tr>\n<tr><td><code>.suffixes<\/code><\/td><td>All extensions (useful for <code>.tar.gz<\/code>)<\/td><\/tr>\n<tr><td><code>.parent<\/code><\/td><td>The folder containing it<\/td><\/tr>\n<tr><td><code>.parents<\/code><\/td><td>Every ancestor folder, nearest first<\/td><\/tr>\n<tr><td><code>.with_suffix(\".png\")<\/code><\/td><td>A <b>new<\/b> path with a different extension<\/td><\/tr>\n<tr><td><code>.with_name(\"x.jpg\")<\/code><\/td><td>A <b>new<\/b> path with a different file name<\/td><\/tr>\n<tr><td><code>.with_stem(\"x\")<\/code><\/td><td>A <b>new<\/b> path with a different stem (Python 3.9+)<\/td><\/tr><\/table>\n<div class=\"warn\">The <code>with_…<\/code> methods return a <b>new Path<\/b>. They don't rename any file on disk — for that, see <code>rename()<\/code> in lesson 3.4.<\/div>", "walk": [[0, "5-8", "Pieces of the file name."], [0, "9-10", "The folder, and every folder above it."], [0, "12-14", "Make new paths by swapping one piece."]], "trace": null, "tip": "name = stem + suffix; parent = the folder it's in.", "tryit": ["Try <code>Path(\"backup.tar.gz\")<\/code>: what are <code>stem<\/code>, <code>suffix<\/code> and <code>suffixes<\/code>?"], "expected": {"out": "name    : beach.final.jpg\nstem    : beach.final\nsuffix  : .jpg\nsuffixes: ['.final', '.jpg']\nparent  : photos/2026/goa\nparents : ['photos/2026/goa', 'photos/2026', 'photos', '.']\nphotos/2026/goa/beach.final.png\nphotos/2026/goa/sunset.jpg\nphotos/2026/goa/beach.jpg", "err": null, "file": null, "line": null, "tree": ["main.py"]}}, {"title": "Relative, absolute and 'where am I?'", "files": [{"name": "main.py", "code": "from pathlib import Path\n\nrel = Path(\"notes.txt\")\nhere = Path.cwd()\nfull = rel.resolve()\n\nprint(rel.is_absolute())\nprint(here.is_absolute())\nprint(full == here / \"notes.txt\")\nprint(full.relative_to(here))\n\nscript_dir = Path(__file__).parent\nprint(Path(__file__).name)\nprint(script_dir == here)\nprint((script_dir / \"notes.txt\").read_text())"}, {"name": "notes.txt", "code": "Buy milk and finish the Python lab."}], "entry": "main.py", "kind": "path", "explain": "<div class=\"def2\"><div><b>Relative path<\/b><span><code>notes.txt<\/code> — measured from the <u>current working directory<\/u>.<\/span><\/div><div><b>Absolute path<\/b><span><code>/home/asha/lab/notes.txt<\/code> or <code>C:\\Users\\Asha\\notes.txt<\/code> — the <u>full address<\/u> from the top.<\/span><\/div><\/div>\n<table class=\"tbl\"><tr><th>Code<\/th><th>Gives<\/th><\/tr>\n<tr><td><code>Path.cwd()<\/code><\/td><td>The <b>current working directory<\/b> — where relative paths start<\/td><\/tr>\n<tr><td><code>Path.home()<\/code><\/td><td>Your home folder<\/td><\/tr>\n<tr><td><code>p.resolve()<\/code><\/td><td>The absolute version of <code>p<\/code><\/td><\/tr>\n<tr><td><code>p.relative_to(base)<\/code><\/td><td><code>p<\/code> written relative to <code>base<\/code><\/td><\/tr>\n<tr><td><code>Path(__file__).parent<\/code><\/td><td>The folder <b>this script<\/b> lives in<\/td><\/tr><\/table>\n<div class=\"warn\"><b>Classic bug:<\/b> the working directory is wherever you <b>started<\/b> Python, not where the script lives. Run <code>python lab/main.py<\/code> from your home folder and <code>Path(\"notes.txt\")<\/code> looks in your home folder! To find files that sit next to your script, use <code>Path(__file__).parent / \"notes.txt\"<\/code>.<\/div>\n<p>(We don't print the absolute paths here because they differ on every computer.)<\/p>", "walk": [[0, "4", "Where relative paths are measured from."], [0, "5", "Turn the relative path into a full one."], [0, "10", "…and back again."], [0, "12", "The script's own folder — the reliable way to find its files."]], "trace": null, "tip": "Relative paths start at the working directory; use Path(__file__).parent to find files next to your script.", "tryit": ["Print <code>Path.cwd()<\/code> and <code>Path.home()<\/code> to see the real absolute paths."], "expected": {"out": "False\nTrue\nTrue\nnotes.txt\nmain.py\nTrue\nBuy milk and finish the Python lab.", "err": null, "file": null, "line": null, "tree": ["main.py", "notes.txt"]}}, {"title": "Does it exist? File or folder?", "files": [{"name": "main.py", "code": "from pathlib import Path\n\nfor name in [\"notes.txt\", \"data\", \"data/marks.csv\", \"missing.txt\"]:\n    p = Path(name)\n    print(f\"{name:<15} exists={p.exists()!s:<5} file={p.is_file()!s:<5} dir={p.is_dir()}\")\n\nsize = Path(\"data/marks.csv\").stat().st_size\nprint(\"marks.csv is\", size, \"bytes\")\n\nPath(\"missing.txt\").read_text()"}, {"name": "notes.txt", "code": "Remember to back up."}, {"name": "data/marks.csv", "code": "name,marks\nAsha,91\nRavi,78"}], "entry": "main.py", "kind": "path", "explain": "<p>These methods <b>do<\/b> look at the disk:<\/p>\n<table class=\"tbl\"><tr><th>Method<\/th><th>True when…<\/th><\/tr>\n<tr><td><code>p.exists()<\/code><\/td><td>Something (file <b>or<\/b> folder) is there<\/td><\/tr>\n<tr><td><code>p.is_file()<\/code><\/td><td>It exists <b>and<\/b> is a file<\/td><\/tr>\n<tr><td><code>p.is_dir()<\/code><\/td><td>It exists <b>and<\/b> is a folder<\/td><\/tr>\n<tr><td><code>p.stat()<\/code><\/td><td>Returns info: <code>st_size<\/code> (bytes), <code>st_mtime<\/code> (last modified)…<\/td><\/tr><\/table>\n<p>The editor tabs show this lesson's project: <code>notes.txt<\/code> and a <code>data<\/code> folder with <code>marks.csv<\/code>.<\/p>\n<div class=\"warn\">Reading a file that doesn't exist raises <code>FileNotFoundError<\/code> — the last line. Check with <code>exists()<\/code> first, or catch the error with <code>try/except<\/code>.<\/div>", "walk": [[0, "3-5", "Check four paths."], [0, "7", "File size in bytes."], [0, "10", "No such file → <code>FileNotFoundError<\/code>."]], "trace": null, "tip": "exists() = anything there; is_file() / is_dir() = and it's that kind.", "tryit": ["Wrap the last line in <code>if Path(\"missing.txt\").exists():<\/code>.", "Add <code>\"data/\"<\/code> and <code>\".\"<\/code> to the list."], "expected": {"out": "notes.txt       exists=True  file=True  dir=False\ndata            exists=True  file=False dir=True\ndata/marks.csv  exists=True  file=True  dir=False\nmissing.txt     exists=False file=False dir=False\nmarks.csv is 26 bytes", "err": "FileNotFoundError: No such file or directory: 'missing.txt'", "file": 0, "line": 10, "tree": ["main.py", "notes.txt", "data/", "data/marks.csv"]}}]}, {"title": "Reading & writing", "level": "Beginner", "summary": "Text and bytes in and out of files.", "lessons": [{"title": "read_text and write_text", "files": [{"name": "main.py", "code": "from pathlib import Path\n\nnotes = Path(\"notes.txt\")\ntext = notes.read_text(encoding=\"utf-8\")\nprint(text)\nprint(\"lines:\", len(text.splitlines()))\n\nout = Path(\"summary.txt\")\nout.write_text(f\"notes.txt has {len(text.splitlines())} lines\", encoding=\"utf-8\")\nprint(out.read_text(encoding=\"utf-8\"))"}, {"name": "notes.txt", "code": "Python is fun\nPathlib makes files easy\nshutil copies whole folders"}], "entry": "main.py", "kind": "path", "explain": "<p>For small files, two methods do everything — no <code>open()<\/code> or <code>close()<\/code> needed:<\/p>\n<table class=\"tbl\"><tr><th>Method<\/th><th>Does<\/th><\/tr>\n<tr><td><code>p.read_text()<\/code><\/td><td>Opens, reads the <b>whole file<\/b> as one string, closes<\/td><\/tr>\n<tr><td><code>p.write_text(s)<\/code><\/td><td>Opens, writes the string (<b>replacing<\/b> any old content), closes. Creates the file if needed.<\/td><\/tr><\/table>\n<p>Look at <b>Folder after running<\/b>: <code>summary.txt<\/code> is new.<\/p>\n<div class=\"note\">Always pass <code>encoding=\"utf-8\"<\/code>. Without it, Python uses the computer's default, which on Windows may not handle Hindi, emoji and other characters — see lesson 5.3.<\/div>", "walk": [[0, "4", "The whole file → one string."], [0, "6", "Split into a list of lines to count them."], [0, "9", "Create summary.txt with one line of text."]], "trace": null, "tip": "read_text() and write_text() handle opening and closing for you.", "tryit": ["Write the text in UPPERCASE to <code>shout.txt<\/code>.", "Add a line to notes.txt (its tab) and run again."], "expected": {"out": "Python is fun\nPathlib makes files easy\nshutil copies whole folders\nlines: 3\nnotes.txt has 3 lines", "err": null, "file": null, "line": null, "tree": ["main.py", "notes.txt", "summary.txt"]}}, {"title": "Line by line, and appending", "files": [{"name": "main.py", "code": "from pathlib import Path\n\npath = Path(\"marks.csv\")\n\nwith path.open(encoding=\"utf-8\") as f:\n    header = f.readline().strip()\n    for line in f:\n        name, marks = line.strip().split(\",\")\n        print(f\"{name:<6} {marks}\")\n\nwith path.open(\"a\", encoding=\"utf-8\") as f:\n    f.write(\"\\nKabir,74\")\n\nlines = path.read_text(encoding=\"utf-8\").splitlines()\nprint(\"last row:\", lines[-1])\nprint(\"rows now:\", len(lines) - 1)"}, {"name": "marks.csv", "code": "name,marks\nAsha,91\nRavi,78\nMeena,85"}], "entry": "main.py", "kind": "path", "explain": "<p>For big files, or when you need a mode other than \"replace\", use <code>p.open()<\/code> inside a <code>with<\/code> block. It works exactly like the built-in <code>open()<\/code>, and the file is closed automatically at the end of the block.<\/p>\n<table class=\"tbl\"><tr><th>Mode<\/th><th>Meaning<\/th><th>If the file exists<\/th><th>If it doesn't<\/th><\/tr>\n<tr><td><code>\"r\"<\/code> (default)<\/td><td>Read<\/td><td>Reads it<\/td><td><code>FileNotFoundError<\/code><\/td><\/tr>\n<tr><td><code>\"w\"<\/code><\/td><td>Write<\/td><td><b>Erases<\/b> it first<\/td><td>Creates it<\/td><\/tr>\n<tr><td><code>\"a\"<\/code><\/td><td>Append<\/td><td>Adds to the end<\/td><td>Creates it<\/td><\/tr>\n<tr><td><code>\"x\"<\/code><\/td><td>Exclusive create<\/td><td><code>FileExistsError<\/code><\/td><td>Creates it<\/td><\/tr><\/table>\n<p>Looping over <code>f<\/code> gives one line at a time, so even a huge file never has to fit in memory.<\/p>\n<div class=\"note\">For real CSV files, the <code>csv<\/code> module handles commas inside quotes and similar edge cases. Splitting by hand is fine for simple data like this.<\/div>", "walk": [[0, "5", "Open for reading; closes automatically."], [0, "6", "Read (and skip) the header row."], [0, "7-9", "One line at a time."], [0, "11", "Append mode: add to the end, keep what's there."]], "trace": null, "tip": "Use p.open() with \"r\", \"w\", \"a\" or \"x\" — inside a with block.", "tryit": ["Change <code>\"a\"<\/code> to <code>\"w\"<\/code>. What's left in marks.csv?", "Change it to <code>\"x\"<\/code> and read the error."], "expected": {"out": "Asha   91\nRavi   78\nMeena  85\nlast row: Kabir,74\nrows now: 4", "err": null, "file": null, "line": null, "tree": ["main.py", "marks.csv"]}}, {"title": "Gotcha: overwriting and missing folders", "files": [{"name": "main.py", "code": "from pathlib import Path\n\nlog = Path(\"log.txt\")\nlog.write_text(\"first run\")\nlog.write_text(\"second run\")\nprint(log.read_text())\n\nreport = Path(\"reports/2026/jan.txt\")\ntry:\n    report.write_text(\"January report\")\nexcept FileNotFoundError:\n    print(\"No folder yet:\", report.parent)\n\nreport.parent.mkdir(parents=True, exist_ok=True)\nreport.write_text(\"January report\")\nprint(report.read_text())"}], "entry": "main.py", "kind": "path", "explain": "<p>Two surprises catch almost everyone:<\/p>\n<ol><li><b><code>write_text<\/code> replaces the whole file.<\/b> There's no warning — \"first run\" is simply gone. Use <code>open(\"a\")<\/code> to add instead.<\/li>\n<li><b>Writing a file does not create its folders.<\/b> <code>reports/2026/<\/code> doesn't exist yet, so the first write fails with <code>FileNotFoundError<\/code> — even though you're <i>creating<\/i> a file.<\/li><\/ol>\n<p>The fix is one line you'll write again and again:<\/p>\n<pre class=\"snippet\">path.parent.mkdir(parents=True, exist_ok=True)<\/pre>\n<p>\"Make the file's folder, including any missing parents, and don't complain if it already exists.\"<\/p>", "walk": [[0, "4-5", "The second write wipes the first."], [0, "9-12", "The folders don't exist → error caught."], [0, "14", "Create reports/ and reports/2026/."], [0, "15", "Now the write works."]], "trace": [[0, 3, "Just an address so far.", null], [0, 4, "log.txt is created with \"first run\".", null], [0, 5, "write_text replaces the whole file — \"first run\" is gone.", null], [0, 6, "", "second run"], [0, 8, "", null], [0, 10, "reports/2026/ doesn't exist, so this raises FileNotFoundError…", null], [0, 12, "…which we catch.", "No folder yet: reports/2026"], [0, 14, "Create both folders.", null], [0, 15, "Now the file can be written.", null], [0, 16, "", "January report"]], "tip": "write_text overwrites, and never creates folders — mkdir(parents=True, exist_ok=True) first.", "tryit": ["Remove <code>exist_ok=True<\/code> and run twice in a row… (here each run starts fresh — what would happen on your computer?)"], "expected": {"out": "second run\nNo folder yet: reports/2026\nJanuary report", "err": null, "file": null, "line": null, "tree": ["log.txt", "main.py", "reports/", "reports/2026/", "reports/2026/jan.txt"]}}, {"title": "Bytes and file information", "files": [{"name": "main.py", "code": "from pathlib import Path\n\nlogo = Path(\"logo.bin\")\nlogo.write_bytes(bytes([137, 80, 78, 71]))\ndata = logo.read_bytes()\nprint(data)\nprint(list(data))\n\ninfo = Path(\"notes.txt\").stat()\nprint(\"size:\", info.st_size, \"bytes\")\nprint(\"logo:\", logo.stat().st_size, \"bytes\")"}, {"name": "notes.txt", "code": "Hello, files!"}], "entry": "main.py", "kind": "path", "explain": "<p>Not every file is text. Images, PDFs, zip files and audio are <b>binary<\/b>: raw bytes.<\/p>\n<div class=\"cmp\"><div><h5>Text<\/h5><ul><li><code>read_text()<\/code> → <code>str<\/code><\/li><li><code>write_text(str)<\/code><\/li><li><code>open(\"r\")<\/code>, <code>open(\"w\")<\/code><\/li><li>Needs an encoding<\/li><\/ul><\/div><div><h5>Binary<\/h5><ul><li><code>read_bytes()<\/code> → <code>bytes<\/code><\/li><li><code>write_bytes(bytes)<\/code><\/li><li><code>open(\"rb\")<\/code>, <code>open(\"wb\")<\/code><\/li><li>No encoding — raw numbers 0–255<\/li><\/ul><\/div><\/div>\n<p>The four bytes written here are the start of every PNG image: 137 then the letters <code>P N G<\/code>.<\/p>\n<p><code>stat()<\/code> returns information about a file. <code>st_size<\/code> is the size in bytes; <code>st_mtime<\/code> is when it was last changed (seconds since 1970).<\/p>", "walk": [[0, "4", "Write four raw bytes."], [0, "6", "Python shows bytes as <code>b'…'<\/code>."], [0, "7", "Each byte is a number 0–255."], [0, "9", "File information: size in bytes."]], "trace": null, "tip": "Text → read_text/write_text; anything else → read_bytes/write_bytes.", "tryit": ["Copy a file byte-for-byte: <code>Path(\"copy.bin\").write_bytes(logo.read_bytes())<\/code>. (shutil does this better — Module 4.)"], "expected": {"out": "b'\\x89PNG'\n[137, 80, 78, 71]\nsize: 13 bytes\nlogo: 4 bytes", "err": null, "file": null, "line": null, "tree": ["logo.bin", "main.py", "notes.txt"]}}]}, {"title": "Folders with pathlib", "level": "Beginner → Intermediate", "summary": "Create, list, search, rename, delete.", "lessons": [{"title": "Creating folders: mkdir", "files": [{"name": "main.py", "code": "from pathlib import Path\n\nPath(\"projects\").mkdir()\nprint(\"created projects/\")\n\ntry:\n    Path(\"projects\").mkdir()\nexcept FileExistsError:\n    print(\"already exists!\")\n\nPath(\"projects\").mkdir(exist_ok=True)\nprint(\"exist_ok=True: no error\")\n\ntry:\n    Path(\"a/b/c\").mkdir()\nexcept FileNotFoundError:\n    print(\"parent a/b is missing\")\n\nPath(\"a/b/c\").mkdir(parents=True)\nprint(Path(\"a/b/c\").is_dir())"}], "entry": "main.py", "kind": "path", "explain": "<table class=\"tbl\"><tr><th>Call<\/th><th>Folder exists<\/th><th>Parent missing<\/th><\/tr>\n<tr><td><code>mkdir()<\/code><\/td><td><code>FileExistsError<\/code><\/td><td><code>FileNotFoundError<\/code><\/td><\/tr>\n<tr><td><code>mkdir(exist_ok=True)<\/code><\/td><td>OK, does nothing<\/td><td><code>FileNotFoundError<\/code><\/td><\/tr>\n<tr><td><code>mkdir(parents=True)<\/code><\/td><td><code>FileExistsError<\/code><\/td><td>Creates the parents too<\/td><\/tr>\n<tr><td><code>mkdir(parents=True, exist_ok=True)<\/code><\/td><td>OK<\/td><td>Creates the parents<\/td><\/tr><\/table>\n<p>The last row is the \"just make sure it exists\" version — the one you'll use most.<\/p>\n<p>See <b>Folder after running<\/b>: <code>projects/<\/code> and the nested <code>a/b/c/<\/code>.<\/p>", "walk": [[0, "3", "Create one folder."], [0, "6-9", "Again → <code>FileExistsError<\/code>."], [0, "11", "Tolerate an existing folder."], [0, "19", "Create a/, a/b/ and a/b/c/ in one go."]], "trace": null, "tip": "mkdir(parents=True, exist_ok=True) = make sure this folder exists.", "tryit": ["Create <code>Path(\"school\") / \"class10\" / \"science\"<\/code> in one call."], "expected": {"out": "created projects/\nalready exists!\nexist_ok=True: no error\nparent a/b is missing\nTrue", "err": null, "file": null, "line": null, "tree": ["main.py", "a/", "a/b/", "a/b/c/", "projects/"]}}, {"title": "Listing a folder: iterdir", "files": [{"name": "main.py", "code": "from pathlib import Path\n\nfolder = Path(\"downloads\")\n\nfor item in sorted(folder.iterdir()):\n    kind = \"DIR \" if item.is_dir() else \"FILE\"\n    print(kind, item.name)\n\nfiles = [p.name for p in folder.iterdir() if p.is_file()]\nprint(sorted(files))\nprint(\"total files:\", len(files))"}, {"name": "downloads/report.pdf", "code": "(pretend this is a PDF)"}, {"name": "downloads/photo.jpg", "code": "(pretend this is a photo)"}, {"name": "downloads/song.mp3", "code": "(pretend this is music)"}, {"name": "downloads/notes.txt", "code": "shopping list"}, {"name": "downloads/old/readme.txt", "code": "an old folder"}], "entry": "main.py", "kind": "path", "explain": "<p><code>folder.iterdir()<\/code> gives a Path for <b>every item directly inside<\/b> the folder — files and sub-folders, one level only.<\/p>\n<div class=\"warn\">The order from <code>iterdir()<\/code> is <b>not<\/b> guaranteed — it depends on the operating system. Wrap it in <code>sorted()<\/code> when order matters.<\/div>\n<p>Each item is a full Path (<code>downloads/song.mp3<\/code>), so you can call <code>.is_file()<\/code>, <code>.suffix<\/code>, <code>.stat()<\/code> and so on directly on it.<\/p>\n<div class=\"note\">The old way was <code>os.listdir(\"downloads\")<\/code>, which returns plain name strings. <code>iterdir()<\/code> returns Paths, which are more useful.<\/div>", "walk": [[0, "5", "Every item inside, in name order."], [0, "6", "Folder or file?"], [0, "9", "A list comprehension keeping only files."]], "trace": null, "tip": "iterdir() lists one level; wrap it in sorted() for a stable order.", "tryit": ["Print only the <code>.txt<\/code> files using <code>p.suffix == \".txt\"<\/code>.", "Print each file's size with <code>p.stat().st_size<\/code>."], "expected": {"out": "FILE notes.txt\nDIR  old\nFILE photo.jpg\nFILE report.pdf\nFILE song.mp3\n['notes.txt', 'photo.jpg', 'report.pdf', 'song.mp3']\ntotal files: 4", "err": null, "file": null, "line": null, "tree": ["main.py", "downloads/", "downloads/notes.txt", "downloads/photo.jpg", "downloads/report.pdf", "downloads/song.mp3", "downloads/old/", "downloads/old/readme.txt"]}}, {"title": "Finding files: glob and rglob", "files": [{"name": "main.py", "code": "from pathlib import Path\n\ndata = Path(\"data\")\n\nprint([p.name for p in sorted(data.glob(\"*.txt\"))])\nprint([str(p) for p in sorted(data.glob(\"*/*.csv\"))])\nprint([str(p) for p in sorted(data.rglob(\"*.csv\"))])\nprint([str(p) for p in sorted(data.glob(\"**/jan.*\"))])\nprint(len(list(data.rglob(\"*\"))), \"items in total\")"}, {"name": "data/readme.txt", "code": "sales data"}, {"name": "data/2025/jan.csv", "code": "a,b"}, {"name": "data/2025/feb.csv", "code": "a,b"}, {"name": "data/2026/jan.csv", "code": "a,b"}, {"name": "data/2026/notes.txt", "code": "draft"}], "entry": "main.py", "kind": "path", "explain": "<p><b>glob patterns<\/b> find files by name, like a search box:<\/p>\n<table class=\"tbl\"><tr><th>Pattern<\/th><th>Matches<\/th><\/tr>\n<tr><td><code>*<\/code><\/td><td>Any characters in one name (<code>*.txt<\/code>)<\/td><\/tr>\n<tr><td><code>?<\/code><\/td><td>Exactly one character (<code>report?.pdf<\/code>)<\/td><\/tr>\n<tr><td><code>[0-9]<\/code><\/td><td>One character from a set<\/td><\/tr>\n<tr><td><code>**<\/code><\/td><td>Any number of folders, including none<\/td><\/tr><\/table>\n<div class=\"def2\"><div><b>glob(\"*.csv\")<\/b><span>Searches <u>only this folder<\/u>.<\/span><\/div><div><b>rglob(\"*.csv\")<\/b><span>Searches this folder <u>and every sub-folder<\/u> — same as <code>glob(\"**/*.csv\")<\/code>.<\/span><\/div><\/div>\n<p>So <code>data.glob(\"*.txt\")<\/code> finds <code>readme.txt<\/code> but not <code>2026/notes.txt<\/code>, while <code>rglob<\/code> would find both.<\/p>", "walk": [[0, "5", "Only directly inside data/."], [0, "6", "Exactly one folder down."], [0, "7", "Any depth."], [0, "8", "jan with any extension, at any depth."], [0, "9", "Everything: 2 folders + 5 files."]], "trace": null, "tip": "glob searches one folder; rglob searches all the way down.", "tryit": ["Find every <code>.txt<\/code> file at any depth.", "Find files from 2025 only with <code>data.glob(\"2025/*\")<\/code>."], "expected": {"out": "['readme.txt']\n['data/2025/feb.csv', 'data/2025/jan.csv', 'data/2026/jan.csv']\n['data/2025/feb.csv', 'data/2025/jan.csv', 'data/2026/jan.csv']\n['data/2025/jan.csv', 'data/2026/jan.csv']\n7 items in total", "err": null, "file": null, "line": null, "tree": ["main.py", "data/", "data/readme.txt", "data/2025/", "data/2025/feb.csv", "data/2025/jan.csv", "data/2026/", "data/2026/jan.csv", "data/2026/notes.txt"]}}, {"title": "Renaming and deleting", "files": [{"name": "main.py", "code": "from pathlib import Path\n\ndraft = Path(\"draft.txt\")\nfinal = draft.rename(\"final.txt\")\nprint(final, final.exists(), draft.exists())\n\nPath(\"old.log\").write_text(\"x\")\nPath(\"old.log\").unlink()\nprint(\"old.log deleted:\", not Path(\"old.log\").exists())\n\nPath(\"ghost.txt\").unlink(missing_ok=True)\nprint(\"missing_ok: no error\")\n\ntry:\n    Path(\"temp\").rmdir()\nexcept OSError:\n    print(\"rmdir refused: temp is not empty\")\n\nPath(\"temp/cache.txt\").unlink()\nPath(\"temp\").rmdir()\nprint(\"temp removed:\", not Path(\"temp\").exists())"}, {"name": "draft.txt", "code": "My essay"}, {"name": "temp/cache.txt", "code": "cached data"}], "entry": "main.py", "kind": "path", "explain": "<table class=\"tbl\"><tr><th>Method<\/th><th>Does<\/th><\/tr>\n<tr><td><code>p.rename(new)<\/code><\/td><td>Renames/moves; returns the new Path<\/td><\/tr>\n<tr><td><code>p.replace(new)<\/code><\/td><td>Same, but <b>overwrites<\/b> <code>new<\/code> if it exists<\/td><\/tr>\n<tr><td><code>p.unlink()<\/code><\/td><td>Deletes a <b>file<\/b><\/td><\/tr>\n<tr><td><code>p.unlink(missing_ok=True)<\/code><\/td><td>Deletes it if it's there, otherwise does nothing<\/td><\/tr>\n<tr><td><code>p.rmdir()<\/code><\/td><td>Deletes an <b>empty<\/b> folder only<\/td><\/tr><\/table>\n<div class=\"warn\">These deletes are <b>permanent<\/b> — no Recycle Bin. And <code>rmdir()<\/code> refuses a folder with anything in it. To delete a folder <b>and everything inside<\/b>, use <code>shutil.rmtree()<\/code> (lesson 4.4).<\/div>\n<p><b>Folder after running<\/b> shows <code>draft.txt<\/code> and <code>temp/<\/code> crossed out, and <code>final.txt<\/code> as new.<\/p>", "walk": [[0, "4", "draft.txt becomes final.txt."], [0, "8", "Delete a file."], [0, "11", "No error if it's already gone."], [0, "14-17", "rmdir only works on empty folders."], [0, "19-20", "Empty it first, then remove it."]], "trace": null, "tip": "unlink() deletes files, rmdir() deletes empty folders — both permanently.", "tryit": ["Rename <code>final.txt<\/code> to <code>essays/final.txt<\/code>. What do you need first?"], "expected": {"out": "final.txt True False\nold.log deleted: True\nmissing_ok: no error\nrmdir refused: temp is not empty\ntemp removed: True", "err": null, "file": null, "line": null, "tree": ["final.txt", "main.py"]}}]}, {"title": "shutil", "level": "Intermediate", "summary": "High-level copy, move, delete and archive.", "lessons": [{"title": "Copying files: copyfile, copy, copy2", "files": [{"name": "main.py", "code": "import shutil\nfrom pathlib import Path\n\nPath(\"backup\").mkdir()\n\nprint(shutil.copyfile(\"report.txt\", \"report_copy.txt\"))\nprint(shutil.copy(\"report.txt\", \"backup\"))\nprint(shutil.copy2(\"report.txt\", \"backup/report_v2.txt\"))\n\nfor p in sorted(Path(\".\").rglob(\"*.txt\")):\n    print(p, \"-\", p.stat().st_size, \"bytes\")"}, {"name": "report.txt", "code": "Quarterly sales: up 12%"}], "entry": "main.py", "kind": "path", "explain": "<p><code>shutil<\/code> (\"shell utilities\") does the file jobs you'd normally do by dragging and dropping: copy, move, delete folders, and zip. pathlib has no copy method (before Python 3.14), so shutil is the standard tool.<\/p>\n<table class=\"tbl\"><tr><th>Function<\/th><th>Destination can be a folder?<\/th><th>Copies permissions<\/th><th>Copies timestamps<\/th><\/tr>\n<tr><td><code>shutil.copyfile(src, dst)<\/code><\/td><td>No — must be a file name<\/td><td>No<\/td><td>No<\/td><\/tr>\n<tr><td><code>shutil.copy(src, dst)<\/code><\/td><td><b>Yes<\/b> — keeps the same name<\/td><td>Yes<\/td><td>No<\/td><\/tr>\n<tr><td><code>shutil.copy2(src, dst)<\/code><\/td><td><b>Yes<\/b><\/td><td>Yes<\/td><td><b>Yes<\/b> (modified time etc.)<\/td><\/tr><\/table>\n<p>Each returns the destination path. <code>shutil.copy(…, \"backup\")<\/code> saw that <code>backup<\/code> is a folder and copied into it as <code>backup/report.txt<\/code>.<\/p>\n<div class=\"note\">Use <code>copy2<\/code> for backups (keeps the original \"last modified\" time), <code>copy<\/code> for everyday copying. All three <b>overwrite<\/b> an existing destination file without asking.<\/div>", "walk": [[0, "6", "Contents only, to an exact file name."], [0, "7", "Into a folder, same name."], [0, "8", "Contents + metadata, with a new name."], [0, "10", "Show every .txt file and its size."]], "trace": null, "tip": "shutil.copy for everyday copies, copy2 when timestamps matter.", "tryit": ["Copy <code>report.txt<\/code> into a folder that doesn't exist. Which error do you get?"], "expected": {"out": "report_copy.txt\nbackup/report.txt\nbackup/report_v2.txt\nbackup/report.txt - 23 bytes\nbackup/report_v2.txt - 23 bytes\nreport.txt - 23 bytes\nreport_copy.txt - 23 bytes", "err": null, "file": null, "line": null, "tree": ["main.py", "report.txt", "report_copy.txt", "backup/", "backup/report.txt", "backup/report_v2.txt"]}}, {"title": "Copying whole folders: copytree", "files": [{"name": "main.py", "code": "import shutil\nfrom pathlib import Path\n\nshutil.copytree(\"site\", \"site_backup\")\n\nshutil.copytree(\n    \"site\",\n    \"site_clean\",\n    ignore=shutil.ignore_patterns(\"*.tmp\", \"*.log\"),\n)\n\ndef show(folder):\n    items = sorted(str(p.relative_to(folder)) for p in Path(folder).rglob(\"*\"))\n    print(folder + \":\", items)\n\nshow(\"site_backup\")\nshow(\"site_clean\")\n\ntry:\n    shutil.copytree(\"site\", \"site_backup\")\nexcept FileExistsError:\n    print(\"site_backup exists -> use dirs_exist_ok=True\")\n\nshutil.copytree(\"site\", \"site_backup\", dirs_exist_ok=True)\nprint(\"merged OK\")"}, {"name": "site/index.html", "code": "<h1>Hello<\/h1>"}, {"name": "site/style.css", "code": "h1 { color: blue; }"}, {"name": "site/notes.tmp", "code": "scratch"}, {"name": "site/debug.log", "code": "log lines"}, {"name": "site/img/logo.svg", "code": "<svg><\/svg>"}], "entry": "main.py", "kind": "path", "explain": "<p><code>shutil.copytree(src, dst)<\/code> copies a folder with <b>everything inside it<\/b>, sub-folders included.<\/p>\n<table class=\"tbl\"><tr><th>Option<\/th><th>Effect<\/th><\/tr>\n<tr><td><code>ignore=shutil.ignore_patterns(\"*.tmp\", …)<\/code><\/td><td>Skip files/folders matching these patterns<\/td><\/tr>\n<tr><td><code>dirs_exist_ok=True<\/code><\/td><td>Copy <b>into<\/b> an existing folder (Python 3.8+), overwriting files with the same name<\/td><\/tr><\/table>\n<div class=\"warn\">By default <code>copytree<\/code> refuses if the destination already exists (<code>FileExistsError<\/code>) — a safety net so you don't merge into the wrong folder by accident.<\/div>\n<p>Common things to ignore: <code>\"__pycache__\"<\/code>, <code>\"*.pyc\"<\/code>, <code>\".git\"<\/code>, <code>\"node_modules\"<\/code>.<\/p>", "walk": [[0, "4", "A full copy."], [0, "6-9", "A copy that skips .tmp and .log files."], [0, "19-22", "Copying onto an existing folder fails…"], [0, "24", "…unless you allow it."]], "trace": null, "tip": "copytree copies a folder tree; ignore_patterns() skips junk.", "tryit": ["Also ignore the <code>img<\/code> folder.", "Add a file to <code>site_backup<\/code> before the final copytree — is it kept?"], "expected": {"out": "site_backup: ['debug.log', 'img', 'img/logo.svg', 'index.html', 'notes.tmp', 'style.css']\nsite_clean: ['img', 'img/logo.svg', 'index.html', 'style.css']\nsite_backup exists -> use dirs_exist_ok=True\nmerged OK", "err": null, "file": null, "line": null, "tree": ["main.py", "site/", "site/debug.log", "site/index.html", "site/notes.tmp", "site/style.css", "site/img/", "site/img/logo.svg", "site_backup/", "site_backup/debug.log", "site_backup/index.html", "site_backup/notes.tmp", "site_backup/style.css", "site_backup/img/", "site_backup/img/logo.svg", "site_clean/", "site_clean/index.html", "site_clean/style.css", "site_clean/img/", "site_clean/img/logo.svg"]}}, {"title": "Moving and renaming: shutil.move", "files": [{"name": "main.py", "code": "import shutil\nfrom pathlib import Path\n\nPath(\"archive\").mkdir()\n\nshutil.move(\"inbox/invoice.pdf\", \"archive\")\nshutil.move(\"inbox/photo.jpg\", \"archive/holiday.jpg\")\nshutil.move(\"inbox/todo.txt\", \"todo_done.txt\")\n\nprint(sorted(p.name for p in Path(\"archive\").iterdir()))\nprint(sorted(p.name for p in Path(\"inbox\").iterdir()))\nprint(Path(\"todo_done.txt\").exists())\n\nshutil.move(\"archive\", \"old_archive\")\nprint(Path(\"old_archive/holiday.jpg\").exists())"}, {"name": "inbox/invoice.pdf", "code": "invoice #1042"}, {"name": "inbox/photo.jpg", "code": "(photo)"}, {"name": "inbox/todo.txt", "code": "finish lab"}], "entry": "main.py", "kind": "path", "explain": "<p><code>shutil.move(src, dst)<\/code> works like cut-and-paste:<\/p>\n<table class=\"tbl\"><tr><th>If <code>dst<\/code> is…<\/th><th>Result<\/th><\/tr>\n<tr><td>An existing <b>folder<\/b><\/td><td>Moves <code>src<\/code> into it, keeping its name<\/td><\/tr>\n<tr><td>A new <b>name<\/b><\/td><td>Moves and renames at the same time<\/td><\/tr><\/table>\n<p>It works on files <b>and<\/b> whole folders (the last move takes everything inside <code>archive<\/code> along).<\/p>\n<div class=\"cmp\"><div><h5>Path.rename()<\/h5><ul><li>Fast, simple rename<\/li><li>Can fail across drives (C: → D:)<\/li><li>Won't move into a folder by name alone<\/li><\/ul><\/div><div><h5>shutil.move()<\/h5><ul><li>Moves into folders<\/li><li>Works across drives (copies, then deletes)<\/li><li>The safe default for \"move\"<\/li><\/ul><\/div><\/div>", "walk": [[0, "6", "Into a folder, same name."], [0, "7", "Into a folder with a new name."], [0, "8", "Just a rename."], [0, "14", "Move a whole folder."]], "trace": [[0, 4, "Create archive/.", null], [0, 6, "archive is a folder → inbox/invoice.pdf becomes archive/invoice.pdf.", null], [0, 7, "Moved and renamed in one step.", null], [0, 8, "Moved out of inbox to the top level, with a new name.", null], [0, 10, "", "['holiday.jpg', 'invoice.pdf']"], [0, 11, "inbox is now empty.", "[]"], [0, 12, "", "True"], [0, 14, "The folder and both files move together.", null], [0, 15, "", "True"]], "tip": "shutil.move = cut and paste: into a folder, or to a new name.", "tryit": ["Delete the empty <code>inbox<\/code> folder afterwards with <code>Path(\"inbox\").rmdir()<\/code>."], "expected": {"out": "['holiday.jpg', 'invoice.pdf']\n[]\nTrue\nTrue", "err": null, "file": null, "line": null, "tree": ["main.py", "todo_done.txt", "inbox/", "old_archive/", "old_archive/holiday.jpg", "old_archive/invoice.pdf"]}}, {"title": "Deleting a whole tree: rmtree", "files": [{"name": "main.py", "code": "import shutil\nfrom pathlib import Path\n\nbuild = Path(\"build\")\nprint(\"before:\", sorted(str(p) for p in build.rglob(\"*\")))\n\ntry:\n    build.rmdir()\nexcept OSError:\n    print(\"rmdir: not empty\")\n\nshutil.rmtree(build)\nprint(\"after :\", build.exists())\n\nshutil.rmtree(\"does_not_exist\", ignore_errors=True)\nprint(\"ignore_errors=True: no error\")"}, {"name": "build/app.txt", "code": "compiled app"}, {"name": "build/lib/a.txt", "code": "a"}, {"name": "build/lib/b.txt", "code": "b"}, {"name": "keep.txt", "code": "don't delete me"}], "entry": "main.py", "kind": "path", "explain": "<p><code>shutil.rmtree(folder)<\/code> deletes a folder <b>and everything inside it<\/b> — files, sub-folders, all of it.<\/p>\n<div class=\"warn\"><b>Be careful.<\/b> There's no Recycle Bin and no \"are you sure?\". A wrong path (for example an empty string or <code>Path.home()<\/code>) can wipe out a lot. Good habits:<br>• Print the path (or list what's inside) before deleting.<br>• Only delete folders your own program created, like <code>build/<\/code> or <code>temp/<\/code>.<br>• Ask for confirmation in scripts: <code>if input(\"Delete build? y/n \") == \"y\":<\/code><\/div>\n<p><code>ignore_errors=True<\/code> skips anything that can't be deleted — including a folder that doesn't exist.<\/p>\n<table class=\"tbl\"><tr><th>To delete…<\/th><th>Use<\/th><\/tr>\n<tr><td>A file<\/td><td><code>Path.unlink()<\/code><\/td><\/tr>\n<tr><td>An empty folder<\/td><td><code>Path.rmdir()<\/code><\/td><\/tr>\n<tr><td>A folder with contents<\/td><td><code>shutil.rmtree()<\/code><\/td><\/tr><\/table>", "walk": [[0, "5", "Look before you delete."], [0, "7-10", "rmdir won't delete a non-empty folder."], [0, "12", "Delete build/ and all its contents."], [0, "15", "No error even though it doesn't exist."]], "trace": null, "tip": "rmtree deletes a folder and everything in it — permanently. Check the path first.", "tryit": ["Delete only <code>build/lib<\/code> and keep <code>build/app.txt<\/code>."], "expected": {"out": "before: ['build/app.txt', 'build/lib', 'build/lib/a.txt', 'build/lib/b.txt']\nrmdir: not empty\nafter : False\nignore_errors=True: no error", "err": null, "file": null, "line": null, "tree": ["keep.txt", "main.py"]}}, {"title": "Zip it: make_archive and unpack_archive", "files": [{"name": "main.py", "code": "import shutil\nimport zipfile\nfrom pathlib import Path\n\nzip_path = shutil.make_archive(\"project_backup\", \"zip\", root_dir=\"project\")\nprint(Path(zip_path).name)\n\nwith zipfile.ZipFile(zip_path) as z:\n    print(sorted(z.namelist()))\n\nshutil.unpack_archive(\"project_backup.zip\", \"restored\")\nprint(sorted(str(p.relative_to(\"restored\")) for p in Path(\"restored\").rglob(\"*\")))"}, {"name": "project/readme.txt", "code": "My project"}, {"name": "project/src/app.txt", "code": "print('hi')"}], "entry": "main.py", "kind": "path", "explain": "<p><code>shutil.make_archive(base_name, format, root_dir)<\/code> zips up a folder in one line.<\/p>\n<table class=\"tbl\"><tr><th>Argument<\/th><th>Meaning<\/th><\/tr>\n<tr><td><code>base_name<\/code><\/td><td>The archive's name <b>without<\/b> extension — shutil adds <code>.zip<\/code><\/td><\/tr>\n<tr><td><code>format<\/code><\/td><td><code>\"zip\"<\/code>, <code>\"tar\"<\/code>, <code>\"gztar\"<\/code> (.tar.gz)…<\/td><\/tr>\n<tr><td><code>root_dir<\/code><\/td><td>The folder whose <b>contents<\/b> go in the archive<\/td><\/tr><\/table>\n<p>It returns the path of the new archive. <code>shutil.unpack_archive(file, folder)<\/code> does the reverse, working out the format from the extension.<\/p>\n<p>The <code>zipfile<\/code> module lets you peek inside a zip without extracting it. Entries ending in <code>/<\/code> are folders.<\/p>", "walk": [[0, "5", "project/ → project_backup.zip"], [0, "8-9", "List what's inside the zip."], [0, "11", "Extract into restored/."]], "trace": null, "tip": "make_archive(\"name\", \"zip\", root_dir=folder) zips; unpack_archive unzips.", "tryit": ["Make a <code>\"gztar\"<\/code> archive instead. What's the file called?"], "expected": {"out": "project_backup.zip\n['readme.txt', 'src/', 'src/app.txt']\n['readme.txt', 'src', 'src/app.txt']", "err": null, "file": null, "line": null, "tree": ["main.py", "project_backup.zip", "project/", "project/readme.txt", "project/src/", "project/src/app.txt", "restored/", "restored/readme.txt", "restored/src/", "restored/src/app.txt"]}}]}, {"title": "os.path vs pathlib & gotchas", "level": "Intermediate", "summary": "Old code, new code, common traps.", "lessons": [{"title": "os.path vs pathlib", "files": [{"name": "main.py", "code": "import os\nfrom pathlib import Path\n\n# old style: strings + os.path\nold = os.path.join(\"data\", \"reports\", \"jan.csv\")\nprint(old, os.path.basename(old), os.path.splitext(old)[1])\nprint(os.path.exists(old))\n\n# new style: Path objects\nnew = Path(\"data\") / \"reports\" / \"jan.csv\"\nprint(new, new.name, new.suffix)\nprint(new.exists())\n\nprint(old == str(new))"}], "entry": "main.py", "kind": "path", "explain": "<p>You'll meet older code that uses <code>os<\/code> and <code>os.path<\/code> with plain strings. It still works — but pathlib is shorter, more readable, and the modern recommendation.<\/p>\n<table class=\"tbl\"><tr><th>Task<\/th><th>os / os.path<\/th><th>pathlib<\/th><\/tr>\n<tr><td>Join<\/td><td><code>os.path.join(a, b)<\/code><\/td><td><code>Path(a) / b<\/code><\/td><\/tr>\n<tr><td>File name<\/td><td><code>os.path.basename(p)<\/code><\/td><td><code>p.name<\/code><\/td><\/tr>\n<tr><td>Folder<\/td><td><code>os.path.dirname(p)<\/code><\/td><td><code>p.parent<\/code><\/td><\/tr>\n<tr><td>Extension<\/td><td><code>os.path.splitext(p)[1]<\/code><\/td><td><code>p.suffix<\/code><\/td><\/tr>\n<tr><td>Exists?<\/td><td><code>os.path.exists(p)<\/code><\/td><td><code>p.exists()<\/code><\/td><\/tr>\n<tr><td>Absolute<\/td><td><code>os.path.abspath(p)<\/code><\/td><td><code>p.resolve()<\/code><\/td><\/tr>\n<tr><td>Working dir<\/td><td><code>os.getcwd()<\/code><\/td><td><code>Path.cwd()<\/code><\/td><\/tr>\n<tr><td>List folder<\/td><td><code>os.listdir(p)<\/code><\/td><td><code>p.iterdir()<\/code><\/td><\/tr>\n<tr><td>Make folders<\/td><td><code>os.makedirs(p, exist_ok=True)<\/code><\/td><td><code>p.mkdir(parents=True, exist_ok=True)<\/code><\/td><\/tr>\n<tr><td>Delete file<\/td><td><code>os.remove(p)<\/code><\/td><td><code>p.unlink()<\/code><\/td><\/tr>\n<tr><td>Rename<\/td><td><code>os.rename(a, b)<\/code><\/td><td><code>p.rename(b)<\/code><\/td><\/tr>\n<tr><td>Copy / move / delete tree<\/td><td colspan=\"2\"><code>shutil.copy<\/code>, <code>shutil.move<\/code>, <code>shutil.rmtree<\/code> — accept both strings and Paths<\/td><\/tr><\/table>", "walk": [[0, "5-7", "The string way."], [0, "10-12", "The Path way: same answers, less code."], [0, "14", "Same address underneath."]], "trace": null, "tip": "pathlib replaces most of os.path; shutil handles copy, move and delete-tree.", "tryit": ["Rewrite <code>os.path.dirname(old)<\/code> the pathlib way."], "expected": {"out": "data/reports/jan.csv jan.csv .csv\nFalse\ndata/reports/jan.csv jan.csv .csv\nFalse\nTrue", "err": null, "file": null, "line": null, "tree": ["main.py"]}}, {"title": "Gotcha: a Path is not a string", "files": [{"name": "main.py", "code": "from pathlib import Path\n\np = Path(\"reports\") / \"jan.txt\"\n\nprint(\"Saving to \" + str(p))\nprint(f\"Saving to {p}\")\nprint(p.name.upper())\n\nprint(\"Saving to \" + p)"}], "entry": "main.py", "kind": "path", "explain": "<p>A Path <b>prints<\/b> like a string, but it isn't one. String operations like <code>+<\/code> or <code>.upper()<\/code> don't work on it directly.<\/p>\n<table class=\"tbl\"><tr><th>Want<\/th><th>Write<\/th><\/tr>\n<tr><td>Glue into text<\/td><td><code>f\"…{p}\"<\/code> or <code>\"…\" + str(p)<\/code><\/td><\/tr>\n<tr><td>String methods<\/td><td><code>str(p).upper()<\/code> or on a part: <code>p.name.upper()<\/code><\/td><\/tr>\n<tr><td>Save in JSON<\/td><td><code>json.dumps(str(p))<\/code> — JSON can't store a Path<\/td><\/tr><\/table>\n<div class=\"note\">The good news: almost everything that takes a file name — <code>open()<\/code>, every <code>shutil<\/code> function, <code>os<\/code> functions, pandas — accepts a Path directly. You only need <code>str()<\/code> for string work.<\/div>", "walk": [[0, "5", "Convert first — works."], [0, "6", "f-strings convert automatically."], [0, "9", "<code>str + Path<\/code> → <code>TypeError<\/code>."]], "trace": null, "tip": "Use str(p) or an f-string when you need the path as text.", "tryit": ["Fix the last line using an f-string."], "expected": {"out": "Saving to reports/jan.txt\nSaving to reports/jan.txt\nJAN.TXT", "err": "TypeError: can only concatenate str (not \"PosixPath\") to str", "file": 0, "line": 9, "tree": ["main.py"]}}, {"title": "Gotcha: always set the encoding", "files": [{"name": "main.py", "code": "from pathlib import Path\n\np = Path(\"greeting.txt\")\np.write_text(\"नमस्ते 🙏 Hello\", encoding=\"utf-8\")\n\ntext = p.read_text(encoding=\"utf-8\")\nprint(text)\nprint(len(text), \"characters\")\nprint(p.stat().st_size, \"bytes\")"}], "entry": "main.py", "kind": "path", "explain": "<p>Text is stored as bytes using an <b>encoding<\/b>. English letters take 1 byte in UTF-8, but Hindi letters take 3 and emoji take 4 — so characters ≠ bytes.<\/p>\n<div class=\"warn\">If you leave out <code>encoding=<\/code>, Python uses the computer's default. On many Windows machines that's an older encoding (cp1252) which can't store Hindi or emoji at all — you'd get <code>UnicodeEncodeError<\/code> when writing, or garbled text like <code>à¤¨<\/code> when reading a UTF-8 file.<\/div>\n<p>The rule is simple: <b>always write <code>encoding=\"utf-8\"<\/code><\/b> for <code>read_text<\/code>, <code>write_text<\/code> and <code>open()<\/code> in text mode. Your code then behaves the same on every computer.<\/p>", "walk": [[0, "4", "Write Hindi, an emoji and English as UTF-8."], [0, "8", "Characters (code points)."], [0, "9", "Bytes on disk — more than the characters."]], "trace": null, "tip": "Always pass encoding=\"utf-8\" when reading or writing text.", "tryit": ["Read the file with <code>read_bytes()<\/code> and print it to see the raw UTF-8 bytes."], "expected": {"out": "नमस्ते 🙏 Hello\n14 characters\n29 bytes", "err": null, "file": null, "line": null, "tree": ["greeting.txt", "main.py"]}}]}, {"title": "Projects", "level": "Project", "summary": "pathlib + shutil in real scripts.", "lessons": [{"title": "Project: Downloads organiser", "files": [{"name": "main.py", "code": "import shutil\nfrom pathlib import Path\n\nCATEGORIES = {\n    \"Documents\": [\".pdf\", \".txt\", \".docx\"],\n    \"Images\": [\".jpg\", \".png\"],\n    \"Music\": [\".mp3\"],\n}\n\ndef category_for(path):\n    for folder, exts in CATEGORIES.items():\n        if path.suffix.lower() in exts:\n            return folder\n    return \"Other\"\n\ndef organise(folder):\n    moved = 0\n    for item in sorted(folder.iterdir()):\n        if item.is_file():\n            target = folder / category_for(item)\n            target.mkdir(exist_ok=True)\n            shutil.move(item, target / item.name)\n            print(f\"{item.name:<15} -> {target.name}/\")\n            moved += 1\n    return moved\n\ndef main():\n    count = organise(Path(\"downloads\"))\n    print(\"Moved\", count, \"files\")\n\nif __name__ == \"__main__\":\n    main()"}, {"name": "downloads/report.pdf", "code": "(pdf)"}, {"name": "downloads/Invoice.PDF", "code": "(pdf)"}, {"name": "downloads/photo.jpg", "code": "(jpg)"}, {"name": "downloads/screenshot.png", "code": "(png)"}, {"name": "downloads/song.mp3", "code": "(mp3)"}, {"name": "downloads/notes.txt", "code": "(text)"}, {"name": "downloads/setup.exe", "code": "(program)"}], "entry": "main.py", "kind": "path", "explain": "<p>A real script you can use on your own Downloads folder: sort every file into a sub-folder by its extension.<\/p>\n<table class=\"tbl\"><tr><th>Step<\/th><th>Tool<\/th><\/tr>\n<tr><td>List the files<\/td><td><code>folder.iterdir()<\/code> + <code>is_file()<\/code><\/td><\/tr>\n<tr><td>Read the extension<\/td><td><code>item.suffix.lower()<\/code> — so <code>.PDF<\/code> counts as <code>.pdf<\/code><\/td><\/tr>\n<tr><td>Build the target folder<\/td><td><code>folder / category<\/code><\/td><\/tr>\n<tr><td>Make sure it exists<\/td><td><code>target.mkdir(exist_ok=True)<\/code><\/td><\/tr>\n<tr><td>Move the file<\/td><td><code>shutil.move(item, target / item.name)<\/code><\/td><\/tr><\/table>\n<p>Check <b>Folder after running<\/b> to see the result.<\/p>\n<div class=\"warn\">To use it on your real Downloads folder, change the path to <code>Path.home() / \"Downloads\"<\/code> — and try it on a <b>copy<\/b> first (<code>shutil.copytree<\/code>!). A safer version would also check that <code>target / item.name<\/code> doesn't already exist before moving.<\/div>", "walk": [[0, "4-8", "Extension → folder rules."], [0, "10-14", "Pick a folder for one file."], [0, "18-24", "Make the folder and move each file."], [0, "31-32", "Run only when this file is the program."]], "trace": null, "tip": "iterdir + suffix + mkdir + shutil.move = a file organiser.", "tryit": ["Add a <code>\"Programs\": [\".exe\"]<\/code> category.", "Add a <code>dry_run=True<\/code> option that prints moves without doing them."], "expected": {"out": "Invoice.PDF     -> Documents/\nnotes.txt       -> Documents/\nphoto.jpg       -> Images/\nreport.pdf      -> Documents/\nscreenshot.png  -> Images/\nsetup.exe       -> Other/\nsong.mp3        -> Music/\nMoved 7 files", "err": null, "file": null, "line": null, "tree": ["main.py", "downloads/", "downloads/Documents/", "downloads/Documents/Invoice.PDF", "downloads/Documents/notes.txt", "downloads/Documents/report.pdf", "downloads/Images/", "downloads/Images/photo.jpg", "downloads/Images/screenshot.png", "downloads/Music/", "downloads/Music/song.mp3", "downloads/Other/", "downloads/Other/setup.exe"]}}, {"title": "Project: versioned backups", "files": [{"name": "main.py", "code": "import shutil\nfrom pathlib import Path\n\nSOURCE = Path(\"my_project\")\nBACKUPS = Path(\"backups\")\n\ndef backup(version):\n    BACKUPS.mkdir(exist_ok=True)\n    folder = BACKUPS / f\"my_project_v{version}\"\n    shutil.copytree(SOURCE, folder, ignore=shutil.ignore_patterns(\"*.tmp\", \"__pycache__\"))\n    zip_file = shutil.make_archive(str(folder), \"zip\", root_dir=folder)\n    shutil.rmtree(folder)\n    return Path(zip_file)\n\ndef list_zip(path):\n    import zipfile\n    with zipfile.ZipFile(path) as z:\n        return sorted(n for n in z.namelist() if not n.endswith(\"/\"))\n\ndef main():\n    for v in (1, 2):\n        z = backup(v)\n        print(\"Created\", z.name, \"->\", list_zip(z))\n    print(sorted(p.name for p in BACKUPS.iterdir()))\n\nif __name__ == \"__main__\":\n    main()"}, {"name": "my_project/app.py", "code": "print('Hello from my app')"}, {"name": "my_project/notes.tmp", "code": "scratch notes"}, {"name": "my_project/data/users.csv", "code": "name\nAsha\nRavi"}], "entry": "main.py", "kind": "path", "explain": "<p>Every tool from the lab in one backup script:<\/p>\n<ol><li><code>mkdir(exist_ok=True)<\/code> — make sure <code>backups/<\/code> exists.<\/li>\n<li><code>copytree<\/code> with <code>ignore_patterns<\/code> — a clean copy without temp files.<\/li>\n<li><code>make_archive<\/code> — zip that copy.<\/li>\n<li><code>rmtree<\/code> — delete the unzipped copy, keeping only the zip.<\/li><\/ol>\n<p>The zip never contains <code>notes.tmp<\/code>. And in <b>Folder after running<\/b>, <code>backups/<\/code> holds only the two zip files — the temporary folders are gone.<\/p>\n<div class=\"note\">In a real script you'd name backups by date instead of version number: <code>from datetime import date<\/code> then <code>f\"my_project_{date.today()}\"<\/code> → <code>my_project_2026-11-11.zip<\/code>.<\/div>", "walk": [[0, "8", "Make sure the backups folder exists."], [0, "10", "Copy the project, skipping junk."], [0, "11", "Zip the copy → backups/my_project_vN.zip"], [0, "12", "Remove the temporary unzipped copy."]], "trace": null, "tip": "copytree → make_archive → rmtree: a clean, zipped backup.", "tryit": ["Name the backup with today's date instead of a version number.", "Also ignore the <code>data<\/code> folder."], "expected": {"out": "Created my_project_v1.zip -> ['app.py', 'data/users.csv']\nCreated my_project_v2.zip -> ['app.py', 'data/users.csv']\n['my_project_v1.zip', 'my_project_v2.zip']", "err": null, "file": null, "line": null, "tree": ["main.py", "backups/", "backups/my_project_v1.zip", "backups/my_project_v2.zip", "my_project/", "my_project/app.py", "my_project/notes.tmp", "my_project/data/", "my_project/data/users.csv"]}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, fi = 0, step = -1, walkSel = -1, errFile = null, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pyfs-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const F = () => L().files;
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const cur = i => (edits[key(mi, li)] || {})[i] ?? F()[i].code;
+const fileEdited = i => cur(i) !== F()[i].code;
+const isEdited = () => F().some((_, i) => fileEdited(i));
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+const base = n => n.split("/").pop();
+const cmdFor = (entry, kind) => kind === "module" ? `$ python -m ${entry}` : `$ python ${entry}`;
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs dir help".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def" || w === "class"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else if (/^__\w+__$/.test(w)) out += `<span class="tk-f">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = F()[fi].name.endsWith(".py") ? highlight(src) : esc(src) + "\n";
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0 && tr[step][0] === fi) hlLines.add(tr[step][1]);
+  if (walkSel >= 0 && L().walk[walkSel][0] === fi) {
+    const r = L().walk[walkSel][1].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  const eL = errFile === fi ? errLine : null;
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === eL ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (eL) mk += `<div class="mark err" style="${at(eL)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+function renderTabs() {
+  const l = L();
+  $("ftabs").innerHTML = F().map((f, i) => {
+    const parts = f.name.split("/"), file = parts.pop(), dir = parts.length ? parts.join("/") + "/" : "";
+    const isEntry = l.kind === "module" ? i === 0 : f.name === l.entry;
+    return `<button role="tab" aria-selected="${i === fi}" class="ftab ${i === fi ? "on" : ""} ${i === errFile ? "err" : ""}" data-f="${i}" title="${f.name}">${isEntry ? '<span class="run">▶</span>' : ""}<span><span class="fdir">${dir}</span>${file}</span>${fileEdited(i) ? '<span class="ed" title="edited"></span>' : ""}</button>`;
+  }).join("");
+  $("ftabs").querySelectorAll(".ftab").forEach(b => b.onclick = () => openFile(+b.dataset.f));
+  const on = $("ftabs").querySelector(".ftab.on"); if (on) on.scrollIntoView({ block: "nearest", inline: "nearest" });
+  $("fname").textContent = l.kind === "module" ? `python -m ${l.entry}` : l.entry;
+  const nm = F()[fi].name, isEntry = l.kind === "module" ? false : nm === l.entry;
+  $("runFileBtn").hidden = isEntry || !nm.endsWith(".py");
+  $("runFileBtn").textContent = `▷ Run ${base(nm)}`;
+  $("runFileBtn").title = `Run ${nm} directly: python ${nm}`;
+}
+function openFile(i) {
+  if (i === fi) return;
+  fi = i; ta.value = cur(i); ta.scrollTop = 0; ta.scrollLeft = 0;
+  renderTabs(); paintEditor();
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  const k = key(mi, li); (edits[k] = edits[k] || {})[fi] = ta.value;
+  errFile = errLine = null;
+  if (step >= 0) step = -1;
+  renderTabs(); renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+
+/* ---------- output console ---------- */
+function showOutput(out, err, file, line, pill, meta, pillCls, cmd, tree) {
+  renderTree(tree);
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) {
+    const where = file !== null && file !== undefined && F()[file]
+      ? `Raised in <button class="errjump" data-f="${file}">${esc(F()[file].name)}</button>${line ? ", line " + line : ""} (highlighted in red)` : "";
+    h += `<span class="errl">${esc(err)}<small>${where}</small></span>`;
+  }
+  o.innerHTML = h;
+  const j = o.querySelector(".errjump");
+  if (j) j.onclick = () => { openFile(+j.dataset.f); if (errLine) scrollToLine(errLine); };
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  $("ocmd").textContent = cmd || cmdFor(L().entry, L().kind);
+  errFile = err && file !== undefined ? file : null; errLine = err ? (line || null) : null;
+  renderTabs(); paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.file, x.line, "Expected", "Press Run to execute it live", "", "", x.tree);
+}
+
+/* ---------- folder tree ---------- */
+function renderTree(after) {
+  if (!after) { $("treeCard").hidden = true; return; }
+  $("treeCard").hidden = false;
+  const before = new Set();
+  F().forEach(f => { const p = f.name.split("/"); for (let i = 1; i < p.length; i++) before.add(p.slice(0, i).join("/") + "/"); before.add(f.name); });
+  const now = new Set(after), root = { kids: {} };
+  [...new Set([...before, ...now])].forEach(k => {
+    const isDir = k.endsWith("/"), parts = k.replace(/\/$/, "").split("/");
+    let n = root;
+    parts.forEach((p, i) => {
+      const last = i === parts.length - 1, key = parts.slice(0, i + 1).join("/") + (last && !isDir ? "" : "/");
+      n.kids[p] = n.kids[p] || { key, dir: !last || isDir, kids: {} };
+      if (!last || isDir) n.kids[p].dir = true, n.kids[p].key = parts.slice(0, i + 1).join("/") + "/";
+      n = n.kids[p];
+    });
+  });
+  let added = 0, gone = 0;
+  const lines = [`<span class="d">project/</span>`];
+  (function walk(n, pre) {
+    const ks = Object.keys(n.kids).sort((a, b) => (n.kids[b].dir - n.kids[a].dir) || a.localeCompare(b));
+    ks.forEach((k, i) => {
+      const c = n.kids[k], lastK = i === ks.length - 1;
+      const isNew = now.has(c.key) && !before.has(c.key), isGone = before.has(c.key) && !now.has(c.key);
+      if (isNew) added++; if (isGone) gone++;
+      const label = `<span class="${c.dir ? "d" : ""}">${esc(k)}${c.dir ? "/" : ""}</span>`;
+      lines.push(`<span class="g">${pre}${lastK ? "└── " : "├── "}</span>` + (isNew ? `<span class="new">${label}</span><span class="tag n">new</span>` : isGone ? `<span class="gone">${label}</span><span class="tag x">gone</span>` : label));
+      if (c.dir) walk(c, pre + (lastK ? "    " : "│   "));
+    });
+  })(root, "");
+  $("tree").innerHTML = lines.join("\n");
+  $("treeHint").textContent = added || gone
+    ? `${added} item${added === 1 ? "" : "s"} created, ${gone} removed or moved compared with the starting files.`
+    : "Same files as at the start — this program didn't change the folder.";
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const c = step >= 0 ? tr[step] : null;
+  const multi = F().length > 1;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${c ? `<span class="ln">${multi ? esc(F()[c[0]].name) + " · " : ""}line ${c[1]}</span>${c[2]}` : "Watch Python move through the code one line at a time. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[3] !== null).map(t => t[3]);
+  const isNew = tr[step][3] !== null;
+  errFile = errLine = null;
+  if (tr[step][0] !== fi) { fi = tr[step][0]; ta.value = cur(fi); }
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderTabs(); renderStepper(); paintEditor(); scrollToLine(tr[step][1]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker; each run writes the lesson's files into a fresh folder) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = "import sys, os, json, runpy, traceback, importlib, re\n_n = [0]\ndef __run(files_json, entry, kind, base=\"/lab\"):\n    _n[0] += 1\n    files = json.loads(files_json)\n    root = f\"{base}/r{_n[0]}\"\n    for p, src in files.items():\n        full = os.path.join(root, p)\n        os.makedirs(os.path.dirname(full), exist_ok=True)\n        with open(full, \"w\") as f:\n            f.write(src)\n    tops = {p.split(\"/\")[0][:-3] if p.endswith(\".py\") and \"/\" not in p else p.split(\"/\")[0] for p in files}\n    for name in list(sys.modules):\n        if name.split(\".\")[0] in tops:\n            del sys.modules[name]\n    old_path, old_cwd, old_argv = sys.path[:], os.getcwd(), sys.argv[:]\n    sys.dont_write_bytecode = True\n    os.chdir(root)\n    importlib.invalidate_caches()\n    res = None\n    tree = []\n    try:\n        if kind == \"module\":\n            sys.path.insert(0, root)\n            sys.argv = [\"-m\"]\n            runpy.run_module(entry, run_name=\"__main__\", alter_sys=True)\n        else:\n            full = os.path.join(root, entry)\n            sys.path.insert(0, os.path.dirname(full))\n            sys.argv = [entry]\n            runpy.run_path(full, run_name=\"__main__\")\n    except SystemExit:\n        pass\n    except BaseException as e:\n        file = line = None\n        for fr in traceback.extract_tb(e.__traceback__):\n            if fr.filename.startswith(root + \"/\"):\n                file, line = fr.filename[len(root) + 1:], fr.lineno\n        if isinstance(e, SyntaxError):\n            msg = e.msg\n            if e.filename and e.filename.startswith(root + \"/\"):\n                file, line = e.filename[len(root) + 1:], e.lineno\n        else:\n            msg = str(e)\n        msg = msg.replace(root + \"/\", \"\")\n        msg = re.sub(r\" \\(consider renaming .*$\", \"\", msg)\n        msg = re.sub(r\"\\[Errno -?\\d+\\] \", \"\", msg)\n        res = {\"err\": type(e).__name__ + \": \" + msg, \"file\": file, \"line\": line}\n    finally:\n        for d, dirs, fs in os.walk(root):\n            dirs[:] = sorted(x for x in dirs if x != \"__pycache__\")\n            rel = os.path.relpath(d, root)\n            if rel != \".\":\n                tree.append(rel + \"/\")\n            tree += [f if rel == \".\" else rel + \"/\" + f for f in sorted(fs)]\n        sys.path[:] = old_path\n        sys.argv[:] = old_argv\n        os.chdir(old_cwd)\n        for name, m in list(sys.modules.items()):\n            f = getattr(m, \"__file__\", None) or \"\"\n            if f.startswith(root + \"/\") or name.split(\".\")[0] in tops:\n                del sys.modules[name]\n    out = res or {}\n    out[\"tree\"] = tree\n    return json.dumps(out)\n";
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.files, e.data.entry, e.data.kind); } catch (x) { r = JSON.stringify({err:String(x), file:null, line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); const cmd = pending.cmd; pending = null; setBusy(false);
+      let err = null, file = null, line = null, tree = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err || null; line = j.line; tree = j.tree; if (j.file) { const k = F().findIndex(f => f.name === j.file); file = k >= 0 ? k : null; } }
+      showOutput(d.out, err, file, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live", cmd, tree);
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.file, x.line, "Expected", msg + " Showing the expected output instead.", "", "", x.tree);
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b; $("runFileBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run(direct) {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  const l = L(), files = {};
+  F().forEach((f, i) => files[f.name] = cur(i));
+  const entry = direct ? F()[fi].name : l.entry, kind = direct ? "path" : l.kind;
+  pending = { id: ++runId, files: JSON.stringify(files), entry, kind, cmd: cmdFor(entry, kind) };
+  $("ocmd").textContent = pending.cmd;
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? 8000 : 60000);
+}
+$("runBtn").onclick = () => run(false);
+$("runFileBtn").onclick = () => run(true);
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = cur(fi); step = -1; errFile = errLine = null; renderTabs(); renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pyfs-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${esc(md.title)}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${esc(x.title)}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errFile = errLine = null;
+  fi = Math.max(0, l.files.findIndex(f => f.name === l.entry));
+  ta.value = cur(fi); ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  const multi = l.files.length > 1;
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${multi ? esc(base(l.files[w[0]].name)) + "<br>" : ""}${w[1].includes("-") ? "lines " : "line "}${w[1]}</span><span>${w[2]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    if (walkSel >= 0 && l.walk[i][0] !== fi) { fi = l.walk[i][0]; ta.value = cur(fi); renderTabs(); }
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][1].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderTabs(); renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
