@@ -1,0 +1,63 @@
+user_id,page_id,page_name
+17,102,Data Science India
+17,103,Cricket Fans
+17,104,Bollywood Updates
+17,114,Gaming Zone
+7,108,Photography Club
+7,111,Book Lovers
+13,107,Machine Learning Hub
+13,111,Book Lovers
+13,112,Tech News Daily
+21,102,Data Science India
+21,104,Bollywood Updates
+19,106,Foodies of Pune
+19,110,Fitness Freaks
+19,115,Yoga & Wellness
+24,106,Foodies of Pune
+24,110,Fitness Freaks
+24,115,Yoga & Wellness
+2,115,Yoga & Wellness
+6,102,Data Science India
+6,106,Foodies of Pune
+18,103,Cricket Fans
+18,105,Travel Diaries
+18,110,Fitness Freaks
+18,114,Gaming Zone
+1,114,Gaming Zone
+22,101,Python Developers
+20,108,Photography Club
+12,101,Python Developers
+14,108,Photography Club
+8,103,Cricket Fans
+8,113,Music Mania
+9,102,Data Science India
+9,106,Foodies of Pune
+9,108,Photography Club
+9,112,Tech News Daily
+9,115,Yoga & Wellness
+11,106,Foodies of Pune
+11,112,Tech News Daily
+11,115,Yoga & Wellness
+5,102,Data Science India
+5,103,Cricket Fans
+5,109,Startup Stories
+5,110,Fitness Freaks
+3,102,Data Science India
+3,104,Bollywood Updates
+3,109,Startup Stories
+3,115,Yoga & Wellness
+10,103,Cricket Fans
+10,106,Foodies of Pune
+10,113,Music Mania
+10,115,Yoga & Wellness
+23,102,Data Science India
+15,104,Bollywood Updates
+15,112,Tech News Daily
+27,104,Bollywood Updates
+4,105,Travel Diaries
+4,110,Fitness Freaks
+4,111,Book Lovers
+16,103,Cricket Fans
+16,105,Travel Diaries
+16,107,Machine Learning Hub
+16,109,Startup Stories
