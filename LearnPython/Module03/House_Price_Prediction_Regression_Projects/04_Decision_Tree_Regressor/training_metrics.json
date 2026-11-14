@@ -1,0 +1,7 @@
+{
+    "model": "Decision Tree Regressor",
+    "validation_rows": 200,
+    "MAE_lakh": 11.765,
+    "RMSE_lakh": 15.189,
+    "R2": 0.942
+}

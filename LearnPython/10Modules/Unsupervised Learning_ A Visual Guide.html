@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unsupervised Learning: A Visual Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: friendly teaching page, same voice as the regression and classification guides
+   IDEA: grey, unlabelled points; each algorithm finds its own structure and colours them in
+   PICTURE: live scatter maps, a dendrogram, density circles and a PCA projection line, all computed in the browser
+   COLOUR and TYPE: template palette; a categorical palette for discovered clusters, grey for unlabelled/noise
+   LAYOUT: sticky nav, hero with algorithm + dataset switcher, one section per topic (text left, live demo right) */
+:root{color-scheme:light dark;
+  --bg:light-dark(#f7f5f0,#14130f); --ink:light-dark(#1d1b18,#f1ede4); --muted:light-dark(#5f5a52,#a8a197);
+  --line:light-dark(#e2ddd2,#2e2b25); --card:light-dark(#ffffff,#1d1b17); --grey:light-dark(#a39d92,#6d675e);
+  --k0:light-dark(#2f6fd6,#6ea1ff); --k1:light-dark(#d9541e,#ff8a5b); --k2:light-dark(#0f8a73,#3fd1b0); --k3:light-dark(#6b4fd8,#a08cff);
+  --k4:light-dark(#b8326f,#ff7eb6); --k5:light-dark(#9a6b00,#f2c14e); --k6:light-dark(#1b8fb5,#5cc8ea); --k7:light-dark(#7a5230,#c99a6e);
+  --km:var(--k0); --km-soft:light-dark(#e3ecfb,#16233a);
+  --hc:var(--k2); --hc-soft:light-dark(#ddf3ee,#12302a);
+  --db:var(--k5); --db-soft:light-dark(#fff3d1,#332a10);
+  --pc:var(--k4); --pc-soft:light-dark(#fbe4ef,#3a1527);
+  --warn:light-dark(#9a6b00,#f2c14e); --warn-soft:light-dark(#fff3d1,#332a10);
+  --radius:16px}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em;text-wrap:balance}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);letter-spacing:-.01em}
+h3{font-size:1.2rem}
+p{margin:0 0 1em}
+code,.mono{font-family:"JetBrains Mono",monospace;font-size:.86em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.kicker{font:600 .78rem/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.lead{font-size:1.12rem;color:var(--muted);max-width:700px}
+.km{color:var(--km)} .hc{color:var(--hc)} .db{color:var(--db)} .pc{color:var(--pc)}
+.bg-km{background:var(--km-soft);color:var(--km)} .bg-hc{background:var(--hc-soft);color:var(--hc)} .bg-db{background:var(--db-soft);color:var(--db)} .bg-pc{background:var(--pc-soft);color:var(--pc)}
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+nav a{white-space:nowrap;color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:99px}
+nav a:hover{background:var(--card);color:var(--ink)}
+.hero{padding:56px 0 50px;display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:40px;align-items:center}
+@media(max-width:860px){.hero{grid-template-columns:minmax(0,1fr)}}
+.fams{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.fam{border-radius:14px;padding:12px 14px;font-size:.88rem;line-height:1.5}
+.fam b{display:block;font-family:Fraunces;font-size:1.05rem;margin-bottom:2px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media(max-width:860px){.grid3,.grid4{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.demo{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:28px;align-items:start;margin-top:22px}
+@media(max-width:860px){.grid2,.demo{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){.grid3,.grid4{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.card h3{margin-bottom:.35em}
+.card p{margin:0;font-size:.94rem}
+.card.top-km{border-top:5px solid var(--km)} .card.top-hc{border-top:5px solid var(--hc)} .card.top-db{border-top:5px solid var(--db)} .card.top-pc{border-top:5px solid var(--pc)}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 12px 14px}
+.chart svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.chart svg.click{cursor:crosshair}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.88rem;color:var(--muted);margin-top:8px}
+.stats b{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ctrl{margin-top:14px}
+.ctrl>label,.ctrl>.lab{display:flex;justify-content:space-between;font-size:.9rem;font-weight:600;margin-bottom:4px}
+.ctrl label span{font-family:"JetBrains Mono",monospace;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--ink);height:32px;margin:0}
+.steps{counter-reset:s;list-style:none;padding:0;margin:10px 0 16px}
+.steps li{counter-increment:s;position:relative;padding:0 0 10px 38px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 .8rem Inter;background:var(--ink);color:var(--bg)}
+.formula{font-family:"JetBrains Mono",monospace;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.9rem;margin:10px 0 14px;overflow-x:auto;white-space:nowrap}
+pre{font-family:"JetBrains Mono",monospace;font-size:.8rem;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto;margin:12px 0 0}
+.note{border-left:4px solid var(--warn);background:var(--warn-soft);padding:14px 18px;border-radius:0 12px 12px 0;margin:22px 0 0;font-size:.95rem}
+.note b{color:var(--warn)}
+.btn,.seg button,.mbtn,.opt{font:600 .9rem Inter;min-height:44px;padding:9px 14px;border-radius:10px;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--k3);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.mbtn,.opt{background:var(--card);color:var(--ink);border-color:var(--line);font-weight:500}
+.seg button[aria-pressed=true],.mbtn[aria-pressed=true],.opt[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.models{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.info{min-height:78px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.94rem;margin-top:12px}
+.status{margin-top:10px;font-size:.92rem;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.box{padding:8px 12px;border-radius:10px;font-weight:600;font-size:.86rem;border:1.5px solid var(--line);background:var(--card)}
+.arrow{color:var(--muted);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:6px;border-radius:50%}
+.meter{height:14px;border-radius:99px;background:var(--bg);overflow:hidden;margin:6px 0 2px;position:relative}
+.meter span{display:block;height:100%;background:var(--pc);border-radius:99px;transition:width .2s}
+.meter i{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+@media (prefers-reduced-motion:reduce){.meter span{transition:none}}
+.hb{display:grid;grid-template-columns:96px minmax(0,1fr) 56px;gap:10px;align-items:center;font-size:.86rem;margin:5px 0}
+.hb .trk{height:14px;background:var(--bg);border-radius:99px;overflow:hidden;position:relative}
+.hb .fill{height:100%;border-radius:99px;position:absolute;top:0}
+.hb .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.dv .trk{border-radius:4px}
+.dv .trk::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--muted)}
+.dv .fill{border-radius:0}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+@media(max-width:560px){.vs{grid-template-columns:1fr}}
+.vs .card svg{width:100%;height:auto;display:block;margin-bottom:10px}
+table.big{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);font-size:.92rem}
+.big th,.big td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.big th{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+.big tr:last-child td{border-bottom:none}
+.big td:first-child{font-weight:600}
+.big td.num{text-align:right;font-variant-numeric:tabular-nums}
+.big td.best{font-weight:700;background:var(--hc-soft)}
+.scroll{overflow-x:auto;border-radius:var(--radius)}
+.q{margin-bottom:18px}
+.q .qt{font-weight:600;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.verdict{border-radius:var(--radius);padding:22px;border:1px solid var(--line);background:var(--card)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.chips span{padding:5px 10px;border-radius:99px;font-size:.8rem;font-weight:600;border:1.5px solid var(--line);color:var(--muted)}
+.chips span.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.quiz .qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+.quiz .ans{display:grid;gap:8px;margin-top:10px}
+.quiz .ans button{text-align:left;font:500 .95rem Inter;min-height:44px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.quiz .ans button.right{border-color:var(--hc);background:var(--hc-soft)}
+.quiz .ans button.wrong{border-color:var(--k1);background:light-dark(#fde7dc,#3a2016)}
+.quiz .why{font-size:.9rem;color:var(--muted);margin-top:10px;display:none}
+.score{font-family:Fraunces;font-size:1.3rem}
+.cheat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:760px){.cheat{grid-template-columns:minmax(0,1fr)}}
+.cheat div{padding:16px;border-radius:14px;font-size:.93rem}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+@media(max-width:600px){.big{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:4px 13px;text-align:right}.stack td::before{content:attr(data-l);font-weight:600;color:var(--muted);text-align:left}.fams{grid-template-columns:1fr}.hb{grid-template-columns:76px minmax(0,1fr) 48px}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#big-picture">Big picture</a>
+  <a href="#clustering">Clustering</a>
+  <a href="#kmeans">K-Means</a>
+  <a href="#hier">Hierarchical</a>
+  <a href="#dbscan">DBSCAN</a>
+  <a href="#dimred">Dimensionality reduction</a>
+  <a href="#pca">PCA</a>
+  <a href="#compare">Compare</a>
+  <a href="#chooser">Which one?</a>
+  <a href="#quiz">Quiz</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="big-picture">
+  <div>
+    <div class="kicker">Unsupervised learning</div>
+    <h1>No answers given. Find the structure yourself.</h1>
+    <p class="lead">In supervised learning every example comes with a label ("spam", "₹45 lakh"). In <b>unsupervised</b> learning there are no labels at all. The algorithm's job is to discover patterns on its own: which points belong together, and which details actually matter.</p>
+    <div class="fams">
+      <div class="fam bg-km"><b>Clustering</b>Group similar points. K-Means, hierarchical, DBSCAN.</div>
+      <div class="fam bg-pc"><b>Dimensionality reduction</b>Squeeze many columns into a few that keep the important information. PCA.</div>
+    </div>
+  </div>
+  <div>
+    <div class="chart">
+      <svg id="hero-plot" viewBox="0 0 480 440" role="img" aria-label="Unlabelled points, coloured by the chosen clustering algorithm"></svg>
+      <div class="legend"><span><i style="background:var(--grey)"></i>Unlabelled / noise</span><span>Colours = groups the algorithm found (it never saw any labels)</span></div>
+    </div>
+    <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="hero-ds"></div></div>
+    <div class="models" id="hero-btns" role="group" aria-label="Choose an algorithm"></div>
+    <div class="info" id="hero-info" aria-live="polite"></div>
+  </div>
+</header>
+</div>
+
+<!-- CLUSTERING -->
+<section id="clustering"><div class="wrap">
+  <div class="kicker">Step 1 · The idea</div>
+  <h2>Clustering: put similar things together</h2>
+  <p class="lead">A cluster is a group of points that are more similar to each other than to points in other groups. "Similar" almost always means <b>close together</b> by some distance.</p>
+  <div class="vs">
+    <div class="card"><svg viewBox="0 0 240 150" id="mini-sup" aria-label="Supervised: points already have colours"></svg><h3>Supervised</h3><p>Points arrive <b>already coloured</b>. The model learns to colour new points the same way.</p></div>
+    <div class="card"><svg viewBox="0 0 240 150" id="mini-uns" aria-label="Unsupervised: grey points, groups unknown"></svg><h3>Unsupervised</h3><p>Points arrive <b>grey</b>. The model decides how many groups there are and where they are.</p></div>
+  </div>
+  <h3 style="margin-top:30px">Three ways to define a "group"</h3>
+  <div class="grid3">
+    <div class="card top-km"><h3>Centroid-based</h3><p>Each group has a centre; points join the nearest centre. <b class="km">K-Means</b>. Fast, but assumes round blobs.</p></div>
+    <div class="card top-hc"><h3>Connectivity-based</h3><p>Repeatedly merge the two closest groups, building a family tree. <b class="hc">Hierarchical</b>. You choose where to cut.</p></div>
+    <div class="card top-db"><h3>Density-based</h3><p>A group is a crowded region; sparse points are noise. <b class="db">DBSCAN</b>. Any shape, finds outliers.</p></div>
+  </div>
+  <h3 style="margin-top:30px">Where it's used</h3>
+  <div class="grid4">
+    <div class="card"><p><b>Customer segments</b><br>Group shoppers by spend, frequency and categories for targeted offers.</p></div>
+    <div class="card"><p><b>Anomaly detection</b><br>Points that fit no cluster: fraud, faulty sensors, intrusions.</p></div>
+    <div class="card"><p><b>Organising content</b><br>Group news articles, support tickets or photos by topic.</p></div>
+    <div class="card"><p><b>Image compression</b><br>Replace millions of colours with the k most typical ones.</p></div>
+  </div>
+  <div class="note"><b>How do you know it worked, with no labels?</b> There's no "accuracy". Instead you check internal scores: <b>inertia</b> (how tight clusters are, lower is better) and the <b>silhouette score</b> (−1 to 1: are points closer to their own cluster than to the next one?). And you check whether the groups make sense to a human expert.</div>
+</div></section>
+
+<!-- KMEANS -->
+<section id="kmeans"><div class="wrap">
+  <div class="kicker">Step 2 · Centroid-based</div>
+  <h2>K-Means: pick centres, assign, move, repeat</h2>
+  <p class="lead">You choose k, the number of clusters. K-Means then alternates two simple moves until nothing changes. Step through it yourself.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li><b>Initialise:</b> drop k centres (centroids) somewhere. Random points from the data, or the smarter <b>k-means++</b>, which spreads them out.</li>
+        <li><b>Assign:</b> every point joins its nearest centroid. The shaded areas show each centroid's territory.</li>
+        <li><b>Update:</b> move each centroid to the average position of its points.</li>
+        <li>Repeat 2–3 until no point changes cluster. Each round lowers the <b>inertia</b>: the total squared distance from points to their centroid.</li>
+      </ol>
+      <div class="formula">inertia = Σ (distance from each point to its centroid)²</div>
+      <p><b>Choosing k: the elbow method.</b> Inertia always falls as k grows, so look for the bend where adding clusters stops helping much.</p>
+      <svg id="elbow" viewBox="0 0 400 170" style="width:100%;display:block" role="img" aria-label="Elbow chart of inertia versus k"></svg>
+      <pre>from sklearn.cluster import KMeans
+km = KMeans(n_clusters=3, init="k-means++", n_init=10).fit(X)
+km.labels_, km.cluster_centers_, km.inertia_</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="km-plot" viewBox="0 0 480 440" role="img" aria-label="K-Means step by step"></svg>
+        <div class="stats"><span>Iteration <b id="km-it"></b></span><span>Inertia <b id="km-in"></b></span><span>Silhouette <b id="km-si"></b></span></div>
+      </div>
+      <div class="status" id="km-status" aria-live="polite"></div>
+      <div class="btns"><button class="btn" id="km-step">Next step</button><button class="btn ghost" id="km-run">Run to the end</button><button class="btn ghost" id="km-new">New random start</button></div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="km-ds"></div></div>
+      <div class="ctrl"><label for="km-k">k (clusters) <span id="km-kv"></span></label><input type="range" id="km-k" min="1" max="8" step="1" value="3"></div>
+      <div class="ctrl"><div class="lab">Initialisation</div><div class="seg" id="km-init"><button data-v="rand" aria-pressed="true">Random points</button><button data-v="pp" aria-pressed="false">k-means++</button></div></div>
+    </div>
+  </div>
+  <div class="note"><b>K-Means' blind spots.</b> Try Moons or Rings: K-Means always cuts space into straight-edged territories, so it can't follow curved shapes. It's also sensitive to the starting centroids (press "New random start" a few times on Blobs with random init), to outliers, and to unscaled features.</div>
+</div></section>
+
+<!-- HIERARCHICAL -->
+<section id="hier"><div class="wrap">
+  <div class="kicker">Step 3 · Connectivity-based</div>
+  <h2>Hierarchical clustering: build a family tree, then cut it</h2>
+  <p class="lead">Start with every point as its own cluster. Repeatedly merge the two closest clusters until only one is left. The record of merges is a tree called a <b>dendrogram</b>.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li>Every point starts alone: n clusters.</li>
+        <li>Find the two closest clusters and merge them. Record the distance at which they merged: that's the height of the join in the dendrogram.</li>
+        <li>Repeat until everything is one cluster. This bottom-up version is <b>agglomerative</b> (top-down splitting is called divisive).</li>
+        <li><b>Cut</b> the tree with a horizontal line. Every branch hanging below the line is one cluster. Tall gaps in the tree hint at a natural number of clusters.</li>
+      </ol>
+      <p><b>Linkage</b> decides what "distance between two clusters" means:</p>
+      <ul style="padding-left:20px;margin-top:0">
+        <li><b>Single:</b> closest pair of points. Follows chains and curves, but one bridge point can glue groups together.</li>
+        <li><b>Complete:</b> farthest pair. Compact, evenly sized groups.</li>
+        <li><b>Average:</b> average of all pairs. A middle ground.</li>
+        <li><b>Ward:</b> merge whichever pair increases total variance least. Similar spirit to K-Means; the usual default.</li>
+      </ul>
+      <pre>from sklearn.cluster import AgglomerativeClustering
+AgglomerativeClustering(n_clusters=3, linkage="ward")
+# draw the tree: scipy.cluster.hierarchy.linkage + dendrogram</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="hc-plot" viewBox="0 0 480 440" role="img" aria-label="Points coloured by hierarchical clusters"></svg>
+        <svg id="hc-dendro" viewBox="0 0 480 210" role="img" aria-label="Dendrogram with cut line" style="margin-top:6px;border-top:1px solid var(--line)"></svg>
+        <div class="stats"><span>Clusters <b id="hc-n"></b></span><span>Cut height <b id="hc-h"></b></span><span>Silhouette <b id="hc-si"></b></span></div>
+      </div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="hc-ds"></div></div>
+      <div class="ctrl"><div class="lab">Linkage</div><div class="seg" id="hc-link"><button data-v="single" aria-pressed="false">Single</button><button data-v="complete" aria-pressed="false">Complete</button><button data-v="average" aria-pressed="false">Average</button><button data-v="ward" aria-pressed="true">Ward</button></div></div>
+      <div class="ctrl"><label for="hc-k">Cut into k clusters <span id="hc-kv"></span></label><input type="range" id="hc-k" min="1" max="8" step="1" value="3"></div>
+    </div>
+  </div>
+  <div class="note"><b>Trade-off:</b> you don't have to choose k in advance, and the tree itself is informative. But it compares every pair of points, so memory and time grow fast. It's comfortable up to roughly ten thousand rows, not millions. Merges are also final: an early mistake is never undone.</div>
+</div></section>
+
+<!-- DBSCAN -->
+<section id="dbscan"><div class="wrap">
+  <div class="kicker">Step 4 · Density-based</div>
+  <h2>DBSCAN: clusters are crowds, loners are noise</h2>
+  <p class="lead">DBSCAN (Density-Based Spatial Clustering of Applications with Noise) doesn't ask for k. It grows clusters through crowded regions and labels isolated points as <b>noise</b>.</p>
+  <div class="demo">
+    <div>
+      <p>Two settings: <b>ε (eps)</b>, the radius of a point's neighbourhood, and <b>minPts</b>, how many points (itself included) must be inside it to count as "crowded".</p>
+      <ol class="steps">
+        <li><b>Core point:</b> has at least minPts points within ε. Drawn large.</li>
+        <li><b>Border point:</b> not crowded itself, but within ε of a core point. Joins that cluster. Drawn small.</li>
+        <li><b>Noise:</b> neither. Belongs to no cluster. Drawn as a grey ×.</li>
+        <li>Start at any core point and keep hopping to core points within ε of each other. Everything reachable is one cluster. Repeat for unvisited core points.</li>
+      </ol>
+      <p>Because clusters grow by chaining neighbourhoods, they can take <b>any shape</b>: moons, rings, snakes. Click any point on the map to see its neighbourhood.</p>
+      <div class="note" style="margin-top:6px"><b>Weak spot:</b> one ε for the whole map. If some clusters are dense and others sparse, no single ε fits both. Pick ε from a k-distance plot, or try <b>HDBSCAN</b>, which adapts to varying density.</div>
+      <pre>from sklearn.cluster import DBSCAN
+db = DBSCAN(eps=0.5, min_samples=5).fit(X)
+db.labels_   # -1 means noise</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="db-plot" class="click" viewBox="0 0 480 440" role="img" aria-label="DBSCAN clusters with core, border and noise points. Click a point to inspect it"></svg>
+        <div class="legend"><span><i style="background:var(--ink)"></i>Core</span><span><i style="background:var(--ink);width:7px;height:7px;vertical-align:1px"></i>Border</span><span>× Noise</span></div>
+        <div class="stats"><span>Clusters <b id="db-n"></b></span><span>Core <b id="db-c"></b></span><span>Noise <b id="db-noise"></b></span></div>
+      </div>
+      <div class="status" id="db-info" aria-live="polite"></div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="db-ds"></div></div>
+      <div class="ctrl"><label for="db-eps">ε (neighbourhood radius) <span id="db-epsv"></span></label><input type="range" id="db-eps" min="0.2" max="2" step="0.05" value="0.8"></div>
+      <div class="ctrl"><label for="db-min">minPts <span id="db-minv"></span></label><input type="range" id="db-min" min="2" max="12" step="1" value="5"></div>
+      <div class="ctrl"><div class="lab">ε circles around core points</div><div class="seg" id="db-circ"><button data-v="1" aria-pressed="true">Show</button><button data-v="0" aria-pressed="false">Hide</button></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- DIM RED -->
+<section id="dimred"><div class="wrap">
+  <div class="kicker">Step 5 · The other half</div>
+  <h2>Dimensionality reduction: fewer columns, same story</h2>
+  <p class="lead">Real datasets can have hundreds of columns (dimensions). Many are redundant or noisy. Dimensionality reduction compresses them into a few new columns that keep most of the information.</p>
+  <div class="grid2" style="margin-top:22px">
+    <div class="card"><h3>The shadow analogy</h3><p>A 3-D object casts a 2-D shadow. Shine the light from a good angle and you can still recognise a hand or a teapot; from a bad angle it's an unreadable blob. Dimensionality reduction looks for the <b>angle that keeps the most detail</b>.</p></div>
+    <div class="card"><h3>Why bother?</h3><p><b>See it:</b> plot 50-column data in 2-D. <b>Speed:</b> fewer columns train faster. <b>Denoise:</b> drop directions that are mostly noise. <b>Fight the curse of dimensionality</b> (below).</p></div>
+    <div class="card"><h3>Selection vs extraction</h3><p><b>Feature selection</b> keeps some original columns and drops the rest. <b>Feature extraction</b> builds new columns as combinations of the old ones. PCA is extraction.</p></div>
+    <div class="card"><h3>The main methods</h3><p><b class="pc">PCA</b>: linear, fast, the standard first choice. <b>t-SNE / UMAP</b>: non-linear, great for 2-D pictures of clusters, not for feeding models. <b>Autoencoders</b>: neural networks that learn a compressed code.</p></div>
+  </div>
+  <h3 style="margin-top:30px">The curse of dimensionality, measured live</h3>
+  <p style="color:var(--muted);max-width:720px">300 random points in a unit cube with d dimensions. For a random query point, we divide the distance to its <b>nearest</b> neighbour by the distance to its <b>farthest</b>. Near 0 means "near" and "far" are clearly different. Near 1 means everything is roughly equally far away, so distance-based methods (K-Means, KNN, DBSCAN) lose their footing.</p>
+  <div class="card" id="curse" style="margin-top:12px"></div>
+</div></section>
+
+<!-- PCA -->
+<section id="pca"><div class="wrap">
+  <div class="kicker">Step 6 · Dimensionality reduction</div>
+  <h2>Principal Component Analysis: find the direction of most spread</h2>
+  <p class="lead">PCA finds new axes, called <b>principal components</b>, ordered by how much of the data's variation (spread) they capture. Keep the first few and drop the rest.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li><b>Standardise</b> each column (mean 0, standard deviation 1), so a column measured in thousands doesn't dominate.</li>
+        <li>Compute the <b>covariance matrix</b>: how every pair of columns moves together.</li>
+        <li>Its <b>eigenvectors</b> are the principal components (directions); its <b>eigenvalues</b> say how much variance each one holds. PC1 holds the most, PC2 the next, and each is at right angles to the ones before.</li>
+        <li><b>Project</b> each point onto the first k components. Those projections are your new, shorter columns.</li>
+      </ol>
+      <p><b>Try it:</b> rotate the line. Each point drops onto it (dashed). The spread of those shadows is the variance kept. PC1 is the angle where it's largest, which is also where the dashed lines are shortest in total (least information lost).</p>
+      <pre>from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+Xs = StandardScaler().fit_transform(X)
+pca = PCA(n_components=0.95).fit(Xs)   # keep 95% of variance
+pca.explained_variance_ratio_</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="pca-plot" viewBox="0 0 480 440" role="img" aria-label="2-D points projected onto a rotatable line"></svg>
+        <svg id="pca-strip" viewBox="0 0 480 64" role="img" aria-label="The new 1-D feature" style="border-top:1px solid var(--line);margin-top:6px"></svg>
+        <div style="font-size:.88rem;margin-top:8px">Variance kept by this line: <b id="pca-pct"></b> <span style="color:var(--muted)">(best possible: <span id="pca-max"></span>)</span></div>
+        <div class="meter"><span id="pca-bar"></span><i id="pca-mark"></i></div>
+      </div>
+      <div class="ctrl"><label for="pca-a">Line angle <span id="pca-av"></span></label><input type="range" id="pca-a" min="0" max="179" step="1" value="120"></div>
+      <div class="btns"><button class="btn" id="pca-pc1">Snap to PC1</button><button class="btn ghost" id="pca-pc2">Show PC2</button></div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:40px">A real use: 6 exam subjects → 2 components</h3>
+  <p style="color:var(--muted);max-width:740px">Simulated marks for 200 students in six subjects. PCA is run live on the standardised marks. Watch how much of the information the first two components keep, and what each one "means".</p>
+  <div class="grid2" style="margin-top:14px">
+    <div class="card"><div class="kicker" style="margin-bottom:10px">Explained variance per component</div><div id="scree"></div><p style="color:var(--muted);font-size:.86rem;margin-top:10px" id="scree-note"></p></div>
+    <div class="card"><div class="kicker" style="margin-bottom:10px">Loadings: what each component is made of</div><div id="loads"></div><p style="color:var(--muted);font-size:.86rem;margin-top:10px">Bars right of the centre line push the component up; bars left push it down.</p></div>
+  </div>
+  <div class="note"><b>The price of PCA:</b> new columns are blends of old ones, so "PC2 = 0.8" is harder to explain than "Maths = 80". PCA only finds straight-line (linear) structure, and it's sensitive to scale, so always standardise first.</div>
+</div></section>
+
+<!-- COMPARE -->
+<section id="compare"><div class="wrap">
+  <div class="kicker">Step 7 · Side by side</div>
+  <h2>All four algorithms on one page</h2>
+  <h3 style="margin-top:20px">Live scoreboard: how well did each recover the hidden groups?</h3>
+  <p style="color:var(--muted);font-size:.92rem">Because the data is simulated, we secretly know the true groups. The <b>Adjusted Rand Index</b> compares a clustering to them: 1.00 is a perfect match, around 0 is no better than random. Settings: true k for K-Means and hierarchical; DBSCAN ε = 0.8, minPts = 5. In real projects you don't have the true groups; this is only possible here because the data is simulated.</p>
+  <div class="scroll"><table class="big"><thead><tr><th>Algorithm</th><th style="text-align:right">Blobs</th><th style="text-align:right">Moons</th><th style="text-align:right">Rings + noise</th></tr></thead><tbody id="board"></tbody></table></div>
+  <h3 style="margin-top:30px">How they differ</h3>
+  <div class="scroll">
+  <table class="big stack">
+    <thead><tr><th>Algorithm</th><th>You choose</th><th>Shapes it finds</th><th>Handles noise?</th><th>Big data?</th><th>You get</th></tr></thead>
+    <tbody id="cmp"></tbody>
+  </table>
+  </div>
+  <div class="note"><b>They work together.</b> A common pipeline: standardise → PCA down to ~10–50 components (faster, less noise) → cluster with K-Means or DBSCAN → plot with PCA or UMAP in 2-D to inspect.</div>
+</div></section>
+
+<!-- CHOOSER -->
+<section id="chooser"><div class="wrap">
+  <div class="kicker">Step 8 · Try it</div>
+  <h2>Which method fits my problem?</h2>
+  <p class="lead">Answer the questions for a starting point.</p>
+  <div class="grid2" style="margin-top:22px;align-items:start">
+    <div id="qs"></div>
+    <div class="verdict">
+      <div class="chips" id="chips"></div>
+      <h3 id="v-title">Pick your answers</h3>
+      <p id="v-body" style="color:var(--muted);margin:0">Your recommendation will appear here.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- QUIZ -->
+<section id="quiz"><div class="wrap">
+  <div class="kicker">Step 9 · Check yourself</div>
+  <h2>Quick quiz</h2>
+  <p class="score" id="score">Score: 0 / 0</p>
+  <div class="quiz" id="quizbox"></div>
+  <h3 style="margin-top:34px">One-line cheat sheet</h3>
+  <div class="cheat">
+    <div class="bg-km"><b>Clustering</b>: group unlabelled points by similarity</div>
+    <div class="bg-km"><b>K-Means</b>: k centres; assign to nearest, move to mean, repeat</div>
+    <div class="bg-hc"><b>Hierarchical</b>: merge closest groups into a tree, cut at the height you want</div>
+    <div class="bg-db"><b>DBSCAN</b>: crowded regions become clusters; loners become noise</div>
+    <div class="bg-pc"><b>Dimensionality reduction</b>: fewer columns that keep most of the information</div>
+    <div class="bg-pc"><b>PCA</b>: rotate onto the directions of greatest variance, keep the top few</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Teaching page on unsupervised learning. All datasets are simulated; every clustering, score and PCA result is computed live in your browser.</div></footer>
+
+<script>
+{
+// ================= helpers & data =================
+const rng=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const gaussOf=R=>()=>{let u=0;while(!u)u=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*R())};
+const cl=v=>Math.max(0.2,Math.min(9.8,v));
+const $=id=>document.getElementById(id);
+const PAL=[0,1,2,3,4,5,6,7].map(i=>`var(--k${i})`);
+const col=l=>l<0?'var(--grey)':PAL[l%8];
+function gen(kind,seed){const R=rng(seed),g=gaussOf(R),P=[];
+  if(kind==='blobs'){[[2.8,7],[7.1,7.2],[5,2.8]].forEach((m,c)=>{for(let i=0;i<60;i++)P.push({x:cl(m[0]+g()*.85),y:cl(m[1]+g()*.85),t:c})})}
+  else if(kind==='moons'){for(let i=0;i<200;i++){const c=i%2,t=R()*Math.PI;let a=c?1-Math.cos(t):Math.cos(t),b=c?.5-Math.sin(t):Math.sin(t);a+=g()*.1;b+=g()*.1;P.push({x:cl((a+1.25)/3.5*10),y:cl((b+.95)/2.4*10),t:c})}}
+  else{for(let i=0;i<80;i++){const r=1.3*Math.sqrt(R()),t=R()*2*Math.PI;P.push({x:5+r*Math.cos(t),y:5+r*Math.sin(t),t:0})}
+    for(let i=0;i<140;i++){const r=3.4+g()*.15,t=R()*2*Math.PI;P.push({x:cl(5+r*Math.cos(t)),y:cl(5+r*Math.sin(t)),t:1})}
+    for(let i=0;i<15;i++){let x,y;do{x=.4+R()*9.2;y=.4+R()*9.2}while(Math.abs(Math.hypot(x-5,y-5)-3.4)<.8||Math.hypot(x-5,y-5)<2.1);P.push({x,y,t:2})}}
+  return P}
+const DSN={blobs:'Blobs',moons:'Moons',rings:'Rings + noise'},TRUEK={blobs:3,moons:2,rings:2};
+const DS={};Object.keys(DSN).forEach((k,i)=>DS[k]={P:gen(k,31+i),cache:{}});
+const memo=(D,key,fn)=>D.cache[key]??(D.cache[key]=fn());
+const d2=(a,b)=>(a.x-b.x)**2+(a.y-b.y)**2;
+
+// ================= algorithms =================
+function kmInit(P,k,seed,pp){const R=rng(seed);let C=[];
+  if(!pp){const used=new Set();while(C.length<k){const i=Math.floor(R()*P.length);if(!used.has(i)){used.add(i);C.push({x:P[i].x,y:P[i].y})}}}
+  else{const f=P[Math.floor(R()*P.length)];C=[{x:f.x,y:f.y}];while(C.length<k){const d=P.map(p=>Math.min(...C.map(c=>d2(p,c))));let r=R()*d.reduce((a,b)=>a+b,0),i=0;while(i<P.length-1&&r>d[i]){r-=d[i];i++}C.push({x:P[i].x,y:P[i].y})}}
+  return C}
+const nearest=(p,C)=>{let b=0,bd=Infinity;C.forEach((c,i)=>{const d=d2(p,c);if(d<bd){bd=d;b=i}});return b};
+const kmAssign=(P,C)=>P.map(p=>nearest(p,C));
+const kmUpdate=(P,C,A)=>C.map((c,i)=>{let sx=0,sy=0,n=0;P.forEach((p,j)=>{if(A[j]===i){sx+=p.x;sy+=p.y;n++}});return n?{x:sx/n,y:sy/n}:{...c}});
+const inertia=(P,C,A)=>P.reduce((s,p,i)=>s+d2(p,C[A[i]]),0);
+function kmRun(P,k,seed,pp){let C=kmInit(P,k,seed,pp),A=kmAssign(P,C);for(let it=0;it<100;it++){C=kmUpdate(P,C,A);const B=kmAssign(P,C);if(B.every((v,i)=>v===A[i]))break;A=B}return{C,A,I:inertia(P,C,A)}}
+function silhouette(P,A){const ids=[...new Set(A.filter(a=>a>=0))];if(ids.length<2)return null;let s=0,n=0;
+  P.forEach((p,i)=>{if(A[i]<0)return;const sums={},cnt={};P.forEach((q,j)=>{if(j===i||A[j]<0)return;const d=Math.sqrt(d2(p,q));sums[A[j]]=(sums[A[j]]||0)+d;cnt[A[j]]=(cnt[A[j]]||0)+1});
+    if(!cnt[A[i]]){n++;return}const a=sums[A[i]]/cnt[A[i]];let b=Infinity;for(const c of ids)if(c!==A[i]&&cnt[c])b=Math.min(b,sums[c]/cnt[c]);s+=(b-a)/Math.max(a,b);n++});
+  return s/n}
+function linkage(P,method){const n=P.length,N=2*n-1,D=Array.from({length:N},()=>new Float64Array(N));
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++)D[i][j]=Math.sqrt(d2(P[i],P[j]));
+  const act=new Set([...Array(n).keys()]),sz=new Array(N).fill(1),M=[];
+  for(let s=0;s<n-1;s++){const A=[...act];let bi=-1,bj=-1,bd=Infinity;
+    for(let x=0;x<A.length;x++)for(let y=x+1;y<A.length;y++){const d=D[A[x]][A[y]];if(d<bd){bd=d;bi=A[x];bj=A[y]}}
+    const id=n+s;sz[id]=sz[bi]+sz[bj];M.push({a:bi,b:bj,h:bd,id});act.delete(bi);act.delete(bj);
+    for(const k of act){const dki=D[k][bi],dkj=D[k][bj],nk=sz[k],ni=sz[bi],nj=sz[bj];let d;
+      if(method==='single')d=Math.min(dki,dkj);else if(method==='complete')d=Math.max(dki,dkj);
+      else if(method==='average')d=(ni*dki+nj*dkj)/(ni+nj);
+      else d=Math.sqrt(Math.max(0,((nk+ni)*dki*dki+(nk+nj)*dkj*dkj-nk*bd*bd)/(nk+ni+nj)));
+      D[k][id]=D[id][k]=d}
+    act.add(id)}
+  return M}
+function leafOrder(n,M){const ch={};M.forEach(m=>ch[m.id]=[m.a,m.b]);const out=[],st=[2*n-2];while(st.length){const v=st.pop();if(v<n)out.push(v);else{st.push(ch[v][1]);st.push(ch[v][0])}}return out}
+function cut(n,M,k){const par={};for(let s=0;s<n-k;s++){par[M[s].a]=M[s].id;par[M[s].b]=M[s].id}
+  const find=x=>{while(par[x]!==undefined)x=par[x];return x};const order=leafOrder(n,M),map={};let c=0;
+  order.forEach(i=>{const r=find(i);if(map[r]===undefined)map[r]=c++});
+  return{labels:[...Array(n).keys()].map(i=>map[find(i)]),find,map}}
+function dbscan(P,eps,minPts){const n=P.length,e2=eps*eps,N=P.map(p=>P.map((q,j)=>d2(p,q)<=e2?j:-1).filter(j=>j>=0)),core=N.map(a=>a.length>=minPts),L=new Array(n).fill(-1);let c=0;
+  for(let i=0;i<n;i++){if(!core[i]||L[i]>=0)continue;L[i]=c;const q=[i];while(q.length){const v=q.pop();if(!core[v])continue;for(const j of N[v])if(L[j]<0){L[j]=c;q.push(j)}}c++}
+  return{L,core,N,k:c}}
+function ari(a,b){const n=a.length,ct={},ra={},rb={},c2=x=>x*(x-1)/2;
+  for(let i=0;i<n;i++){const k=a[i]+'|'+b[i];ct[k]=(ct[k]||0)+1;ra[a[i]]=(ra[a[i]]||0)+1;rb[b[i]]=(rb[b[i]]||0)+1}
+  const s=Object.values(ct).reduce((t,v)=>t+c2(v),0),sa=Object.values(ra).reduce((t,v)=>t+c2(v),0),sb=Object.values(rb).reduce((t,v)=>t+c2(v),0),e=sa*sb/c2(n),mx=(sa+sb)/2;
+  return mx===e?1:(s-e)/(mx-e)}
+const truth=D=>D.P.map(p=>p.t);
+const kmBest=(D,k)=>memo(D,'kmb'+k,()=>{let best=null;for(let s=1;s<=5;s++){const r=kmRun(D.P,k,s*97,true);if(!best||r.I<best.I)best=r}return best});
+const link=(D,m)=>memo(D,'L'+m,()=>linkage(D.P,m));
+const dbs=(D,e,m)=>memo(D,`db${e}_${m}`,()=>dbscan(D.P,e,m));
+
+// ================= drawing =================
+const W=480,H=440,L=40,RM=10,T=10,BM=40,PW=W-L-RM,PH=H-T-BM;
+const sx=x=>L+x/10*PW, sy=y=>T+(1-y/10)*PH;
+function frame(id){let g=`<defs><clipPath id="clip-${id}"><rect x="${L}" y="${T}" width="${PW}" height="${PH}"/></clipPath></defs><rect x="${L}" y="${T}" width="${PW}" height="${PH}" fill="none" stroke="var(--line)"/>`;
+  for(let v=0;v<=10;v+=2)g+=`<text x="${sx(v)}" y="${H-BM+18}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter">${v}</text><text x="${L-8}" y="${sy(v)+4}" text-anchor="end" font-size="12" fill="var(--muted)" font-family="Inter">${v}</text>`;
+  g+=`<text x="${L+PW/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter">Feature x₁</text><text x="12" y="${T+PH/2}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter" transform="rotate(-90 12 ${T+PH/2})">Feature x₂</text>`;
+  return g}
+const draw=(id,inner)=>{$(id).innerHTML=frame(id)+inner};
+const dot=(p,l,r=5)=>`<circle cx="${sx(p.x).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="${r}" fill="${col(l)}" stroke="var(--card)" stroke-width="1"/>`;
+const cross=(p,c='var(--grey)')=>`<path d="M${sx(p.x)-4},${sy(p.y)-4}l8,8M${sx(p.x)+4},${sy(p.y)-4}l-8,8" stroke="${c}" stroke-width="2"/>`;
+const dots=(P,A)=>P.map((p,i)=>A&&A[i]<0?cross(p):dot(p,A?A[i]:-1)).join('');
+function territories(C){const CO=48,RO=44,cw=PW/CO,ch=PH/RO;let o='';
+  for(let r=0;r<RO;r++){let s=0,cur=null;const y=10-(r+.5)/RO*10;
+    for(let c=0;c<=CO;c++){const v=c<CO?nearest({x:(c+.5)/CO*10,y},C):-9;if(v!==cur){if(cur!==null)o+=`<rect x="${(L+s*cw).toFixed(2)}" y="${(T+r*ch).toFixed(2)}" width="${((c-s)*cw).toFixed(2)}" height="${ch.toFixed(2)}" fill="${col(cur)}" opacity=".12" shape-rendering="crispEdges"/>`;cur=v;s=c}}}
+  return o}
+const centroid=(c,i)=>`<g><circle cx="${sx(c.x)}" cy="${sy(c.y)}" r="12" fill="var(--card)" stroke="${col(i)}" stroke-width="3"/><path d="M${sx(c.x)-5},${sy(c.y)-5}l10,10M${sx(c.x)+5},${sy(c.y)-5}l-10,10" stroke="${col(i)}" stroke-width="3"/></g>`;
+function dsSeg(id,cur,on){const el=$(id);el.innerHTML=Object.entries(DSN).map(([k,v])=>`<button data-v="${k}" aria-pressed="${k===cur}">${v}</button>`).join('');
+  [...el.children].forEach(b=>b.onclick=()=>{[...el.children].forEach(x=>x.setAttribute('aria-pressed',x===b));on(b.dataset.v)})}
+function seg(id,on){const el=$(id);[...el.children].forEach(b=>b.onclick=()=>{[...el.children].forEach(x=>x.setAttribute('aria-pressed',x===b));on(b.dataset.v)})}
+const f2=v=>v==null?'–':v.toFixed(2);
+
+// ================= hero =================
+const HM=[
+ {k:'Raw data',c:'',run:D=>null,t:'This is all an unsupervised algorithm gets: positions, no colours. Pick an algorithm to see what groups it finds.'},
+ {k:'K-Means',c:'km',run:(D,ds)=>kmBest(D,TRUEK[ds]).A,t:'cuts the map into straight-edged territories around k centres.'},
+ {k:'Hierarchical (Ward)',c:'hc',run:(D,ds)=>cut(D.P.length,link(D,'ward'),TRUEK[ds]).labels,t:'merges the closest groups, keeping clusters compact.'},
+ {k:'Hierarchical (single)',c:'hc',run:(D,ds)=>cut(D.P.length,link(D,'single'),TRUEK[ds]).labels,t:'merges via the closest pair of points, so it can follow chains.'},
+ {k:'DBSCAN',c:'db',run:D=>dbs(D,.8,5).L,t:'grows clusters through crowded regions and marks loners as noise (×).'}];
+let hDs='moons',hM=0;
+function hero(){const D=DS[hDs],m=HM[hM],A=m.run(D,hDs);draw('hero-plot',dots(D.P,A));
+  [...$('hero-btns').children].forEach((b,j)=>b.setAttribute('aria-pressed',j===hM));
+  $('hero-info').innerHTML=hM===0?m.t:`<b class="${m.c}">${m.k}</b> ${m.t}<br><span style="color:var(--muted);font-size:.88rem">Match with the hidden true groups (Adjusted Rand Index): <b style="color:var(--ink)">${f2(ari(A,truth(D)))}</b> (1.00 = perfect). Try every dataset.</span>`}
+$('hero-btns').innerHTML=HM.map(m=>`<button class="mbtn">${m.k}</button>`).join('');
+[...$('hero-btns').children].forEach((b,i)=>b.onclick=()=>{hM=i;hero()});
+dsSeg('hero-ds',hDs,v=>{hDs=v;hero()});hero();
+
+// mini supervised vs unsupervised
+(()=>{const P=DS.blobs.P.filter((_,i)=>i%3===0),m=(p,c)=>`<circle cx="${10+p.x*22}" cy="${145-p.y*14}" r="4" fill="${c}"/>`;
+  $('mini-sup').innerHTML=P.map(p=>m(p,col(p.t))).join('');$('mini-uns').innerHTML=P.map(p=>m(p,'var(--grey)')).join('')})();
+
+// ================= k-means =================
+let K={ds:'blobs',k:3,pp:false,seed:7,C:null,A:null,prev:null,it:0,phase:'assign',done:false};
+function kmReset(){const D=DS[K.ds];K.C=kmInit(D.P,K.k,K.seed,K.pp);K.A=null;K.prev=null;K.it=0;K.phase='assign';K.done=false;kmDraw()}
+function kmStep(){if(K.done)return;const P=DS[K.ds].P;
+  if(K.phase==='assign'){const B=kmAssign(P,K.C);if(K.A&&B.every((v,i)=>v===K.A[i])){K.done=true}else{K.A=B;K.phase='update';if(K.it===0)K.it=1}}
+  else{K.prev=K.C.map(c=>({...c}));K.C=kmUpdate(P,K.C,K.A);K.phase='assign';K.it++}
+  kmDraw()}
+function kmDraw(){const D=DS[K.ds];$('km-kv').textContent=K.k;
+  const trails=K.prev&&K.phase==='assign'?K.prev.map((p,i)=>`<line x1="${sx(p.x)}" y1="${sy(p.y)}" x2="${sx(K.C[i].x)}" y2="${sy(K.C[i].y)}" stroke="${col(i)}" stroke-width="2" stroke-dasharray="4 4"/><circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="5" fill="none" stroke="${col(i)}" stroke-width="1.5"/>`).join(''):'';
+  draw('km-plot',(K.A?territories(K.C):'')+dots(D.P,K.A)+trails+K.C.map(centroid).join(''));
+  $('km-it').textContent=K.it;$('km-in').textContent=K.A?inertia(D.P,K.C,K.A).toFixed(1):'–';$('km-si').textContent=K.done?f2(silhouette(D.P,K.A)):'–';
+  $('km-status').innerHTML=K.done?'<b class="hc">✓ Converged.</b> No point changed cluster, so K-Means stops.':!K.A?`${K.k} centroids placed (${K.pp?'k-means++':'random points'}). <b>Next: assign</b> every point to its nearest centroid.`:K.phase==='update'?'Points assigned. <b>Next: update</b>, moving each centroid to the mean of its points.':'Centroids moved (dashed trail). <b>Next: re-assign</b> points to the new nearest centroid.';
+  $('km-step').disabled=K.done;elbow()}
+function elbow(){const D=DS[K.ds],I=[1,2,3,4,5,6,7,8].map(k=>kmBest(D,k).I),mx=I[0],X=k=>40+(k-1)*48,Y=v=>140-v/mx*125;
+  let g=`<line x1="40" x2="380" y1="140" y2="140" stroke="var(--line)"/><text x="210" y="166" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Inter">k (number of clusters)</text><text x="34" y="${Y(mx)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="Inter">${Math.round(mx)}</text><text x="34" y="143" text-anchor="end" font-size="11" fill="var(--muted)" font-family="Inter">0</text>`;
+  g+=`<path d="${I.map((v,i)=>(i?'L':'M')+X(i+1)+','+Y(v)).join('')}" fill="none" stroke="var(--km)" stroke-width="2.5"/>`;
+  g+=I.map((v,i)=>`<circle cx="${X(i+1)}" cy="${Y(v)}" r="${i+1===K.k?7:4}" fill="${i+1===K.k?'var(--ink)':'var(--km)'}"/><text x="${X(i+1)}" y="154" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Inter">${i+1}</text>`).join('');
+  g+=`<text x="380" y="18" text-anchor="end" font-size="11" fill="var(--muted)" font-family="Inter">best inertia over 5 k-means++ runs</text>`;
+  $('elbow').innerHTML=g}
+$('km-step').onclick=kmStep;
+$('km-run').onclick=()=>{let g=0;while(!K.done&&g++<400)kmStep()};
+$('km-new').onclick=()=>{K.seed=Math.floor(Math.random()*1e6);kmReset()};
+$('km-k').oninput=()=>{K.k=+$('km-k').value;kmReset()};
+seg('km-init',v=>{K.pp=v==='pp';kmReset()});
+dsSeg('km-ds',K.ds,v=>{K.ds=v;kmReset()});kmReset();
+
+// ================= hierarchical =================
+let HC={ds:'blobs',m:'ward',k:3};
+function hcDraw(){const D=DS[HC.ds],n=D.P.length,M=link(D,HC.m),{labels,find,map}=cut(n,M,HC.k);$('hc-kv').textContent=HC.k;
+  draw('hc-plot',dots(D.P,labels));
+  const order=leafOrder(n,M),pos={};order.forEach((v,i)=>pos[v]=i);
+  const DW=480,DH=210,dl=40,dr=10,dt=12,db=26,hmax=M[n-2].h,X={},Y={};
+  const yy=h=>dt+(1-h/hmax)*(DH-dt-db);
+  for(let i=0;i<n;i++){X[i]=dl+(pos[i]+.5)/n*(DW-dl-dr);Y[i]=yy(0)}
+  let g='';M.forEach((m,s)=>{X[m.id]=(X[m.a]+X[m.b])/2;Y[m.id]=yy(m.h);const c=s<n-HC.k?col(map[find(m.id)]):'var(--muted)';
+    g+=`<path d="M${X[m.a].toFixed(1)},${Y[m.a].toFixed(1)}V${Y[m.id].toFixed(1)}H${X[m.b].toFixed(1)}V${Y[m.b].toFixed(1)}" fill="none" stroke="${c}" stroke-width="${s<n-HC.k?1.2:1.8}"/>`});
+  const ch=HC.k>1?(M[n-HC.k-1].h+M[n-HC.k].h)/2:hmax*1.02;
+  g+=`<line x1="${dl}" x2="${DW-dr}" y1="${yy(Math.min(ch,hmax*1.02))}" y2="${yy(Math.min(ch,hmax*1.02))}" stroke="var(--ink)" stroke-width="2" stroke-dasharray="6 4"/>`;
+  g+=`<text x="${dl-6}" y="${yy(hmax)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="Inter">${hmax.toFixed(1)}</text><text x="${dl-6}" y="${yy(0)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="Inter">0</text>`;
+  g+=`<text x="${(dl+DW-dr)/2}" y="${DH-6}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Inter">${n} points (leaves) · height = merge distance · dashed line = cut</text>`;
+  $('hc-dendro').innerHTML=g;
+  $('hc-n').textContent=HC.k;$('hc-h').textContent=HC.k>1?ch.toFixed(2):'above top';$('hc-si').textContent=f2(silhouette(D.P,labels))}
+$('hc-k').oninput=()=>{HC.k=+$('hc-k').value;hcDraw()};
+seg('hc-link',v=>{HC.m=v;hcDraw()});dsSeg('hc-ds',HC.ds,v=>{HC.ds=v;hcDraw()});hcDraw();
+
+// ================= dbscan =================
+let DB={ds:"moons",eps:.8,min:5,circ:true,sel:null};
+function dbDraw(){const D=DS[DB.ds],eps=+(+$('db-eps').value).toFixed(2),mn=+$('db-min').value,r=dbs(D,eps,mn);
+  $('db-epsv').textContent=eps.toFixed(2);$('db-minv').textContent=mn;const R=eps/10*PW;
+  const circ=DB.circ?D.P.map((p,i)=>r.core[i]?`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="${R}" fill="${col(r.L[i])}" opacity=".07"/>`:'').join(''):'';
+  let sel='';if(DB.sel!=null){const p=D.P[DB.sel];sel=`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="${R}" fill="none" stroke="var(--ink)" stroke-width="2.5"/>`+r.N[DB.sel].map(j=>j===DB.sel?'':`<line x1="${sx(p.x)}" y1="${sy(p.y)}" x2="${sx(D.P[j].x)}" y2="${sy(D.P[j].y)}" stroke="var(--ink)" stroke-width="1.2" opacity=".7"/>`).join('')}
+  const pts=D.P.map((p,i)=>r.L[i]<0?cross(p):dot(p,r.L[i],r.core[i]?5.5:3.5)).join('');
+  draw('db-plot',`<g clip-path="url(#clip-db-plot)">${circ}</g>`+sel+pts);
+  $('db-n').textContent=r.k;$('db-c').textContent=r.core.filter(Boolean).length;$('db-noise').textContent=r.L.filter(v=>v<0).length;
+  if(DB.sel==null)$('db-info').innerHTML='<b>Click a point</b> to see its ε-neighbourhood and why it is core, border or noise.';
+  else{const i=DB.sel,cnt=r.N[i].length,type=r.core[i]?'<b>core</b>':r.L[i]>=0?'<b>border</b>':'<b>noise</b>';
+    $('db-info').innerHTML=`This point has <b>${cnt}</b> point${cnt>1?'s':''} within ε (counting itself); minPts is ${mn}. ${cnt>=mn?'Crowded enough':'Not crowded enough'}, so it's ${type}${!r.core[i]&&r.L[i]>=0?': it sits inside a core point\'s circle, so it joins that cluster':''}${r.L[i]<0?': no core point is within reach':''}.`}}
+['db-eps','db-min'].forEach(id=>$(id).oninput=dbDraw);
+seg('db-circ',v=>{DB.circ=v==='1';dbDraw()});
+dsSeg('db-ds',DB.ds,v=>{DB.ds=v;DB.sel=null;dbDraw()});
+$('db-plot').addEventListener('click',e=>{const r=$('db-plot').getBoundingClientRect(),x=((e.clientX-r.left)/r.width*W-L)/PW*10,y=(1-((e.clientY-r.top)/r.height*H-T)/PH)*10;
+  const P=DS[DB.ds].P;let b=-1,bd=.36;P.forEach((p,i)=>{const d=(p.x-x)**2+(p.y-y)**2;if(d<bd){bd=d;b=i}});DB.sel=b<0?null:b;dbDraw()});
+dbDraw();
+
+// ================= curse of dimensionality =================
+(()=>{const R=rng(3),dims=[1,2,3,10,50,200,1000],res=dims.map(d=>{const P=Array.from({length:300},()=>Float64Array.from({length:d},R));let s=0;
+    for(let q=0;q<5;q++){const Q=Float64Array.from({length:d},R);let mn=Infinity,mx=0;for(const p of P){let t=0;for(let j=0;j<d;j++)t+=(p[j]-Q[j])**2;t=Math.sqrt(t);if(t<mn)mn=t;if(t>mx)mx=t}s+=mn/mx}return s/5});
+  $('curse').innerHTML=dims.map((d,i)=>`<div class="hb"><span>${d} dim${d>1?'s':''}</span><div class="trk"><div class="fill" style="left:0;width:${res[i]*100}%;background:var(--pc)"></div></div><span class="v">${res[i].toFixed(2)}</span></div>`).join('')+
+  `<p style="color:var(--muted);font-size:.86rem;margin:10px 0 0">Nearest ÷ farthest distance (average of 5 query points). At 1,000 dimensions, the nearest point is almost as far away as the farthest.</p>`})();
+
+// ================= linear algebra =================
+function jacobi(S){const n=S.length,A=S.map(r=>r.slice()),V=A.map((_,i)=>A.map((_,j)=>+(i===j)));
+  for(let sw=0;sw<100;sw++){let off=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)off+=A[i][j]**2;if(off<1e-14)break;
+    for(let p=0;p<n;p++)for(let q=p+1;q<n;q++){if(Math.abs(A[p][q])<1e-15)continue;const th=(A[q][q]-A[p][p])/(2*A[p][q]),t=(th>=0?1:-1)/(Math.abs(th)+Math.sqrt(th*th+1)),c=1/Math.sqrt(t*t+1),s=t*c;
+      for(let k=0;k<n;k++){const a=A[k][p],b=A[k][q];A[k][p]=c*a-s*b;A[k][q]=s*a+c*b}
+      for(let k=0;k<n;k++){const a=A[p][k],b=A[q][k];A[p][k]=c*a-s*b;A[q][k]=s*a+c*b}
+      for(let k=0;k<n;k++){const a=V[k][p],b=V[k][q];V[k][p]=c*a-s*b;V[k][q]=s*a+c*b}}}
+  return A.map((r,i)=>({val:r[i],vec:V.map(row=>row[i])})).sort((a,b)=>b.val-a.val)}
+
+// ================= PCA 2-D demo =================
+const PP=(()=>{const R=rng(21),g=gaussOf(R),a=32*Math.PI/180;return Array.from({length:70},()=>{const t=g()*1.7,s=g()*.55;return{x:5+t*Math.cos(a)-s*Math.sin(a),y:5+t*Math.sin(a)+s*Math.cos(a)}})})();
+const pm={x:PP.reduce((s,p)=>s+p.x,0)/70,y:PP.reduce((s,p)=>s+p.y,0)/70};
+const cov=[[0,0],[0,0]];PP.forEach(p=>{const a=p.x-pm.x,b=p.y-pm.y;cov[0][0]+=a*a/69;cov[0][1]+=a*b/69;cov[1][1]+=b*b/69});cov[1][0]=cov[0][1];
+const E2=jacobi(cov),TOT=cov[0][0]+cov[1][1];
+const angOf=v=>{let a=Math.atan2(v[1],v[0])*180/Math.PI;a=((a%180)+180)%180;return Math.round(a)%180};
+const PC1A=angOf(E2[0].vec);
+function pcaDraw(){const a=+$('pca-a').value,r=a*Math.PI/180,u=[Math.cos(r),Math.sin(r)];$('pca-av').textContent=a+'°'+(a===PC1A?' (PC1)':a===(PC1A+90)%180?' (PC2)':'');
+  const pr=PP.map(p=>(p.x-pm.x)*u[0]+(p.y-pm.y)*u[1]),v=pr.reduce((s,t)=>s+t*t,0)/69;
+  const line=`<line x1="${sx(pm.x-u[0]*20)}" y1="${sy(pm.y-u[1]*20)}" x2="${sx(pm.x+u[0]*20)}" y2="${sy(pm.y+u[1]*20)}" stroke="var(--pc)" stroke-width="3" clip-path="url(#clip-pca-plot)"/>`;
+  const drops=PP.map((p,i)=>{const q={x:pm.x+pr[i]*u[0],y:pm.y+pr[i]*u[1]};return `<line x1="${sx(p.x)}" y1="${sy(p.y)}" x2="${sx(q.x)}" y2="${sy(q.y)}" stroke="var(--muted)" stroke-dasharray="3 3" opacity=".8"/><circle cx="${sx(q.x)}" cy="${sy(q.y)}" r="3" fill="var(--pc)"/>`}).join('');
+  draw('pca-plot',line+drops+PP.map(p=>dot(p,0,4.5)).join(''));
+  const SX=t=>240+t/6*225;
+  $('pca-strip').innerHTML=`<line x1="15" x2="465" y1="30" y2="30" stroke="var(--line)" stroke-width="2"/>`+pr.map(t=>`<circle cx="${SX(t).toFixed(1)}" cy="30" r="4" fill="var(--pc)" opacity=".6"/>`).join('')+`<text x="240" y="58" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Inter">the new single feature: each point's position along the pink line</text>`;
+  $('pca-pct').textContent=Math.round(v/TOT*100)+'%';$('pca-max').textContent=Math.round(E2[0].val/TOT*100)+'% at PC1';
+  $('pca-bar').style.width=(v/TOT*100)+'%';$('pca-mark').style.left=(E2[0].val/TOT*100)+'%'}
+$('pca-a').oninput=pcaDraw;$('pca-pc1').onclick=()=>{$('pca-a').value=PC1A;pcaDraw()};$('pca-pc2').onclick=()=>{$('pca-a').value=(PC1A+90)%180;pcaDraw()};pcaDraw();
+
+// ================= PCA on 6 subjects =================
+(()=>{const R=rng(55),g=gaussOf(R),SUB=['Maths','Physics','Chemistry','English','History','Art'];
+  const X=Array.from({length:200},()=>{const sci=g(),hum=.45*sci+.89*g();return[.85*sci+.5*g(),.8*sci+.55*g(),.75*sci+.6*g(),.8*hum+.55*g(),.75*hum+.6*g(),.45*hum+.2*sci+.85*g()]});
+  const m=SUB.map((_,j)=>X.reduce((s,r)=>s+r[j],0)/200),sd=SUB.map((_,j)=>Math.sqrt(X.reduce((s,r)=>s+(r[j]-m[j])**2,0)/199));
+  const Z=X.map(r=>r.map((v,j)=>(v-m[j])/sd[j])),C=SUB.map((_,i)=>SUB.map((_,j)=>Z.reduce((s,r)=>s+r[i]*r[j],0)/199));
+  const E=jacobi(C),tot=E.reduce((s,e)=>s+e.val,0);let cum=0;
+  $('scree').innerHTML=E.map((e,i)=>{cum+=e.val/tot;return `<div class="hb"><span>PC${i+1}</span><div class="trk"><div class="fill" style="left:0;width:${e.val/tot*100}%;background:${i<2?'var(--pc)':'var(--grey)'}"></div></div><span class="v">${Math.round(e.val/tot*100)}%</span></div>`}).join('');
+  $('scree-note').innerHTML=`The first two components keep <b style="color:var(--ink)">${Math.round((E[0].val+E[1].val)/tot*100)}%</b> of the information in six columns. You could plot every student on a 2-D chart and still see most of the story.`;
+  const fix=v=>{const s=v.reduce((a,b)=>a+b,0)>=0?1:-1;return v.map(x=>x*s)};
+  const v1=fix(E[0].vec),v2=E[1].vec[0]>=0?E[1].vec:E[1].vec.map(x=>-x);
+  const bars=(v,c)=>SUB.map((s,j)=>`<div class="hb dv"><span>${s}</span><div class="trk"><div class="fill" style="${v[j]>=0?'left:50%':'right:50%'};width:${Math.abs(v[j])*50/.75}%;max-width:50%;background:${c}"></div></div><span class="v">${v[j]>=0?'+':'−'}${Math.abs(v[j]).toFixed(2)}</span></div>`).join('');
+  $('loads').innerHTML=`<b>PC1</b> <span style="color:var(--muted);font-size:.88rem">all positive → overall ability</span>${bars(v1,'var(--pc)')}<div style="height:12px"></div><b>PC2</b> <span style="color:var(--muted);font-size:.88rem">sciences vs humanities</span>${bars(v2,'var(--k3)')}`})();
+
+// ================= compare =================
+const keys=Object.keys(DSN),ROWS=[
+ ['K-Means','km',D=>kmBest(D,TRUEK[D.key]).A],
+ ['Hierarchical (Ward)','hc',D=>cut(D.P.length,link(D,'ward'),TRUEK[D.key]).labels],
+ ['Hierarchical (single)','hc',D=>cut(D.P.length,link(D,'single'),TRUEK[D.key]).labels],
+ ['DBSCAN','db',D=>dbs(D,.8,5).L]];
+keys.forEach(k=>DS[k].key=k);
+const SC=ROWS.map(r=>keys.map(k=>ari(r[2](DS[k]),truth(DS[k])))),BEST=keys.map((_,j)=>Math.max(...SC.map(r=>r[j])));
+$('board').innerHTML=SC.map((r,i)=>`<tr><td class="${ROWS[i][1]}">${ROWS[i][0]}</td>${r.map((v,j)=>`<td class="num${v===BEST[j]?' best':''}">${f2(v)}</td>`).join('')}</tr>`).join('');
+const CMP=[
+ ['K-Means','km','k (number of clusters)','Round, similar-sized blobs','No: outliers drag centroids','Yes (MiniBatchKMeans)','A label and a centre per cluster'],
+ ['Hierarchical','hc','Linkage, then where to cut','Depends on linkage; single follows chains','Somewhat; single linkage is fragile','No: about 10k rows max','A full tree (dendrogram)'],
+ ['DBSCAN','db','ε and minPts','Any shape','Yes: labels noise explicitly','Medium, with spatial indexing','Labels, with −1 for noise'],
+ ['PCA','pc','How many components (or % variance)','Linear directions only','Noise mostly ends up in later components','Yes: fast','New, fewer columns, plus explained variance']];
+const HD=['Algorithm','You choose','Shapes it finds','Handles noise?','Big data?','You get'];
+$('cmp').innerHTML=CMP.map(r=>`<tr><td data-l="${HD[0]}" class="${r[1]}">${r[0]}</td>${r.slice(2).map((c,j)=>`<td data-l="${HD[j+1]}">${c}</td>`).join('')}</tr>`).join('');
+
+// ================= chooser =================
+const NAMES=['K-Means','Hierarchical','DBSCAN','PCA'],NC=['km','hc','db','pc'];
+const Q=[
+ {k:'goal',q:'What do you want to do?',o:[['Find groups in my data','group'],['Shrink many columns into a few','reduce']]},
+ {k:'kk',q:'Do you know how many groups to expect?',o:[['Yes, roughly','yes'],['No idea','no']]},
+ {k:'shape',q:'What might the groups look like?',o:[['Round, similar-sized blobs','round'],['Odd shapes, or outliers expected','odd'],['Not sure','unsure']]},
+ {k:'tree',q:'Would a tree of groups within groups be useful, and is the data under ~10k rows?',o:[['Yes','yes'],['No','no']]}];
+const A={};
+$('qs').innerHTML=Q.map((x,i)=>`<div class="q"><div class="qt">${i+1}. ${x.q}</div><div class="opts">${x.o.map(o=>`<button class="opt" aria-pressed="false" data-k="${x.k}" data-v="${o[1]}">${o[0]}</button>`).join('')}</div></div>`).join('');
+$('qs').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{A[b.dataset.k]=b.dataset.v;b.parentNode.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));verdict()});
+function verdict(){let pick=-1,why='';
+  if(A.goal==='reduce'){pick=3;why='Standardise your columns, run PCA and keep enough components for about 90–95% of the variance. For a 2-D picture of clusters, also try UMAP or t-SNE (for viewing only, not as model inputs).'}
+  else if(Object.keys(A).length<Q.length){$('v-title').textContent='Keep going…';$('v-body').textContent=`${Object.keys(A).length} of ${Q.length} answered (only question 1 matters if you want to shrink columns).`}
+  else if(A.shape==='odd'){pick=2;why='DBSCAN finds clusters of any shape and flags outliers as noise, with no k needed. Tune ε with a k-distance plot; if densities vary a lot, try HDBSCAN.'}
+  else if(A.tree==='yes'){pick=1;why='Agglomerative clustering with Ward linkage, plus a dendrogram, lets you see groups within groups and choose k by looking for the tallest gaps.'}
+  else if(A.kk==='yes'){pick=0;why='K-Means with k-means++ is fast and simple for roundish groups. Scale features first, and run several starts (n_init).'}
+  else{pick=0;why='Try K-Means for k = 2…10 and use the elbow plot and silhouette score to pick k. If the clusters look stretched or odd, switch to DBSCAN.'}
+  if(pick>=0){$('v-title').innerHTML=`<span class="${NC[pick]}">${NAMES[pick]}</span>`;$('v-body').textContent=why}
+  $('chips').innerHTML=NAMES.map((x,i)=>`<span class="${i===pick?'on':''}">${x}</span>`).join('')}
+verdict();
+
+// ================= quiz =================
+const QZ=[
+ {q:'What makes a learning task "unsupervised"?',a:['It runs without a GPU','The training data has no labels or target column','A human checks every prediction'],c:1,w:'The algorithm only sees the inputs and must find structure itself.'},
+ {q:'In K-Means, what happens in the "update" step?',a:['Each point moves to the nearest centroid','Each centroid moves to the mean of its assigned points','k increases by one'],c:1,w:'Assign: points pick a centroid. Update: centroids move to the average of their points.'},
+ {q:'K-Means struggles with two interlocking moon shapes because…',a:['It needs labels','It splits space into straight-edged territories around centres','It is too slow'],c:1,w:'Each point joins its nearest centre, so boundaries are straight lines between centres.'},
+ {q:'In a dendrogram, how do you get 3 clusters?',a:['Cut the tree with a horizontal line that crosses 3 branches','Count 3 leaves from the left','Use only the top merge'],c:0,w:'Each branch hanging below the cut line becomes one cluster.'},
+ {q:'A DBSCAN point with fewer than minPts neighbours, and no core point within ε, is…',a:['A core point','A border point','Noise'],c:2,w:'Border points need a core point within ε; with none, the point is noise (label −1).'},
+ {q:'PCA\'s first principal component is the direction that…',a:['Separates the labelled classes best','Captures the most variance in the data','Is parallel to the first column'],c:1,w:'PC1 = direction of greatest spread. (Separating labelled classes is LDA, a supervised method.)'},
+ {q:'Why standardise columns before PCA?',a:['A column in large units would dominate the variance','PCA only accepts integers','It makes PCA non-linear'],c:0,w:'PCA chases variance; income in rupees would swamp age in years unless both are scaled.'}];
+let right=0,tried=0;
+$('quizbox').innerHTML=QZ.map((x,i)=>`<div class="qcard" data-i="${i}"><b>${i+1}. ${x.q}</b><div class="ans">${x.a.map((t,j)=>`<button data-j="${j}">${t}</button>`).join('')}</div><div class="why">${x.w}</div></div>`).join('');
+$('quizbox').querySelectorAll('.qcard').forEach(c=>{const x=QZ[+c.dataset.i];c.querySelectorAll('.ans button').forEach(b=>b.onclick=()=>{
+  if(c.dataset.done)return;c.dataset.done=1;tried++;const j=+b.dataset.j;if(j===x.c)right++;
+  c.querySelectorAll('.ans button').forEach((y,k)=>{if(k===x.c)y.classList.add('right');else if(k===j)y.classList.add('wrong')});
+  c.querySelector('.why').style.display='block';$('score').textContent=`Score: ${right} / ${tried}`})});
+}
+</script>
+</body>
+</html>

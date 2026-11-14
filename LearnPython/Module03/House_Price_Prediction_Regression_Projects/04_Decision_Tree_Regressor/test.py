@@ -29,6 +29,9 @@ def main():
     result["predicted_price_lakh"] = predicted.round(2)
     result["error_lakh"] = (actual - predicted).round(2)
     result.to_csv(OUTPUT_FILE, index=False)
+    result["absolute_error_lakh"] = (
+    actual - predicted
+).abs().round(2)
 
     rmse = mean_squared_error(actual, predicted) ** 0.5
     print("\nTEST RESULTS")
@@ -37,7 +40,7 @@ def main():
     print(f"RMSE: {rmse:.2f} lakh")
     print(f"R²  : {r2_score(actual, predicted):.4f}")
     print("\nFirst 10 predictions:")
-    print(result[["price_lakh", "predicted_price_lakh", "error_lakh"]].head(10).to_string(index=False))
+    print(result[["price_lakh", "predicted_price_lakh", "error_lakh", "absolute_error_lakh"]].head(10).to_string(index=False))
     print(f"\nFull predictions saved to: {OUTPUT_FILE.name}")
 
 if __name__ == "__main__":

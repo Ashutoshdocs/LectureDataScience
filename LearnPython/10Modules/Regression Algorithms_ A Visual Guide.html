@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regression Algorithms: A Visual Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: friendly teaching page, same voice as the AI/ML/DL guide
+   IDEA: one shared dataset of houses that every model tries to fit
+   PICTURE: live scatter plots where each model draws its own prediction line
+   COLOUR and TYPE: template palette; purple = equation family, green = tree family, orange = boosting/test data
+   LAYOUT: sticky nav, hero with model switcher, one section per algorithm (text left, live demo right) */
+:root{color-scheme:light dark;
+  --bg:light-dark(#f7f5f0,#14130f); --ink:light-dark(#1d1b18,#f1ede4); --muted:light-dark(#5f5a52,#a8a197);
+  --line:light-dark(#e2ddd2,#2e2b25); --card:light-dark(#ffffff,#1d1b17);
+  --eq:light-dark(#6b4fd8,#a08cff); --eq-soft:light-dark(#ece7fb,#262040);
+  --tr:light-dark(#0f8a73,#3fd1b0); --tr-soft:light-dark(#ddf3ee,#12302a);
+  --bo:light-dark(#d9541e,#ff8a5b); --bo-soft:light-dark(#fde7dc,#3a2016);
+  --warn:light-dark(#9a6b00,#f2c14e); --warn-soft:light-dark(#fff3d1,#332a10);
+  --radius:16px}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em;text-wrap:balance}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);letter-spacing:-.01em}
+h3{font-size:1.2rem}
+p{margin:0 0 1em}
+code,.mono{font-family:"JetBrains Mono",monospace;font-size:.86em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.kicker{font:600 .78rem/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.lead{font-size:1.12rem;color:var(--muted);max-width:700px}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:600}
+.eq{color:var(--eq)} .tr{color:var(--tr)} .bo{color:var(--bo)}
+.bg-eq{background:var(--eq-soft);color:var(--eq)} .bg-tr{background:var(--tr-soft);color:var(--tr)} .bg-bo{background:var(--bo-soft);color:var(--bo)}
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+nav a{white-space:nowrap;color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:99px}
+nav a:hover{background:var(--card);color:var(--ink)}
+.hero{padding:60px 0 50px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:40px;align-items:center}
+@media(max-width:860px){.hero{grid-template-columns:minmax(0,1fr)}}
+.fams{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.fam{border-radius:14px;padding:14px 16px;font-size:.92rem}
+.fam b{display:block;font-family:Fraunces;font-size:1.1rem;margin-bottom:4px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+.demo{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:28px;align-items:start;margin-top:22px}
+@media(max-width:860px){.grid2,.demo{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 14px 16px}
+.chart svg{width:100%;height:auto;display:block}
+.stats{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.88rem;color:var(--muted);margin-top:8px}
+.stats b{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ctrl{margin-top:14px}
+.ctrl label{display:flex;justify-content:space-between;font-size:.9rem;font-weight:600}
+.ctrl label span{font-family:"JetBrains Mono",monospace;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--ink);height:32px;margin:0}
+.steps{counter-reset:s;list-style:none;padding:0;margin:10px 0 16px}
+.steps li{counter-increment:s;position:relative;padding:0 0 10px 38px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 .8rem Inter;background:var(--ink);color:var(--bg)}
+.formula{font-family:"JetBrains Mono",monospace;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.92rem;margin:10px 0 14px;overflow-x:auto;white-space:nowrap}
+pre{font-family:"JetBrains Mono",monospace;font-size:.82rem;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto;margin:12px 0 0}
+.note{border-left:4px solid var(--warn);background:var(--warn-soft);padding:14px 18px;border-radius:0 12px 12px 0;margin:22px 0 0;font-size:.95rem}
+.note b{color:var(--warn)}
+.btn,.seg button,.mbtn,.opt{font:600 .9rem Inter;min-height:44px;padding:9px 16px;border-radius:10px;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--eq);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.mbtn,.opt{background:var(--card);color:var(--ink);border-color:var(--line);font-weight:500}
+.seg button[aria-pressed=true],.mbtn[aria-pressed=true],.opt[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.models{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.info{min-height:78px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.94rem;margin-top:12px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.box{padding:8px 12px;border-radius:10px;font-weight:600;font-size:.86rem;border:1.5px solid var(--line);background:var(--card)}
+.arrow{color:var(--muted);font-weight:700}
+.rules{font-family:"JetBrains Mono",monospace;font-size:.8rem;white-space:pre;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px;color:var(--muted)}
+.bars{margin-top:14px}
+.bar{display:grid;grid-template-columns:110px minmax(0,1fr) 70px;gap:10px;align-items:center;font-size:.88rem;margin:6px 0}
+.bar .trk{height:14px;background:var(--bg);border-radius:99px;overflow:hidden}
+.bar .fill{height:100%;border-radius:99px;transition:width .25s}
+.bar .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+@media (prefers-reduced-motion:reduce){.bar .fill{transition:none}}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
+.total b{font-family:Fraunces;font-size:clamp(1.6rem,4vw,2.2rem)}
+.degbars{display:flex;align-items:flex-end;gap:5px;height:90px;margin-top:10px}
+.degbars div{flex:1;display:flex;gap:2px;align-items:flex-end;height:100%;cursor:pointer;border-radius:4px;padding:0 2px}
+.degbars div.on{background:var(--eq-soft)}
+.degbars i{flex:1;border-radius:3px 3px 0 0;display:block}
+.deglab{display:flex;gap:5px;font-size:.72rem;color:var(--muted);text-align:center}
+.deglab span{flex:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin-right:6px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);font-size:.92rem}
+th,td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:none}
+td:first-child{font-weight:600}
+.scroll{overflow-x:auto;border-radius:var(--radius)}
+.q{margin-bottom:18px}
+.q .qt{font-weight:600;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.verdict{border-radius:var(--radius);padding:22px;border:1px solid var(--line);background:var(--card)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.chips span{padding:5px 10px;border-radius:99px;font-size:.8rem;font-weight:600;border:1.5px solid var(--line);color:var(--muted)}
+.chips span.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.quiz .qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+.quiz .ans{display:grid;gap:8px;margin-top:10px}
+.quiz .ans button{text-align:left;font:500 .95rem Inter;min-height:44px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.quiz .ans button.right{border-color:var(--tr);background:var(--tr-soft)}
+.quiz .ans button.wrong{border-color:var(--bo);background:var(--bo-soft)}
+.quiz .why{font-size:.9rem;color:var(--muted);margin-top:10px;display:none}
+.score{font-family:Fraunces;font-size:1.3rem}
+.cheat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:760px){.cheat{grid-template-columns:minmax(0,1fr)}}
+.cheat div{padding:16px;border-radius:14px;font-size:.93rem}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:4px 13px;text-align:right}.stack td::before{content:attr(data-l);font-weight:600;color:var(--muted);text-align:left}.fams{grid-template-columns:1fr}.bar{grid-template-columns:84px minmax(0,1fr) 60px}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#big-picture">Big picture</a>
+  <a href="#linear">Linear</a>
+  <a href="#multiple">Multiple linear</a>
+  <a href="#poly">Polynomial</a>
+  <a href="#tree">Decision tree</a>
+  <a href="#forest">Random forest</a>
+  <a href="#boost">Gradient boosting</a>
+  <a href="#compare">Compare</a>
+  <a href="#chooser">Which one?</a>
+  <a href="#quiz">Quiz</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="big-picture">
+  <div>
+    <div class="kicker">Supervised · Regression</div>
+    <h1>Six ways to predict a number</h1>
+    <p class="lead">Regression means predicting a <b>quantity</b>: a price, a delay in minutes, a temperature. All six algorithms do the same job. They differ in the <b>shape</b> of line they're allowed to draw through your data.</p>
+    <div class="fams">
+      <div class="fam bg-eq"><b>The equation family</b>Linear, multiple linear, polynomial. Learn a formula's numbers. Smooth, explainable, can extend beyond the data.</div>
+      <div class="fam bg-tr"><b>The tree family</b>Decision tree, random forest, gradient boosting. Learn yes/no questions. Flexible, but flat outside the data they saw.</div>
+    </div>
+  </div>
+  <div>
+    <div class="chart">
+      <svg id="hero-plot" viewBox="0 0 600 320" role="img" aria-label="Scatter of house size vs price with the selected model's prediction line"></svg>
+      <div class="legend"><span><i style="background:var(--ink)"></i>Training houses (24)</span><span><i style="border:2px solid var(--bo)"></i>Unseen test houses (30)</span></div>
+    </div>
+    <div class="models" id="hero-btns" role="group" aria-label="Choose a model"></div>
+    <div class="info" id="hero-info" aria-live="polite"></div>
+  </div>
+</header>
+</div>
+
+<!-- LINEAR -->
+<section id="linear"><div class="wrap">
+  <div class="kicker">Step 1 · The foundation</div>
+  <h2>Linear regression: the best straight line</h2>
+  <p class="lead">Every other algorithm on this page builds on one idea from here: measure how wrong you are, then make that number as small as possible.</p>
+  <div class="demo">
+    <div>
+      <div class="formula">price = <span class="eq">m</span> × size + <span class="eq">b</span></div>
+      <p>The model has just two numbers to learn: the slope <b class="eq">m</b> (how much price rises per unit of size) and the intercept <b class="eq">b</b> (the starting price).</p>
+      <ol class="steps">
+        <li>Draw any line. For each house, the vertical gap between the dot and the line is the <b>residual</b> (the error).</li>
+        <li>Square every residual (so negatives don't cancel positives) and average them. That's the <b>mean squared error (MSE)</b>.</li>
+        <li>Find the m and b that make MSE smallest. This is called <b>least squares</b>. For a straight line there's an exact formula; for big models, gradient descent nudges m and b downhill step by step.</li>
+      </ol>
+      <p style="color:var(--muted)">Try it: move the sliders and watch the residual lines and the error. Then let the maths find the answer.</p>
+      <pre>from sklearn.linear_model import LinearRegression
+model = LinearRegression().fit(X, y)
+model.coef_, model.intercept_   # m and b</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="lin-plot" viewBox="0 0 600 320" role="img" aria-label="Adjustable straight line with residuals"></svg>
+        <div class="stats"><span>Your MSE <b id="lin-mse"></b></span><span>Best possible <b id="lin-best"></b></span><span id="lin-gap"></span></div>
+      </div>
+      <div class="ctrl"><label for="lin-m">Slope m <span id="lin-mv"></span></label><input type="range" id="lin-m" min="-4" max="16" step="0.1" value="2"></div>
+      <div class="ctrl"><label for="lin-b">Intercept b <span id="lin-bv"></span></label><input type="range" id="lin-b" min="-20" max="90" step="1" value="60"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn" id="lin-fit">Find best fit (least squares)</button>
+        <button class="btn ghost" id="lin-reset">Reset</button>
+      </div>
+    </div>
+  </div>
+  <div class="note"><b>Notice the miss:</b> even the best straight line overshoots big houses and undershoots mid-size ones. The real pattern bends. A straight line can't, which is called <b>underfitting</b>. Polynomial regression (Step 3) fixes this.</div>
+</div></section>
+
+<!-- MULTIPLE -->
+<section id="multiple"><div class="wrap">
+  <div class="kicker">Step 2 · More inputs</div>
+  <h2>Multiple linear regression: one weight per column</h2>
+  <p class="lead">Real prices depend on more than size. Multiple linear regression gives every input its own coefficient and adds the pieces up.</p>
+  <div class="demo">
+    <div>
+      <div class="formula">price = <span class="eq">b₀</span> + <span class="eq">b₁</span>·size + <span class="eq">b₂</span>·bedrooms + <span class="eq">b₃</span>·age + <span class="eq">b₄</span>·near_metro</div>
+      <ol class="steps">
+        <li>Each coefficient is learned with the same least-squares rule as Step 1, just in more dimensions. Instead of a line, the model fits a flat <b>plane</b> (or hyperplane).</li>
+        <li>A coefficient means: <i>change this input by 1 while holding the others fixed, and the price moves by this much.</i> That's what makes the model easy to explain.</li>
+        <li>A negative coefficient pulls the price down. Here, every year of age costs ₹0.5 lakh.</li>
+      </ol>
+      <div class="note" style="margin-top:6px"><b>Watch out for:</b> inputs that move together (size and bedrooms) can make coefficients unstable, which is called multicollinearity. And it's still straight lines: each input's effect is the same at every value.</div>
+      <pre>X = df[["size","bedrooms","age","near_metro"]]
+LinearRegression().fit(X, df["price"])</pre>
+    </div>
+    <div class="card">
+      <div class="kicker" style="margin-bottom:6px">Build a house</div>
+      <div class="ctrl" style="margin-top:0"><label for="mx-size">Size (×100 sq ft) <span id="mx-size-v"></span></label><input type="range" id="mx-size" min="5" max="30" step="1" value="12"></div>
+      <div class="ctrl"><label for="mx-bed">Bedrooms <span id="mx-bed-v"></span></label><input type="range" id="mx-bed" min="1" max="5" step="1" value="2"></div>
+      <div class="ctrl"><label for="mx-age">Age (years) <span id="mx-age-v"></span></label><input type="range" id="mx-age" min="0" max="40" step="1" value="10"></div>
+      <div class="ctrl"><label>Near a metro station</label><div class="seg" id="mx-metro"><button aria-pressed="false" data-v="0">No</button><button aria-pressed="true" data-v="1">Yes</button></div></div>
+      <div class="bars" id="mx-bars"></div>
+      <div class="total"><span>Predicted price</span><b id="mx-total"></b></div>
+      <p style="font-size:.8rem;color:var(--muted);margin:6px 0 0">Coefficients are illustrative, not from a real market.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- POLY -->
+<section id="poly"><div class="wrap">
+  <div class="kicker">Step 3 · Bending the line</div>
+  <h2>Polynomial regression: curves, and the danger of too many</h2>
+  <p class="lead">Add <code>size²</code>, <code>size³</code>… as extra columns, then run ordinary linear regression on them. The line can now bend.</p>
+  <div class="demo">
+    <div>
+      <div class="formula">price = b₀ + b₁·x + b₂·x² + b₃·x³ + … + b<sub>d</sub>·x<sup>d</sup></div>
+      <ol class="steps">
+        <li>Pick a <b>degree</b> d. Degree 1 is a straight line, degree 2 is one bend, degree 3 two bends.</li>
+        <li>It's still "linear" regression, because the model is linear in the <i>coefficients</i>. You've only invented new columns.</li>
+        <li>Judge it on <b>test data</b> it never saw. Training error always falls as degree rises; test error falls, then climbs. The climb is <b>overfitting</b>: the curve memorises noise.</li>
+      </ol>
+      <div class="kicker" style="margin:18px 0 4px">Error by degree (tap a bar)</div>
+      <div class="degbars" id="deg-bars"></div>
+      <div class="deglab" id="deg-lab"></div>
+      <div class="legend"><span><i style="background:var(--eq)"></i>Training error</span><span><i style="background:var(--bo)"></i>Test error</span></div>
+      <pre>from sklearn.preprocessing import PolynomialFeatures
+from sklearn.pipeline import make_pipeline
+make_pipeline(PolynomialFeatures(degree=2), LinearRegression())</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="poly-plot" viewBox="0 0 600 320" role="img" aria-label="Polynomial curve of the chosen degree"></svg>
+        <div class="stats"><span>Training RMSE <b id="poly-tr"></b></span><span>Test RMSE <b id="poly-te"></b></span><span id="poly-verdict"></span></div>
+      </div>
+      <div class="ctrl"><label for="poly-d">Degree <span id="poly-dv"></span></label><input type="range" id="poly-d" min="1" max="10" step="1" value="2"></div>
+      <p style="font-size:.88rem;color:var(--muted);margin-top:8px">RMSE = square root of MSE, in ₹ lakh: the typical size of a miss. Try degree 10 and watch the edges.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- TREE -->
+<section id="tree"><div class="wrap">
+  <div class="kicker">Step 4 · A different idea</div>
+  <h2>Decision tree regressor: twenty questions</h2>
+  <p class="lead">Forget equations. A tree splits houses into groups with yes/no questions, then predicts the <b>average price of each group</b>.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li>Try every possible split, like "size &lt; 4.3?". For each, measure how similar the prices are on each side (variance, i.e. MSE around each side's average).</li>
+        <li>Keep the split that makes both sides most uniform. Then repeat inside each side. This greedy search builds the tree.</li>
+        <li>Stop at a <b>max depth</b> or when a group gets too small. Each final group (leaf) predicts its average.</li>
+      </ol>
+      <div class="flow"><div class="box">All houses</div><span class="arrow">→</span><div class="box">size &lt; t ?</div><span class="arrow">→</span><div class="box">split again</div><span class="arrow">→</span><div class="box" style="border-color:var(--tr);color:var(--tr);background:var(--tr-soft)">leaf = average</div></div>
+      <p>The prediction is a <b>staircase</b>. Deeper trees have more, smaller steps; too deep and each step hugs a single house (overfitting).</p>
+      <div class="rules" id="tree-rules"></div>
+      <pre>from sklearn.tree import DecisionTreeRegressor
+DecisionTreeRegressor(max_depth=3, min_samples_leaf=2)</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="tree-plot" viewBox="0 0 600 320" role="img" aria-label="Step-shaped tree prediction with split lines"></svg>
+        <div class="stats"><span>Leaves <b id="tree-leaves"></b></span><span>Training RMSE <b id="tree-tr"></b></span><span>Test RMSE <b id="tree-te"></b></span></div>
+      </div>
+      <div class="ctrl"><label for="tree-d">Max depth <span id="tree-dv"></span></label><input type="range" id="tree-d" min="1" max="6" step="1" value="2"></div>
+      <p style="font-size:.88rem;color:var(--muted);margin-top:8px">Dashed lines are the split points. Look at the right edge: past the last house, the prediction goes flat. Trees cannot extrapolate.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- FOREST -->
+<section id="forest"><div class="wrap">
+  <div class="kicker">Step 5 · Wisdom of the crowd</div>
+  <h2>Random forest regressor: many trees, averaged</h2>
+  <p class="lead">One deep tree is jumpy. Train lots of different deep trees and average their answers: the jumps cancel out, the real pattern stays.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li><b>Bootstrap:</b> each tree gets its own random sample of the training rows, drawn with replacement. Some houses appear twice, some not at all.</li>
+        <li><b>Random features:</b> at each split, a tree may only consider a random subset of the columns. This keeps trees different from each other. (Our demo has one column, so only step 1 shows.)</li>
+        <li><b>Average:</b> the forest's prediction is the mean of all trees' predictions. This is called <b>bagging</b>.</li>
+      </ol>
+      <div class="flow"><div class="box">Data</div><span class="arrow">→</span><div class="box">sample 1 → tree 1</div><div class="box">sample 2 → tree 2</div><div class="box">… tree n</div><span class="arrow">→</span><div class="box" style="border-color:var(--tr);color:var(--tr);background:var(--tr-soft)">average</div></div>
+      <p>Trees are trained <b>independently</b>, so they can run in parallel. Random forest works well with little tuning, which makes it a great default.</p>
+      <pre>from sklearn.ensemble import RandomForestRegressor
+RandomForestRegressor(n_estimators=200, max_features="sqrt")</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="forest-plot" viewBox="0 0 600 320" role="img" aria-label="Faint individual trees and their bold average"></svg>
+        <div class="stats"><span>Trees <b id="forest-n"></b></span><span>Training RMSE <b id="forest-tr"></b></span><span>Test RMSE <b id="forest-te"></b></span></div>
+      </div>
+      <div class="ctrl"><label for="forest-k">Number of trees <span id="forest-kv"></span></label><input type="range" id="forest-k" min="1" max="60" step="1" value="1"></div>
+      <p style="font-size:.88rem;color:var(--muted);margin-top:8px">Faint green lines are individual depth-6 trees (up to 12 shown). The bold line is their average. Slide from 1 to 60.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- BOOST -->
+<section id="boost"><div class="wrap">
+  <div class="kicker">Step 6 · Learning from mistakes</div>
+  <h2>Gradient boosting regressor: fix the errors, one small tree at a time</h2>
+  <p class="lead">Random forest builds trees side by side. Boosting builds them <b>in a line</b>: each new tree studies what the model so far got wrong.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li>Start with a dumb guess: the average price of all houses.</li>
+        <li>Compute the residuals (actual − predicted). Train a <b>small</b> tree to predict those residuals.</li>
+        <li>Add that tree's output, shrunk by the <b>learning rate</b> (e.g. 0.1), to the model. Repeat for hundreds of rounds.</li>
+      </ol>
+      <div class="formula">F<sub>new</sub>(x) = F<sub>old</sub>(x) + <span class="bo">learning_rate</span> × tree<sub>residuals</sub>(x)</div>
+      <p>"Gradient" because, for squared error, residuals are exactly the direction that lowers the loss fastest. A small learning rate needs more rounds but generalises better. Too many rounds will eventually overfit, so practitioners stop early using validation data.</p>
+      <pre>from sklearn.ensemble import GradientBoostingRegressor
+GradientBoostingRegressor(n_estimators=300, learning_rate=0.05, max_depth=3)
+# faster cousins: XGBoost, LightGBM, CatBoost</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="boost-plot" viewBox="0 0 600 320" role="img" aria-label="Boosted prediction with residual lines"></svg>
+        <div class="stats"><span>Rounds <b id="boost-n"></b></span><span>Training RMSE <b id="boost-tr"></b></span><span>Test RMSE <b id="boost-te"></b></span></div>
+      </div>
+      <div class="ctrl"><label for="boost-k">Boosting rounds <span id="boost-kv"></span></label><input type="range" id="boost-k" min="0" max="150" step="1" value="0"></div>
+      <div class="ctrl"><label>Learning rate</label><div class="seg" id="boost-lr"><button data-v="0.05" aria-pressed="false">0.05</button><button data-v="0.1" aria-pressed="true">0.1</button><button data-v="0.5" aria-pressed="false">0.5</button><button data-v="1" aria-pressed="false">1.0</button></div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button class="btn" id="boost-step">+1 round</button><button class="btn ghost" id="boost-play">▶ Play</button></div>
+      <p style="font-size:.88rem;color:var(--muted);margin-top:8px">Orange lines are the residuals the next tree will try to fix. Each tree here has depth 2.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- COMPARE -->
+<section id="compare"><div class="wrap">
+  <div class="kicker">Step 7 · Side by side</div>
+  <h2>All six on one page</h2>
+  <div class="scroll" style="margin-top:20px">
+  <table class="stack">
+    <thead><tr><th>Algorithm</th><th>Shape it draws</th><th>Predicts beyond data?</th><th>Overfit risk</th><th>Explain it?</th><th>Scale features?</th></tr></thead>
+    <tbody id="cmp"></tbody>
+  </table>
+  </div>
+  <div class="note"><b>Rule of thumb on tabular data:</b> start with linear regression as a baseline you can explain, then try random forest, then tuned gradient boosting. If the fancy model barely beats the simple one, keep the simple one.</div>
+</div></section>
+
+<!-- CHOOSER -->
+<section id="chooser"><div class="wrap">
+  <div class="kicker">Step 8 · Try it</div>
+  <h2>Which regressor fits my problem?</h2>
+  <p class="lead">Answer four questions for a starting point.</p>
+  <div class="grid2" style="margin-top:22px;align-items:start">
+    <div id="qs"></div>
+    <div class="verdict">
+      <div class="chips" id="chips"></div>
+      <h3 id="v-title">Pick your answers</h3>
+      <p id="v-body" style="color:var(--muted);margin:0">Your recommendation will appear here.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- QUIZ -->
+<section id="quiz"><div class="wrap">
+  <div class="kicker">Step 9 · Check yourself</div>
+  <h2>Quick quiz</h2>
+  <p class="score" id="score">Score: 0 / 0</p>
+  <div class="quiz" id="quizbox"></div>
+  <h3 style="margin-top:34px">One-line cheat sheet</h3>
+  <div class="cheat">
+    <div class="bg-eq"><b>Linear</b>: best straight line, found by minimising squared errors</div>
+    <div class="bg-eq"><b>Multiple linear</b>: one weight per input, added up into a flat plane</div>
+    <div class="bg-eq"><b>Polynomial</b>: add x², x³ columns so the line can bend; watch the degree</div>
+    <div class="bg-tr"><b>Decision tree</b>: yes/no splits, each leaf predicts its group's average</div>
+    <div class="bg-tr"><b>Random forest</b>: many trees on random samples, averaged together</div>
+    <div class="bg-bo"><b>Gradient boosting</b>: small trees in a chain, each fixing the last one's errors</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Teaching page on regression algorithms. House data is simulated (24 training and 30 test points); every fit and error on this page is computed live in your browser.</div></footer>
+
+<script>
+{
+// ---------- data ----------
+const rng=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const R=rng(11);
+const gauss=()=>{let u=0;while(!u)u=R();const v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+const truth=x=>30+15*x-0.9*x*x;
+const mk=n=>Array.from({length:n},()=>{const x=0.3+R()*9.4;return{x,y:truth(x)+gauss()*7}}).sort((a,b)=>a.x-b.x);
+const TR=mk(24), TE=mk(30);
+const rmse=(fn,P)=>Math.sqrt(P.reduce((s,p)=>s+(p.y-fn(p.x))**2,0)/P.length);
+const mse=(fn,P)=>P.reduce((s,p)=>s+(p.y-fn(p.x))**2,0)/P.length;
+const $=id=>document.getElementById(id);
+const fx=(v,d=1)=>v.toFixed(d);
+
+// ---------- models ----------
+function ols(P){const n=P.length,mx=P.reduce((s,p)=>s+p.x,0)/n,my=P.reduce((s,p)=>s+p.y,0)/n;let a=0,b=0;P.forEach(p=>{a+=(p.x-mx)*(p.y-my);b+=(p.x-mx)**2});const m=a/b;return{m,b:my-m*mx}}
+function polyfit(P,d){const k=d+1,A=Array.from({length:k},()=>Array(k+1).fill(0));
+  P.forEach(p=>{const z=(p.x-5)/5,pw=[1];for(let i=1;i<k;i++)pw.push(pw[i-1]*z);for(let i=0;i<k;i++){for(let j=0;j<k;j++)A[i][j]+=pw[i]*pw[j];A[i][k]+=pw[i]*p.y}});
+  for(let i=0;i<k;i++)A[i][i]+=1e-9;
+  for(let c=0;c<k;c++){let pv=c;for(let r=c+1;r<k;r++)if(Math.abs(A[r][c])>Math.abs(A[pv][c]))pv=r;const tmp=A[c];A[c]=A[pv];A[pv]=tmp;
+    for(let r=0;r<k;r++){if(r===c)continue;const t=A[r][c]/A[c][c];for(let j=c;j<=k;j++)A[r][j]-=t*A[c][j]}}
+  const w=A.map((r,i)=>r[k]/r[i]);return x=>{const z=(x-5)/5;let s=0,pw=1;for(const c of w){s+=c*pw;pw*=z}return s}}
+function grow(P,depth,minLeaf=2){
+  const mean=P.reduce((s,p)=>s+p.y,0)/P.length;
+  if(depth===0||P.length<2*minLeaf)return{v:mean,n:P.length};
+  const S=[...P].sort((a,b)=>a.x-b.x),ts=S.reduce((s,p)=>s+p.y,0),tq=S.reduce((s,p)=>s+p.y*p.y,0);
+  let best=null,ls=0,lq=0;
+  for(let i=0;i<S.length-1;i++){ls+=S[i].y;lq+=S[i].y**2;const nl=i+1,nr=S.length-nl;
+    if(nl<minLeaf||nr<minLeaf||S[i].x===S[i+1].x)continue;
+    const sse=(lq-ls*ls/nl)+((tq-lq)-(ts-ls)**2/nr);if(!best||sse<best.sse)best={sse,t:(S[i].x+S[i+1].x)/2,i}}
+  if(!best)return{v:mean,n:P.length};
+  return{t:best.t,v:mean,n:P.length,l:grow(S.slice(0,best.i+1),depth-1,minLeaf),r:grow(S.slice(best.i+1),depth-1,minLeaf)}}
+const tp=(nd,x)=>nd.l?tp(x<nd.t?nd.l:nd.r,x):nd.v;
+const cuts=(nd,a=[])=>{if(nd.l){a.push(nd.t);cuts(nd.l,a);cuts(nd.r,a)}return a};
+const leaves=nd=>nd.l?leaves(nd.l)+leaves(nd.r):1;
+const R2=rng(99);
+const FOREST=Array.from({length:60},()=>grow(Array.from({length:TR.length},()=>TR[Math.floor(R2()*TR.length)]),6,2));
+const forestFn=n=>x=>{let s=0;for(let i=0;i<n;i++)s+=tp(FOREST[i],x);return s/n};
+const boostCache={};
+function boost(lr){if(boostCache[lr])return boostCache[lr];const base=TR.reduce((s,p)=>s+p.y,0)/TR.length;let F=TR.map(()=>base);const trees=[];
+  for(let s=0;s<150;s++){const t=grow(TR.map((p,i)=>({x:p.x,y:p.y-F[i]})),2,2);trees.push(t);F=F.map((v,i)=>v+lr*tp(t,TR[i].x))}
+  return boostCache[lr]={base,trees,lr}}
+const boostFn=(B,m)=>x=>{let s=B.base;for(let i=0;i<m;i++)s+=B.lr*tp(B.trees[i],x);return s};
+
+// ---------- plotting ----------
+const W=600,H=320,L=46,RM=14,T=14,BM=38;
+const sx=x=>L+x/10*(W-L-RM), sy=y=>T+(1-y/120)*(H-T-BM);
+function frame(id){let g=`<defs><clipPath id="clip-${id}"><rect x="${L}" y="${T}" width="${W-L-RM}" height="${H-T-BM}"/></clipPath></defs>`;
+  for(let y=0;y<=120;y+=30)g+=`<line x1="${L}" x2="${W-RM}" y1="${sy(y)}" y2="${sy(y)}" stroke="var(--line)"/><text x="${L-8}" y="${sy(y)+4}" text-anchor="end" font-size="12" fill="var(--muted)" font-family="Inter">${y}</text>`;
+  for(let x=0;x<=10;x+=2)g+=`<text x="${sx(x)}" y="${H-BM+18}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter">${x}</text>`;
+  g+=`<text x="${(L+W-RM)/2}" y="${H-2}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter">Size (×100 sq ft)</text>`;
+  g+=`<text x="12" y="${(T+H-BM)/2}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter" transform="rotate(-90 12 ${(T+H-BM)/2})">Price (₹ lakh)</text>`;
+  return g}
+function curve(id,fn,col,w=3,op=1,dash=''){let d='';for(let i=0;i<=500;i++){const x=i/50;let y=fn(x);y=Math.max(-30,Math.min(150,y));d+=(i?'L':'M')+sx(x).toFixed(1)+','+sy(y).toFixed(1)}
+  return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" opacity="${op}" stroke-dasharray="${dash}" stroke-linejoin="round" clip-path="url(#clip-${id})"/>`}
+const dots=(P,test)=>P.map(p=>test?`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="4.5" fill="none" stroke="var(--bo)" stroke-width="1.8" opacity=".8"/>`:`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="5" fill="var(--ink)"/>`).join('');
+const resid=(fn,col)=>TR.map(p=>`<line x1="${sx(p.x)}" x2="${sx(p.x)}" y1="${sy(p.y)}" y2="${sy(Math.max(-30,Math.min(150,fn(p.x))))}" stroke="${col}" stroke-width="1.6" opacity=".75"/>`).join('');
+const draw=(id,inner)=>{$(id).innerHTML=frame(id)+inner};
+
+// ---------- hero ----------
+const lin=ols(TR);
+const HM=[
+ {k:'Linear',c:'var(--eq)',fn:x=>lin.m*x+lin.b,t:'<b class="eq">Linear</b>: one straight line. Simple and explainable, but it misses the bend in the data.'},
+ {k:'Polynomial (deg 2)',c:'var(--eq)',fn:polyfit(TR,2),t:'<b class="eq">Polynomial, degree 2</b>: a gentle curve. Matches the real "big houses level off" shape well.'},
+ {k:'Decision tree',c:'var(--tr)',fn:(t=>x=>tp(t,x))(grow(TR,3)),t:'<b class="tr">Decision tree, depth 3</b>: a staircase of group averages. Easy to read as rules, a bit blocky.'},
+ {k:'Random forest',c:'var(--tr)',fn:forestFn(60),t:'<b class="tr">Random forest, 60 trees</b>: the staircases averaged into a smoother line.'},
+ {k:'Gradient boosting',c:'var(--bo)',fn:boostFn(boost(0.1),100),t:'<b class="bo">Gradient boosting, 100 rounds</b>: small trees chained, each fixing the last one\'s errors.'}];
+function hero(i){const m=HM[i];draw('hero-plot',dots(TE,true)+dots(TR)+curve('hero-plot',m.fn,m.c,3.5));
+  [...$('hero-btns').children].forEach((b,j)=>b.setAttribute('aria-pressed',i===j));
+  $('hero-info').innerHTML=m.t+`<br><span style="color:var(--muted);font-size:.88rem">Typical miss on the 30 unseen houses: <b style="color:var(--ink)">₹${fx(rmse(m.fn,TE))} lakh</b>. Multiple linear needs several inputs, so it gets its own demo in Step 2.</span>`}
+$('hero-btns').innerHTML=HM.map(m=>`<button class="mbtn" aria-pressed="false">${m.k}</button>`).join('');
+[...$('hero-btns').children].forEach((b,i)=>b.onclick=()=>hero(i));
+hero(0);
+
+// ---------- linear ----------
+const best=mse(x=>lin.m*x+lin.b,TR);
+function linDraw(){const m=+$('lin-m').value,b=+$('lin-b').value,fn=x=>m*x+b,e=mse(fn,TR);
+  $('lin-mv').textContent=fx(m);$('lin-bv').textContent=fx(b,0);
+  draw('lin-plot',resid(fn,'var(--bo)')+dots(TR)+curve('lin-plot',fn,'var(--eq)',3.5));
+  $('lin-mse').textContent=fx(e,0);$('lin-best').textContent=fx(best,0);
+  $('lin-gap').innerHTML=e<=best*1.02?'<b class="tr">✓ That\'s the least-squares line</b>':`${fx(e/best,1)}× worse than best`}
+$('lin-m').oninput=$('lin-b').oninput=linDraw;
+$('lin-fit').onclick=()=>{$('lin-m').value=lin.m.toFixed(1);$('lin-b').value=Math.round(lin.b);linDraw()};
+$('lin-reset').onclick=()=>{$('lin-m').value=2;$('lin-b').value=60;linDraw()};
+linDraw();
+
+// ---------- multiple ----------
+let metro=1;
+function mxDraw(){const s=+$('mx-size').value,bd=+$('mx-bed').value,a=+$('mx-age').value;
+  $('mx-size-v').textContent=s;$('mx-bed-v').textContent=bd;$('mx-age-v').textContent=a;
+  const parts=[['Base b₀',12],['Size ×4.2',4.2*s],['Bedrooms ×6',6*bd],['Age ×−0.5',-0.5*a],['Metro ×9',9*metro]];
+  $('mx-bars').innerHTML=parts.map(([l,v])=>`<div class="bar"><span>${l}</span><div class="trk"><div class="fill" style="width:${Math.min(100,Math.abs(v)/130*100)}%;background:${v<0?'var(--bo)':'var(--eq)'}"></div></div><span class="val">${v<0?'−':'+'}${fx(Math.abs(v))}</span></div>`).join('');
+  $('mx-total').textContent='₹'+fx(parts.reduce((t,p)=>t+p[1],0))+' lakh'}
+['mx-size','mx-bed','mx-age'].forEach(id=>$(id).oninput=mxDraw);
+[...$('mx-metro').children].forEach(b=>b.onclick=()=>{metro=+b.dataset.v;[...$('mx-metro').children].forEach(x=>x.setAttribute('aria-pressed',x===b));mxDraw()});
+mxDraw();
+
+// ---------- polynomial ----------
+const PF=Array.from({length:10},(_,i)=>polyfit(TR,i+1));
+const PE=PF.map(f=>[rmse(f,TR),Math.min(rmse(f,TE),40)]);
+const maxE=Math.max(...PE.flat());
+function polyDraw(){const d=+$('poly-d').value,f=PF[d-1],[a,b]=PE[d-1];$('poly-dv').textContent=d;
+  draw('poly-plot',dots(TE,true)+dots(TR)+curve('poly-plot',f,'var(--eq)',3.5));
+  $('poly-tr').textContent=fx(a);$('poly-te').textContent=rmse(f,TE)>40?'> 40':fx(b);
+  const bestD=PE.reduce((bi,e,i)=>e[1]<PE[bi][1]?i:bi,0)+1;
+  $('poly-verdict').innerHTML=d===1?'<b class="bo">Underfitting</b>':d===bestD?'<b class="tr">Best on test data</b>':d>bestD+2?'<b class="bo">Overfitting</b>':'';
+  $('deg-bars').innerHTML=PE.map(([a,b],i)=>`<div class="${i+1===d?'on':''}" data-d="${i+1}" title="Degree ${i+1}"><i style="height:${a/maxE*100}%;background:var(--eq)"></i><i style="height:${b/maxE*100}%;background:var(--bo)"></i></div>`).join('');
+  [...$('deg-bars').children].forEach(el=>el.onclick=()=>{$('poly-d').value=el.dataset.d;polyDraw()})}
+$('deg-lab').innerHTML=PE.map((_,i)=>`<span>${i+1}</span>`).join('');
+$('poly-d').oninput=polyDraw;polyDraw();
+
+// ---------- tree ----------
+function rules(nd,ind=''){if(!nd.l)return `${ind}→ predict ₹${fx(nd.v)} lakh  (${nd.n} houses)\n`;
+  return `${ind}if size < ${fx(nd.t,2)}:\n`+rules(nd.l,ind+'    ')+`${ind}else:\n`+rules(nd.r,ind+'    ')}
+function treeDraw(){const d=+$('tree-d').value,t=grow(TR,d),fn=x=>tp(t,x);$('tree-dv').textContent=d;
+  const cl=cuts(t).map(c=>`<line x1="${sx(c)}" x2="${sx(c)}" y1="${T}" y2="${H-BM}" stroke="var(--tr)" stroke-dasharray="4 5" opacity=".55"/>`).join('');
+  draw('tree-plot',cl+dots(TE,true)+dots(TR)+curve('tree-plot',fn,'var(--tr)',3.5));
+  $('tree-leaves').textContent=leaves(t);$('tree-tr').textContent=fx(rmse(fn,TR));$('tree-te').textContent=fx(rmse(fn,TE));
+  $('tree-rules').textContent=d<=3?rules(t):`Depth ${d} has ${leaves(t)} leaves: too many rules to read comfortably.\nThat's the trade-off: deeper = more accurate on training data, less explainable.`}
+$('tree-d').oninput=treeDraw;treeDraw();
+
+// ---------- forest ----------
+function forestDraw(){const k=+$('forest-k').value,fn=forestFn(k);$('forest-kv').textContent=k;
+  const faint=FOREST.slice(0,Math.min(k,12)).map(t=>curve('forest-plot',x=>tp(t,x),'var(--tr)',1.5,.28)).join('');
+  draw('forest-plot',faint+dots(TE,true)+dots(TR)+curve('forest-plot',fn,'var(--tr)',4));
+  $('forest-n').textContent=k;$('forest-tr').textContent=fx(rmse(fn,TR));$('forest-te').textContent=fx(rmse(fn,TE))}
+$('forest-k').oninput=forestDraw;forestDraw();
+
+// ---------- boosting ----------
+let lr=0.1,timer=null;
+function boostDraw(){const k=+$('boost-k').value,fn=boostFn(boost(lr),k);$('boost-kv').textContent=k;
+  draw('boost-plot',resid(fn,'var(--bo)')+dots(TE,true)+dots(TR)+curve('boost-plot',fn,'var(--bo)',3.5));
+  $('boost-n').textContent=k;$('boost-tr').textContent=fx(rmse(fn,TR));$('boost-te').textContent=fx(rmse(fn,TE))}
+function stop(){clearInterval(timer);timer=null;$('boost-play').textContent='▶ Play'}
+$('boost-k').oninput=boostDraw;
+$('boost-step').onclick=()=>{$('boost-k').value=Math.min(150,+$('boost-k').value+1);boostDraw()};
+$('boost-play').onclick=()=>{if(timer)return stop();if(+$('boost-k').value>=150)$('boost-k').value=0;$('boost-play').textContent='❚❚ Pause';
+  timer=setInterval(()=>{const v=+$('boost-k').value+1;$('boost-k').value=v;boostDraw();if(v>=150)stop()},matchMedia('(prefers-reduced-motion:reduce)').matches?20:90)};
+[...$('boost-lr').children].forEach(b=>b.onclick=()=>{lr=+b.dataset.v;[...$('boost-lr').children].forEach(x=>x.setAttribute('aria-pressed',x===b));boostDraw()});
+boostDraw();
+
+// ---------- compare table ----------
+const CMP=[
+ ['Linear','Straight line','Yes, continues the line','Low (underfits curves)','Very easy: one slope','Only if regularised'],
+ ['Multiple linear','Flat plane over many inputs','Yes','Low','Easy: one weight per input','Only if regularised'],
+ ['Polynomial','Smooth curve','Yes, but often wildly','High at high degree','Medium','Yes, recommended'],
+ ['Decision tree','Staircase of averages','No, goes flat','High if deep','Easy when shallow: if/else rules','No'],
+ ['Random forest','Smoothed staircase','No, goes flat','Low to medium','Medium: feature importances','No'],
+ ['Gradient boosting','Very flexible','No, goes flat','Medium, needs tuning','Harder: use SHAP values','No']];
+const HD=['Algorithm','Shape it draws','Predicts beyond data?','Overfit risk','Explain it?','Scale features?'];
+$('cmp').innerHTML=CMP.map((r,i)=>`<tr>${r.map((c,j)=>`<td data-l="${HD[j]}"${j===0?` class="${i<3?'eq':i<5?'tr':'bo'}"`:''}>${c}</td>`).join('')}</tr>`).join('');
+
+// ---------- chooser ----------
+const NAMES=['Linear','Multiple linear','Polynomial','Decision tree','Random forest','Gradient boosting'];
+const Q=[
+ {k:'shape',q:'How does the target change as the inputs change?',o:[['Roughly a straight line','straight'],['One smooth bend','curve'],['Complex, with interactions','complex']]},
+ {k:'inputs',q:'How many input columns?',o:[['Just one','one'],['Several','many']]},
+ {k:'explain',q:'Must you show a simple formula or rules?',o:[['Yes','yes'],['No, accuracy first','no']]},
+ {k:'extra',q:'Will you predict outside the range seen in training?',o:[['Yes','yes'],['No','no']]}];
+const A={};
+$('qs').innerHTML=Q.map((x,i)=>`<div class="q"><div class="qt">${i+1}. ${x.q}</div><div class="opts">${x.o.map(o=>`<button class="opt" aria-pressed="false" data-k="${x.k}" data-v="${o[1]}">${o[0]}</button>`).join('')}</div></div>`).join('');
+$('qs').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{A[b.dataset.k]=b.dataset.v;b.parentNode.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));verdict()});
+function verdict(){const n=Object.keys(A).length;let pick=-1,why='';
+  if(n<Q.length){$('v-title').textContent='Keep going…';$('v-body').textContent=`${n} of ${Q.length} answered.`}
+  else{
+    if(A.shape==='straight'){pick=A.inputs==='one'?0:1;why='A straight-line relationship is exactly what linear models assume. You get a formula anyone can check, and it extends sensibly beyond your data.'}
+    else if(A.shape==='curve'&&(A.inputs==='one'||A.explain==='yes')){pick=2;why='Add squared (maybe cubed) terms and keep a readable formula. Pick the degree by checking error on held-out data, and keep it low (2–3).'}
+    else if(A.explain==='yes'){pick=3;why='A shallow tree (depth 3–4) turns into plain if/else rules. Accept a little accuracy loss for transparency.'}
+    else if(A.shape==='curve'){pick=4;why='Many inputs and a curved pattern: a random forest handles it with almost no tuning, and is hard to break.'}
+    else{pick=5;why='Complex patterns and accuracy first: tuned gradient boosting (XGBoost / LightGBM) usually wins on tabular data. Use a random forest as the quick baseline to beat.'}
+    if(A.extra==='yes'&&pick>=3)why+=' ⚠ But you need to predict beyond your training range, and trees go flat there. Consider a linear model, or modelling the trend separately.';
+    $('v-title').innerHTML=`<span class="${pick<3?'eq':pick<5?'tr':'bo'}">${NAMES[pick]} regression</span>`;$('v-body').textContent=why}
+  $('chips').innerHTML=NAMES.map((x,i)=>`<span class="${i===pick?'on':''}">${x}</span>`).join('')}
+verdict();
+
+// ---------- quiz ----------
+const QZ=[
+ {q:'Why is polynomial regression still called "linear"?',a:['It always draws straight lines','It is linear in its coefficients; x², x³ are just extra columns','It uses a decision tree inside'],c:1,w:'The curve bends in x, but the model is a weighted sum of columns, so least squares still applies.'},
+ {q:'You raise the polynomial degree from 3 to 10. Training error falls, test error rises. This is…',a:['Overfitting','Underfitting','Extrapolation'],c:0,w:'The curve memorises noise in the training points and generalises worse.'},
+ {q:'A tree trained on houses from 500–1000 sq ft is asked about a 2000 sq ft house. It predicts…',a:['A straight-line extension','The same value as its right-most leaf','An error'],c:1,w:'Trees can only output averages of groups they saw, so they go flat beyond the data.'},
+ {q:'Random forest reduces overfitting mainly by…',a:['Making each tree deeper','Fitting each tree to residuals','Averaging many trees trained on different random samples'],c:2,w:'Bagging: independent noisy trees, averaged, cancel each other\'s mistakes.'},
+ {q:'In gradient boosting, each new tree is trained to predict…',a:['The original target','The residual errors of the model so far','A random subset of rows only'],c:1,w:'Each round fits what is still wrong, then adds a shrunken version of it.'},
+ {q:'In multiple linear regression, a coefficient of 4.2 on size means…',a:['Price rises 4.2 per unit of size, holding other inputs fixed','Size explains 4.2% of the price','Size is the 4th most important input'],c:0,w:'Each coefficient is the effect of one input with the others held constant.'}];
+let right=0,tried=0;
+$('quizbox').innerHTML=QZ.map((x,i)=>`<div class="qcard" data-i="${i}"><b>${i+1}. ${x.q}</b><div class="ans">${x.a.map((t,j)=>`<button data-j="${j}">${t}</button>`).join('')}</div><div class="why">${x.w}</div></div>`).join('');
+$('quizbox').querySelectorAll('.qcard').forEach(c=>{const x=QZ[+c.dataset.i];c.querySelectorAll('.ans button').forEach(b=>b.onclick=()=>{
+  if(c.dataset.done)return;c.dataset.done=1;tried++;const j=+b.dataset.j;if(j===x.c)right++;
+  c.querySelectorAll('.ans button').forEach((y,k)=>{if(k===x.c)y.classList.add('right');else if(k===j)y.classList.add('wrong')});
+  c.querySelector('.why').style.display='block';$('score').textContent=`Score: ${right} / ${tried}`})});
+}
+</script>
+</body>
+</html>

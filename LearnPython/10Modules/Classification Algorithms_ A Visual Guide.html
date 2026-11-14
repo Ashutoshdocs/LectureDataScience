@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classification Algorithms: A Visual Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: friendly teaching page, same voice as the AI/ML/DL and regression guides
+   IDEA: a map of two kinds of points; every model paints the map with the class it would predict
+   PICTURE: live decision-region maps, computed in the browser, one per algorithm
+   COLOUR and TYPE: template palette; blue = class A, orange = class B; family colours for headings
+   LAYOUT: sticky nav, hero with model + dataset switcher, one section per algorithm (text left, live map right) */
+:root{color-scheme:light dark;
+  --bg:light-dark(#f7f5f0,#14130f); --ink:light-dark(#1d1b18,#f1ede4); --muted:light-dark(#5f5a52,#a8a197);
+  --line:light-dark(#e2ddd2,#2e2b25); --card:light-dark(#ffffff,#1d1b17);
+  --ca:light-dark(#2f6fd6,#6ea1ff); --ca-soft:light-dark(#e3ecfb,#16233a);
+  --cb:light-dark(#d9541e,#ff8a5b); --cb-soft:light-dark(#fde7dc,#3a2016);
+  --eq:light-dark(#6b4fd8,#a08cff); --eq-soft:light-dark(#ece7fb,#262040);
+  --kn:light-dark(#9a6b00,#f2c14e); --kn-soft:light-dark(#fff3d1,#332a10);
+  --tr:light-dark(#0f8a73,#3fd1b0); --tr-soft:light-dark(#ddf3ee,#12302a);
+  --nb:light-dark(#b8326f,#ff7eb6); --nb-soft:light-dark(#fbe4ef,#3a1527);
+  --warn:light-dark(#9a6b00,#f2c14e); --warn-soft:light-dark(#fff3d1,#332a10);
+  --radius:16px}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em;text-wrap:balance}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);letter-spacing:-.02em}
+h2{font-size:clamp(1.6rem,3.2vw,2.3rem);letter-spacing:-.01em}
+h3{font-size:1.2rem}
+p{margin:0 0 1em}
+code,.mono{font-family:"JetBrains Mono",monospace;font-size:.86em}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+section{padding:64px 0;border-top:1px solid var(--line)}
+.kicker{font:600 .78rem/1 Inter;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.lead{font-size:1.12rem;color:var(--muted);max-width:700px}
+.eq{color:var(--eq)} .kn{color:var(--kn)} .tr{color:var(--tr)} .nb{color:var(--nb)} .ca{color:var(--ca)} .cb{color:var(--cb)}
+.bg-eq{background:var(--eq-soft);color:var(--eq)} .bg-kn{background:var(--kn-soft);color:var(--kn)} .bg-tr{background:var(--tr-soft);color:var(--tr)} .bg-nb{background:var(--nb-soft);color:var(--nb)}
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+nav a{white-space:nowrap;color:var(--muted);text-decoration:none;font-size:.88rem;font-weight:500;padding:6px 12px;border-radius:99px}
+nav a:hover{background:var(--card);color:var(--ink)}
+.hero{padding:56px 0 50px;display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:40px;align-items:center}
+@media(max-width:860px){.hero{grid-template-columns:minmax(0,1fr)}}
+.fams{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.fam{border-radius:14px;padding:12px 14px;font-size:.88rem;line-height:1.5}
+.fam b{display:block;font-family:Fraunces;font-size:1.05rem;margin-bottom:2px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+.demo{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:28px;align-items:start;margin-top:22px}
+@media(max-width:860px){.grid2,.demo{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 12px 14px}
+.chart svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.chart svg.click{cursor:crosshair}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.88rem;color:var(--muted);margin-top:8px}
+.stats b{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ctrl{margin-top:14px}
+.ctrl>label,.ctrl>.lab{display:flex;justify-content:space-between;font-size:.9rem;font-weight:600;margin-bottom:4px}
+.ctrl label span{font-family:"JetBrains Mono",monospace;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--ink);height:32px;margin:0}
+.steps{counter-reset:s;list-style:none;padding:0;margin:10px 0 16px}
+.steps li{counter-increment:s;position:relative;padding:0 0 10px 38px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:1px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 .8rem Inter;background:var(--ink);color:var(--bg)}
+.formula{font-family:"JetBrains Mono",monospace;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.9rem;margin:10px 0 14px;overflow-x:auto;white-space:nowrap}
+pre{font-family:"JetBrains Mono",monospace;font-size:.8rem;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto;margin:12px 0 0}
+.note{border-left:4px solid var(--warn);background:var(--warn-soft);padding:14px 18px;border-radius:0 12px 12px 0;margin:22px 0 0;font-size:.95rem}
+.note b{color:var(--warn)}
+.btn,.seg button,.mbtn,.opt{font:600 .9rem Inter;min-height:44px;padding:9px 14px;border-radius:10px;border:1.5px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--eq);outline-offset:2px}
+button:disabled{opacity:.4;cursor:not-allowed}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.mbtn,.opt{background:var(--card);color:var(--ink);border-color:var(--line);font-weight:500}
+.seg button[aria-pressed=true],.mbtn[aria-pressed=true],.opt[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.models{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.info{min-height:78px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.94rem;margin-top:12px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.box{padding:8px 12px;border-radius:10px;font-weight:600;font-size:.86rem;border:1.5px solid var(--line);background:var(--card)}
+.arrow{color:var(--muted);font-weight:700}
+.rules{font-family:"JetBrains Mono",monospace;font-size:.78rem;white-space:pre;overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-1px;margin-right:6px}
+.vote{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:.9rem;min-height:64px}
+.vbar{display:flex;height:16px;border-radius:99px;overflow:hidden;margin:8px 0 4px;background:var(--bg)}
+.vbar span{display:block;height:100%;transition:width .25s}
+@media (prefers-reduced-motion:reduce){.vbar span{transition:none}}
+.calc{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
+.calc th,.calc td{padding:6px 6px;white-space:nowrap;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.calc th:first-child,.calc td:first-child{text-align:left}
+table.big{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);font-size:.92rem}
+.big th,.big td{padding:11px 13px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.big th{font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+.big tr:last-child td{border-bottom:none}
+.big td:first-child{font-weight:600}
+.big td.num{text-align:right;font-variant-numeric:tabular-nums}
+.big td.best{font-weight:700;background:var(--tr-soft)}
+.scroll{overflow-x:auto;border-radius:var(--radius)}
+.q{margin-bottom:18px}
+.q .qt{font-weight:600;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.verdict{border-radius:var(--radius);padding:22px;border:1px solid var(--line);background:var(--card)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.chips span{padding:5px 10px;border-radius:99px;font-size:.8rem;font-weight:600;border:1.5px solid var(--line);color:var(--muted)}
+.chips span.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.quiz .qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+.quiz .ans{display:grid;gap:8px;margin-top:10px}
+.quiz .ans button{text-align:left;font:500 .95rem Inter;min-height:44px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.quiz .ans button.right{border-color:var(--tr);background:var(--tr-soft)}
+.quiz .ans button.wrong{border-color:var(--cb);background:var(--cb-soft)}
+.quiz .why{font-size:.9rem;color:var(--muted);margin-top:10px;display:none}
+.score{font-family:Fraunces;font-size:1.3rem}
+.cheat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:760px){.cheat{grid-template-columns:minmax(0,1fr)}}
+.cheat div{padding:16px;border-radius:14px;font-size:.93rem}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}
+@media(max-width:600px){.big{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flex;justify-content:space-between;gap:12px;border:0;padding:4px 13px;text-align:right}.stack td::before{content:attr(data-l);font-weight:600;color:var(--muted);text-align:left}.fams{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a href="#big-picture">Big picture</a>
+  <a href="#logistic">Logistic</a>
+  <a href="#knn">KNN</a>
+  <a href="#tree">Decision tree</a>
+  <a href="#forest">Random forest</a>
+  <a href="#svm">SVM</a>
+  <a href="#nb">Naive Bayes</a>
+  <a href="#compare">Compare</a>
+  <a href="#chooser">Which one?</a>
+  <a href="#quiz">Quiz</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="big-picture">
+  <div>
+    <div class="kicker">Supervised · Classification</div>
+    <h1>Six ways to sort things into groups</h1>
+    <p class="lead">Regression predicts a number. Classification predicts a <b>category</b>: spam or not spam, approve or reject, cat or dog. Every classifier is really drawing a <b>boundary</b> on a map. They differ in what shape of boundary they can draw.</p>
+    <div class="fams">
+      <div class="fam bg-eq"><b>Draw a line</b>Logistic regression and SVM. Find the best dividing line or curve.</div>
+      <div class="fam bg-kn"><b>Ask the neighbours</b>KNN. You're probably like the points closest to you.</div>
+      <div class="fam bg-tr"><b>Ask questions</b>Decision tree and random forest. Split the map into boxes.</div>
+      <div class="fam bg-nb"><b>Count probabilities</b>Naive Bayes. Which class makes these values most likely?</div>
+    </div>
+  </div>
+  <div>
+    <div class="chart">
+      <svg id="hero-plot" viewBox="0 0 480 440" role="img" aria-label="Two classes of points with the chosen model's decision regions"></svg>
+      <div class="legend"><span><i style="background:var(--ca);border-radius:50%"></i>Class A</span><span><i style="background:var(--cb)"></i>Class B</span><span>Shaded area = what the model would predict there</span></div>
+    </div>
+    <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="hero-ds"></div></div>
+    <div class="models" id="hero-btns" role="group" aria-label="Choose a model"></div>
+    <div class="info" id="hero-info" aria-live="polite"></div>
+  </div>
+</header>
+</div>
+
+<!-- LOGISTIC -->
+<section id="logistic"><div class="wrap">
+  <div class="kicker">Step 1 · The foundation</div>
+  <h2>Logistic regression: a straight line plus a probability</h2>
+  <p class="lead">Despite the name, it's a classifier. It computes a score like linear regression, then squashes it into a probability between 0 and 1.</p>
+  <div class="demo">
+    <div>
+      <div class="formula">z = <span class="eq">w₀</span> + <span class="eq">w₁</span>·x₁ + <span class="eq">w₂</span>·x₂ &nbsp;→&nbsp; P(B) = 1 / (1 + e<sup>−z</sup>)</div>
+      <svg id="sig" viewBox="0 0 320 120" style="width:100%;max-width:360px;display:block" role="img" aria-label="Sigmoid curve with threshold"></svg>
+      <ol class="steps">
+        <li>The <b>sigmoid</b> turns any score z into a probability. A big positive z means "almost surely B"; z = 0 means 50/50.</li>
+        <li>Training measures <b>log loss</b>: confident wrong answers are punished heavily. <b>Gradient descent</b> nudges the weights to reduce it, epoch by epoch.</li>
+        <li>Pick a <b>threshold</b> (usually 0.5). Probability above it → class B. The boundary is where P = threshold, and it's always a <b>straight line</b>.</li>
+      </ol>
+      <pre>from sklearn.linear_model import LogisticRegression
+clf = LogisticRegression().fit(X, y)
+clf.predict_proba(X_new)   # probabilities, not just labels</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="lr-plot" viewBox="0 0 480 440" role="img" aria-label="Logistic regression decision regions"></svg>
+        <div class="stats"><span>Log loss <b id="lr-loss"></b></span><span>Train accuracy <b id="lr-tr"></b></span><span>Test accuracy <b id="lr-te"></b></span></div>
+      </div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="lr-ds"></div></div>
+      <div class="ctrl"><label for="lr-e">Training epochs <span id="lr-ev"></span></label><input type="range" id="lr-e" min="0" max="300" step="1" value="0"></div>
+      <div class="ctrl"><label for="lr-t">Threshold <span id="lr-tv"></span></label><input type="range" id="lr-t" min="0.1" max="0.9" step="0.05" value="0.5"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="lr-play">▶ Train</button></div>
+    </div>
+  </div>
+  <div class="note"><b>Try the Ring dataset:</b> no straight line can separate inside from outside, so logistic regression gets about half right. You'd have to add features like x₁² and x₂² by hand, or pick a model that bends.</div>
+</div></section>
+
+<!-- KNN -->
+<section id="knn"><div class="wrap">
+  <div class="kicker">Step 2 · Learning by example</div>
+  <h2>K-nearest neighbours: you are who you live near</h2>
+  <p class="lead">KNN doesn't learn a formula at all. It memorises the training points, and to classify a new one it looks at the k closest and takes a vote.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li><b>Store</b> every training point. That's the whole "training" step, which is why KNN is called a lazy learner.</li>
+        <li>For a new point, measure the <b>distance</b> (usually straight-line, Euclidean) to every stored point.</li>
+        <li>Take the <b>k nearest</b> and let them vote. The majority class wins. The share of votes doubles as a probability.</li>
+      </ol>
+      <div class="formula">distance = √((x₁ − a₁)² + (x₂ − a₂)²)</div>
+      <p><b>Choosing k:</b> k = 1 follows every stray point (overfitting, jagged islands). A large k smooths everything out and can blur real detail (underfitting). Odd k avoids ties with two classes.</p>
+      <div class="note" style="margin-top:6px"><b>Scale your features.</b> If one feature is in rupees (0–1,000,000) and another in years (0–40), distance is decided almost entirely by rupees. Standardise first. KNN also gets slow on big datasets and weak with many features.</div>
+      <pre>from sklearn.neighbors import KNeighborsClassifier
+KNeighborsClassifier(n_neighbors=5)</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="knn-plot" class="click" viewBox="0 0 480 440" role="img" aria-label="KNN decision regions. Click to place a query point"></svg>
+        <div class="stats"><span>Train accuracy <b id="knn-tr"></b></span><span>Test accuracy <b id="knn-te"></b></span></div>
+      </div>
+      <div class="vote" id="knn-vote" aria-live="polite"></div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="knn-ds"></div></div>
+      <div class="ctrl"><label for="knn-k">k (neighbours) <span id="knn-kv"></span></label><input type="range" id="knn-k" min="1" max="31" step="2" value="5"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- TREE -->
+<section id="tree"><div class="wrap">
+  <div class="kicker">Step 3 · Twenty questions</div>
+  <h2>Decision tree classifier: split until the boxes are pure</h2>
+  <p class="lead">A tree asks yes/no questions like "is x₁ &lt; 4.2?" and keeps splitting the map until each box is mostly one class.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li>Measure how mixed a group is with <b>Gini impurity</b>. A group that's all A scores 0; a 50/50 mix scores 0.5.</li>
+        <li>Try every possible split on every feature. Keep the one that lowers the weighted impurity the most. (Entropy / information gain is the other common measure.)</li>
+        <li>Repeat inside each half until a max depth or the boxes are pure. Each leaf predicts its <b>majority class</b>.</li>
+      </ol>
+      <div class="formula">Gini = 1 − (p<sub>A</sub>² + p<sub>B</sub>²)</div>
+      <p>Splits are always on one feature at a time, so the boundary is made of <b>horizontal and vertical edges</b>: boxes. Deep trees carve tiny boxes around single points, which is overfitting.</p>
+      <div class="rules" id="tree-rules"></div>
+      <pre>from sklearn.tree import DecisionTreeClassifier
+DecisionTreeClassifier(max_depth=4, criterion="gini")</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="tree-plot" viewBox="0 0 480 440" role="img" aria-label="Decision tree regions made of boxes"></svg>
+        <div class="stats"><span>Leaves <b id="tree-leaves"></b></span><span>Train accuracy <b id="tree-tr"></b></span><span>Test accuracy <b id="tree-te"></b></span></div>
+      </div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="tree-ds"></div></div>
+      <div class="ctrl"><label for="tree-d">Max depth <span id="tree-dv"></span></label><input type="range" id="tree-d" min="1" max="10" step="1" value="2"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- FOREST -->
+<section id="forest"><div class="wrap">
+  <div class="kicker">Step 4 · Wisdom of the crowd</div>
+  <h2>Random forest classifier: many trees vote</h2>
+  <p class="lead">One deep tree is jumpy. Grow many different trees and let them vote. Their individual mistakes cancel out.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li><b>Bootstrap:</b> each tree trains on its own random sample of the rows, drawn with replacement.</li>
+        <li><b>Random features:</b> at every split, a tree may only look at a random subset of the features (here: 1 of the 2). This keeps trees different from each other.</li>
+        <li><b>Vote:</b> each tree gives its answer and the majority wins. (scikit-learn averages the trees' probabilities, which is nearly the same.)</li>
+      </ol>
+      <div class="flow"><div class="box">Data</div><span class="arrow">→</span><div class="box">sample 1 → tree 1</div><div class="box">sample 2 → tree 2</div><div class="box">… tree n</div><span class="arrow">→</span><div class="box" style="border-color:var(--tr);color:var(--tr);background:var(--tr-soft)">majority vote</div></div>
+      <p>Paler shading means the trees disagree. Strong default for tabular data: little tuning, handles mixed features, gives <b>feature importances</b>.</p>
+      <pre>from sklearn.ensemble import RandomForestClassifier
+RandomForestClassifier(n_estimators=200, max_features="sqrt")</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="forest-plot" viewBox="0 0 480 440" role="img" aria-label="Random forest regions; paler means trees disagree"></svg>
+        <div class="stats"><span>Trees <b id="forest-n"></b></span><span>Train accuracy <b id="forest-tr"></b></span><span>Test accuracy <b id="forest-te"></b></span></div>
+      </div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="forest-ds"></div></div>
+      <div class="ctrl"><label for="forest-k">Number of trees <span id="forest-kv"></span></label><input type="range" id="forest-k" min="1" max="50" step="1" value="1"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- SVM -->
+<section id="svm"><div class="wrap">
+  <div class="kicker">Step 5 · The widest street</div>
+  <h2>Support vector machine: maximise the margin</h2>
+  <p class="lead">Many lines can separate two groups. SVM picks the one with the <b>widest empty street</b> between them. Only the points on the edge of the street matter.</p>
+  <div class="demo">
+    <div>
+      <ol class="steps">
+        <li>Find the boundary that keeps the biggest gap (the <b>margin</b>) to the nearest points of each class.</li>
+        <li>The points sitting on or inside the margin are the <b>support vectors</b>. Move any other point and the boundary doesn't change.</li>
+        <li><b>C</b> sets how strict it is. Small C: wide street, a few points allowed inside (soft margin). Large C: narrow street, tries hard to classify every point.</li>
+        <li><b>Kernel trick:</b> the RBF kernel lets SVM draw curves by implicitly mapping points into a higher-dimensional space where a straight cut works. <b>γ</b> sets how wiggly it can get.</li>
+      </ol>
+      <div class="note" style="margin-top:6px"><b>Practical notes:</b> always scale features. SVMs shine on small-to-medium datasets with clear margins, but training slows down sharply past ~100k rows, and they don't output probabilities natively.</div>
+      <pre>from sklearn.svm import SVC
+SVC(kernel="rbf", C=1.0, gamma="scale")</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="svm-plot" viewBox="0 0 480 440" role="img" aria-label="SVM boundary, margin and support vectors"></svg>
+        <div class="legend"><span><i style="background:var(--ink);opacity:.18"></i>Margin (the street)</span><span><i style="border:2px solid var(--ink);border-radius:50%"></i>Support vector</span></div>
+        <div class="stats"><span>Support vectors <b id="svm-sv"></b></span><span>Train accuracy <b id="svm-tr"></b></span><span>Test accuracy <b id="svm-te"></b></span></div>
+      </div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="svm-ds"></div></div>
+      <div class="ctrl"><div class="lab">Kernel</div><div class="seg" id="svm-k"><button data-v="linear" aria-pressed="true">Linear</button><button data-v="rbf" aria-pressed="false">RBF (curved)</button></div></div>
+      <div class="ctrl"><div class="lab">C (strictness)</div><div class="seg" id="svm-c"><button data-v="0.1" aria-pressed="false">0.1</button><button data-v="1" aria-pressed="true">1</button><button data-v="10" aria-pressed="false">10</button></div></div>
+      <div class="ctrl"><div class="lab">γ (RBF only)</div><div class="seg" id="svm-g"><button data-v="0.5" aria-pressed="false">0.5</button><button data-v="2" aria-pressed="true">2</button><button data-v="10" aria-pressed="false">10</button></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- NB -->
+<section id="nb"><div class="wrap">
+  <div class="kicker">Step 6 · Thinking in probabilities</div>
+  <h2>Naive Bayes: which class best explains what I see?</h2>
+  <p class="lead">Naive Bayes learns what each class typically looks like, then asks: "given these values, which class is more likely to have produced them?"</p>
+  <div class="demo">
+    <div>
+      <div class="formula">P(class | x₁, x₂) ∝ P(class) × P(x₁ | class) × P(x₂ | class)</div>
+      <ol class="steps">
+        <li><b>Prior</b> P(class): how common each class is in training.</li>
+        <li><b>Likelihood</b>: for each class and each feature, fit a simple distribution. Gaussian NB uses a bell curve (mean and spread). The ellipses on the map show them.</li>
+        <li><b>The naive part:</b> assume features are independent within a class, so you can just multiply their likelihoods. Rarely true, but it often works anyway.</li>
+        <li>Multiply, compare, pick the bigger. Click the map to see the arithmetic.</li>
+      </ol>
+      <p>Extremely fast, works with little data, and is a classic for <b>text</b> (Multinomial NB on word counts powers many spam filters). Its probabilities tend to be overconfident.</p>
+      <pre>from sklearn.naive_bayes import GaussianNB, MultinomialNB
+GaussianNB()        # numeric features
+MultinomialNB()     # word counts</pre>
+    </div>
+    <div>
+      <div class="chart">
+        <svg id="nb-plot" class="click" viewBox="0 0 480 440" role="img" aria-label="Naive Bayes regions with class distributions. Click for the calculation"></svg>
+        <div class="stats"><span>Train accuracy <b id="nb-tr"></b></span><span>Test accuracy <b id="nb-te"></b></span></div>
+      </div>
+      <div class="vote" id="nb-calc" aria-live="polite"></div>
+      <div class="ctrl"><div class="lab">Dataset</div><div class="seg" id="nb-ds"></div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- COMPARE -->
+<section id="compare"><div class="wrap">
+  <div class="kicker">Step 7 · Side by side</div>
+  <h2>All six on one page</h2>
+  <h3 style="margin-top:20px">Live scoreboard: test accuracy on each dataset</h3>
+  <p style="color:var(--muted);font-size:.92rem">Computed in your browser with default settings (logistic 300 epochs, KNN k=5, tree depth 4, forest 50 trees, SVM RBF C=1 γ=2, Gaussian NB). Best per dataset highlighted.</p>
+  <div class="scroll"><table class="big"><thead><tr><th>Algorithm</th><th style="text-align:right">Blobs</th><th style="text-align:right">Moons</th><th style="text-align:right">Ring</th></tr></thead><tbody id="board"></tbody></table></div>
+  <h3 style="margin-top:30px">How they differ</h3>
+  <div class="scroll">
+  <table class="big stack">
+    <thead><tr><th>Algorithm</th><th>Boundary shape</th><th>Training</th><th>Predicting</th><th>Scale features?</th><th>Explain it?</th></tr></thead>
+    <tbody id="cmp"></tbody>
+  </table>
+  </div>
+  <div class="note"><b>Accuracy isn't everything.</b> If 95% of emails are not spam, a model that always says "not spam" scores 95%. On imbalanced data, also look at precision, recall and the confusion matrix.</div>
+</div></section>
+
+<!-- CHOOSER -->
+<section id="chooser"><div class="wrap">
+  <div class="kicker">Step 8 · Try it</div>
+  <h2>Which classifier fits my problem?</h2>
+  <p class="lead">Answer four questions for a starting point.</p>
+  <div class="grid2" style="margin-top:22px;align-items:start">
+    <div id="qs"></div>
+    <div class="verdict">
+      <div class="chips" id="chips"></div>
+      <h3 id="v-title">Pick your answers</h3>
+      <p id="v-body" style="color:var(--muted);margin:0">Your recommendation will appear here.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- QUIZ -->
+<section id="quiz"><div class="wrap">
+  <div class="kicker">Step 9 · Check yourself</div>
+  <h2>Quick quiz</h2>
+  <p class="score" id="score">Score: 0 / 0</p>
+  <div class="quiz" id="quizbox"></div>
+  <h3 style="margin-top:34px">One-line cheat sheet</h3>
+  <div class="cheat">
+    <div class="bg-eq"><b>Logistic regression</b>: straight-line boundary, outputs a probability via the sigmoid</div>
+    <div class="bg-kn"><b>KNN</b>: no training; the k closest points vote</div>
+    <div class="bg-tr"><b>Decision tree</b>: yes/no splits into boxes, each leaf votes its majority</div>
+    <div class="bg-tr"><b>Random forest</b>: many random trees, majority vote</div>
+    <div class="bg-eq"><b>SVM</b>: widest-margin boundary; kernels let it curve</div>
+    <div class="bg-nb"><b>Naive Bayes</b>: prior × likelihoods, assuming features are independent</div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Teaching page on classification algorithms. All three datasets are simulated (80 training and 80 test points each); every boundary and accuracy figure is computed live in your browser.</div></footer>
+
+<script>
+{
+// ================= data =================
+const rng=s=>()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const cl=v=>Math.max(0.2,Math.min(9.8,v));
+function gen(kind,seed,n){const R=rng(seed);const g=()=>{let u=0;while(!u)u=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*R())};const P=[];
+  for(let i=0;i<n;i++){const c=i%2;let x,y;
+    if(kind==='blobs'){const m=c?[6.2,6.1]:[3.8,3.9];x=m[0]+g()*1.25;y=m[1]+g()*1.25}
+    else if(kind==='moons'){const t=R()*Math.PI;let a=c?1-Math.cos(t):Math.cos(t),b=c?0.5-Math.sin(t):Math.sin(t);a+=g()*0.17;b+=g()*0.17;x=(a+1.25)/3.5*10;y=(b+0.85)/2.1*10}
+    else{const r=c?3+R()*1.5:1.9*Math.sqrt(R()),t=R()*2*Math.PI;x=5+r*Math.cos(t)+g()*0.3;y=5+r*Math.sin(t)+g()*0.3}
+    P.push({x:cl(x),y:cl(y),c})}return P}
+const DSN={blobs:'Blobs',moons:'Moons',ring:'Ring'};
+const DS={};
+Object.keys(DSN).forEach((k,i)=>{const tr=gen(k,10+i,80),te=gen(k,200+i,80);
+  const mx=tr.reduce((s,p)=>s+p.x,0)/80,my=tr.reduce((s,p)=>s+p.y,0)/80;
+  const sx=Math.sqrt(tr.reduce((s,p)=>s+(p.x-mx)**2,0)/80),sy=Math.sqrt(tr.reduce((s,p)=>s+(p.y-my)**2,0)/80);
+  DS[k]={tr,te,z:(x,y)=>[(x-mx)/sx,(y-my)/sy],mx,my,sx,sy,cache:{}}});
+const $=id=>document.getElementById(id);
+const pct=v=>Math.round(v*100)+'%';
+const acc=(f,P,thr=.5)=>P.reduce((s,p)=>s+((f(p.x,p.y)>=thr?1:0)===p.c),0)/P.length;
+const sig=z=>1/(1+Math.exp(-z));
+const memo=(D,key,fn)=>D.cache[key]??(D.cache[key]=fn());
+
+// ================= models =================
+// logistic: history of weights per epoch
+function lrHist(D){return memo(D,'lr',()=>{let w=[0,0,0];const H=[w.slice()],Z=D.tr.map(p=>D.z(p.x,p.y));
+  for(let e=0;e<300;e++){const g=[0,0,0];D.tr.forEach((p,i)=>{const[a,b]=Z[i],d=sig(w[0]+w[1]*a+w[2]*b)-p.c;g[0]+=d;g[1]+=d*a;g[2]+=d*b});
+    w=w.map((v,j)=>v-0.5*g[j]/80);H.push(w.slice())}return H})}
+const lrFn=(D,w)=>(x,y)=>{const[a,b]=D.z(x,y);return sig(w[0]+w[1]*a+w[2]*b)};
+// knn
+const knnN=(D,x,y,k)=>D.tr.map(p=>({p,d:Math.hypot(p.x-x,p.y-y)})).sort((a,b)=>a.d-b.d).slice(0,k);
+const knnFn=(D,k)=>(x,y)=>knnN(D,x,y,k).reduce((s,o)=>s+o.p.c,0)/k;
+// tree (gini)
+function gtree(P,depth,R){const n=P.length,n1=P.reduce((s,p)=>s+p.c,0);
+  if(depth===0||n1===0||n1===n||n<2)return{p:n1/n,n,n1};
+  const gi=(a,m)=>{const q=a/m;return 1-q*q-(1-q)**2};
+  const tryF=fs=>{let best=null;for(const f of fs){const S=[...P].sort((a,b)=>a[f]-b[f]);let l1=0;
+    for(let i=0;i<n-1;i++){l1+=S[i].c;if(S[i][f]===S[i+1][f])continue;const nl=i+1,nr=n-nl,imp=(nl*gi(l1,nl)+nr*gi(n1-l1,nr))/n;
+      if(!best||imp<best.imp)best={imp,f,t:(S[i][f]+S[i+1][f])/2,S,i}}}return best};
+  let b=tryF(R?[R()<.5?'x':'y']:['x','y']);if(!b&&R)b=tryF(['x','y']);
+  if(!b)return{p:n1/n,n,n1};
+  return{f:b.f,t:b.t,p:n1/n,n,n1,l:gtree(b.S.slice(0,b.i+1),depth-1,R),r:gtree(b.S.slice(b.i+1),depth-1,R)}}
+const tp=(nd,x,y)=>nd.l?tp((nd.f==='x'?x:y)<nd.t?nd.l:nd.r,x,y):nd.p;
+const leaves=nd=>nd.l?leaves(nd.l)+leaves(nd.r):1;
+const treeFn=(D,d)=>{const t=memo(D,'t'+d,()=>gtree(D.tr,d,null));return(x,y)=>tp(t,x,y)};
+function forest(D){return memo(D,'rf',()=>{const R=rng(77);return Array.from({length:50},()=>gtree(Array.from({length:80},()=>D.tr[Math.floor(R()*80)]),12,R))})}
+const forestVote=(D,k)=>{const F=forest(D);return(x,y)=>{let s=0;for(let i=0;i<k;i++)s+=tp(F[i],x,y)>=.5?1:0;return s/k}};
+// svm (simplified SMO, Platt 1998)
+function svm(D,kern,C,gam){return memo(D,`svm${kern}${C}${gam}`,()=>{const X=D.tr.map(p=>D.z(p.x,p.y)),Y=D.tr.map(p=>p.c?1:-1),n=80,R=rng(5),tol=1e-3;
+  const K=(a,b)=>kern==='linear'?a[0]*b[0]+a[1]*b[1]:Math.exp(-gam*((a[0]-b[0])**2+(a[1]-b[1])**2));
+  const KM=X.map(a=>X.map(b=>K(a,b))),al=new Float64Array(n);let b=0,passes=0,it=0;
+  const fi=i=>{let s=b;for(let j=0;j<n;j++)if(al[j])s+=al[j]*Y[j]*KM[j][i];return s};
+  while(passes<10&&it<3000){it++;let ch=0;
+    for(let i=0;i<n;i++){const Ei=fi(i)-Y[i];if(!((Y[i]*Ei<-tol&&al[i]<C)||(Y[i]*Ei>tol&&al[i]>0)))continue;
+      let j=Math.floor(R()*(n-1));if(j>=i)j++;const Ej=fi(j)-Y[j],ai=al[i],aj=al[j];
+      const Lo=Y[i]!==Y[j]?Math.max(0,aj-ai):Math.max(0,ai+aj-C),Hi=Y[i]!==Y[j]?Math.min(C,C+aj-ai):Math.min(C,ai+aj);if(Lo===Hi)continue;
+      const eta=2*KM[i][j]-KM[i][i]-KM[j][j];if(eta>=0)continue;
+      let nj=Math.min(Hi,Math.max(Lo,aj-Y[j]*(Ei-Ej)/eta));if(Math.abs(nj-aj)<1e-5)continue;
+      const ni=ai+Y[i]*Y[j]*(aj-nj);al[i]=ni;al[j]=nj;
+      const b1=b-Ei-Y[i]*(ni-ai)*KM[i][i]-Y[j]*(nj-aj)*KM[i][j],b2=b-Ej-Y[i]*(ni-ai)*KM[i][j]-Y[j]*(nj-aj)*KM[j][j];
+      b=ni>0&&ni<C?b1:nj>0&&nj<C?b2:(b1+b2)/2;ch++}
+    passes=ch?0:passes+1}
+  const f=(x,y)=>{const q=D.z(x,y);let s=b;for(let j=0;j<n;j++)if(al[j])s+=al[j]*Y[j]*K(X[j],q);return s};
+  const sv=D.tr.filter((p,i)=>al[i]>1e-6);return{f,p:(x,y)=>sig(2*f(x,y)),sv}})}
+// gaussian naive bayes
+function nb(D){return memo(D,'nb',()=>{const st=[0,1].map(c=>{const P=D.tr.filter(p=>p.c===c),n=P.length,m=['x','y'].map(f=>P.reduce((s,p)=>s+p[f],0)/n);
+    const v=['x','y'].map((f,i)=>P.reduce((s,p)=>s+(p[f]-m[i])**2,0)/n+1e-3);return{prior:n/D.tr.length,m,v}});
+  const pdf=(v,m,s2)=>Math.exp(-((v-m)**2)/(2*s2))/Math.sqrt(2*Math.PI*s2);
+  const parts=(x,y)=>st.map(s=>{const l1=pdf(x,s.m[0],s.v[0]),l2=pdf(y,s.m[1],s.v[1]);return{prior:s.prior,l1,l2,prod:s.prior*l1*l2}});
+  const p=(x,y)=>{const lg=st.map(s=>Math.log(s.prior)-((x-s.m[0])**2)/(2*s.v[0])-Math.log(s.v[0])/2-((y-s.m[1])**2)/(2*s.v[1])-Math.log(s.v[1])/2);return 1/(1+Math.exp(lg[0]-lg[1]))};
+  return{st,parts,p}})}
+
+// ================= drawing =================
+const W=480,H=440,L=40,RM=10,T=10,BM=40,PW=W-L-RM,PH=H-T-BM;
+const sx=x=>L+x/10*PW, sy=y=>T+(1-y/10)*PH;
+const ix=px=>(px-L)/PW*10, iy=py=>(1-(py-T)/PH)*10;
+function frame(id){let g=`<defs><clipPath id="clip-${id}"><rect x="${L}" y="${T}" width="${PW}" height="${PH}"/></clipPath></defs>`;
+  for(let v=0;v<=10;v+=2)g+=`<text x="${sx(v)}" y="${H-BM+18}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter">${v}</text><text x="${L-8}" y="${sy(v)+4}" text-anchor="end" font-size="12" fill="var(--muted)" font-family="Inter">${v}</text>`;
+  g+=`<text x="${L+PW/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter">Feature x₁</text><text x="12" y="${T+PH/2}" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Inter" transform="rotate(-90 12 ${T+PH/2})">Feature x₂</text>`;
+  return g}
+const CO=48,RO=44,OP=[.1,.2,.3,.42];
+function regions(f,thr=.5){const cw=PW/CO,ch=PH/RO;let out='';
+  for(let r=0;r<RO;r++){let run=null;const y=10-(r+.5)/RO*10;
+    for(let c=0;c<=CO;c++){let key=null;if(c<CO){const p=f((c+.5)/CO*10,y),cls=p>=thr?1:0,lv=Math.min(3,Math.floor(Math.abs(p-.5)*8));key=cls*10+lv}
+      if(run&&key===run.k)continue;
+      if(run)out+=`<rect x="${(L+run.s*cw).toFixed(2)}" y="${(T+r*ch).toFixed(2)}" width="${((c-run.s)*cw).toFixed(2)}" height="${ch.toFixed(2)}" shape-rendering="crispEdges" fill="var(--c${run.k>=10?'b':'a'})" opacity="${OP[run.k%10]}"/>`;
+      run=c<CO?{k:key,s:c}:null}}
+  return out+`<rect x="${L}" y="${T}" width="${PW}" height="${PH}" fill="none" stroke="var(--line)"/>`}
+const pt=(p,hollow)=>p.c?`<rect x="${sx(p.x)-4.5}" y="${sy(p.y)-4.5}" width="9" height="9" fill="${hollow?'none':'var(--cb)'}" stroke="${hollow?'var(--cb)':'var(--card)'}" stroke-width="${hollow?1.8:1}"/>`
+  :`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="5" fill="${hollow?'none':'var(--ca)'}" stroke="${hollow?'var(--ca)':'var(--card)'}" stroke-width="${hollow?1.8:1}"/>`;
+const dots=P=>P.map(p=>pt(p)).join('');
+const draw=(id,inner)=>{$(id).innerHTML=frame(id)+inner};
+function dsSeg(id,cur,on){const el=$(id);el.innerHTML=Object.entries(DSN).map(([k,v])=>`<button data-v="${k}" aria-pressed="${k===cur}">${v}</button>`).join('');
+  [...el.children].forEach(b=>b.onclick=()=>{[...el.children].forEach(x=>x.setAttribute('aria-pressed',x===b));on(b.dataset.v)})}
+function seg(id,on){const el=$(id);[...el.children].forEach(b=>b.onclick=()=>{if(b.disabled)return;[...el.children].forEach(x=>x.setAttribute('aria-pressed',x===b));on(b.dataset.v)})}
+function svgPt(svg,e){const r=svg.getBoundingClientRect();return{x:ix((e.clientX-r.left)/r.width*W),y:iy((e.clientY-r.top)/r.height*H)}}
+const statsSet=(pre,f,D,thr)=>{$(pre+'-tr').textContent=pct(acc(f,D.tr,thr));$(pre+'-te').textContent=pct(acc(f,D.te,thr))};
+
+// ================= hero =================
+const HM=[
+ {k:'Logistic',c:'eq',f:D=>lrFn(D,lrHist(D)[300]),t:'a single straight boundary.'},
+ {k:'KNN (k=5)',c:'kn',f:D=>knnFn(D,5),t:'follows the local shape of the data.'},
+ {k:'Decision tree',c:'tr',f:D=>treeFn(D,4),t:'boxes with horizontal and vertical edges.'},
+ {k:'Random forest',c:'tr',f:D=>forestVote(D,50),t:'smoothed boxes; paler where trees disagree.'},
+ {k:'SVM (RBF)',c:'eq',f:D=>svm(D,'rbf',1,2).p,t:'a smooth curve with the widest margin.'},
+ {k:'Naive Bayes',c:'nb',f:D=>nb(D).p,t:'curves where the two classes\' bell curves are equally likely.'}];
+let hDs='moons',hM=0;
+function hero(){const D=DS[hDs],m=HM[hM],f=m.f(D);draw('hero-plot',regions(f)+dots(D.tr));
+  [...$('hero-btns').children].forEach((b,j)=>b.setAttribute('aria-pressed',j===hM));
+  $('hero-info').innerHTML=`<b class="${m.c}">${m.k}</b>: ${m.t}<br><span style="color:var(--muted);font-size:.88rem">Accuracy on 80 unseen test points: <b style="color:var(--ink)">${pct(acc(f,D.te))}</b>. Switch datasets to see where each model struggles.</span>`}
+$('hero-btns').innerHTML=HM.map(m=>`<button class="mbtn">${m.k}</button>`).join('');
+[...$('hero-btns').children].forEach((b,i)=>b.onclick=()=>{hM=i;hero()});
+dsSeg('hero-ds',hDs,v=>{hDs=v;hero()});hero();
+
+// ================= logistic =================
+let lDs='blobs',timer=null;
+function sigDraw(thr){const s=$('sig'),X=z=>20+(z+6)/12*290,Y=p=>100-p*85;let d='';for(let i=0;i<=120;i++){const z=-6+i/10;d+=(i?'L':'M')+X(z).toFixed(1)+','+Y(sig(z)).toFixed(1)}
+  const zt=Math.log(thr/(1-thr));
+  s.innerHTML=`<line x1="20" x2="310" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--line)"/><line x1="${X(0)}" x2="${X(0)}" y1="10" y2="100" stroke="var(--line)"/>
+  <rect x="${X(zt)}" y="${Y(1)}" width="${310-X(zt)}" height="${Y(0)-Y(1)}" fill="var(--cb)" opacity=".12"/><rect x="20" y="${Y(1)}" width="${X(zt)-20}" height="${Y(0)-Y(1)}" fill="var(--ca)" opacity=".12"/>
+  <path d="${d}" fill="none" stroke="var(--eq)" stroke-width="3"/><line x1="20" x2="310" y1="${Y(thr)}" y2="${Y(thr)}" stroke="var(--ink)" stroke-dasharray="4 4"/>
+  <text x="24" y="${Y(thr)-5}" font-size="11" fill="var(--ink)" font-family="Inter">threshold ${thr.toFixed(2)}</text>
+  <text x="${X(0)}" y="116" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Inter">z = 0</text><text x="306" y="116" text-anchor="end" font-size="11" fill="var(--muted)" font-family="Inter">z →</text>
+  <text x="304" y="${Y(1)+12}" text-anchor="end" font-size="11" fill="var(--cb)" font-family="Inter" font-weight="600">predict B</text><text x="26" y="${Y(0)-6}" font-size="11" fill="var(--ca)" font-family="Inter" font-weight="600">predict A</text>`}
+function lrDraw(){const D=DS[lDs],e=+$('lr-e').value,thr=+$('lr-t').value,w=lrHist(D)[e],f=lrFn(D,w);
+  $('lr-ev').textContent=e;$('lr-tv').textContent=thr.toFixed(2);sigDraw(thr);
+  let line='';const lg=Math.log(thr/(1-thr));
+  if(e>0&&Math.abs(w[2])>1e-6){const yAt=x=>D.my+D.sy*(lg-w[0]-w[1]*(x-D.mx)/D.sx)/w[2];line=`<line x1="${sx(0)}" y1="${sy(yAt(0))}" x2="${sx(10)}" y2="${sy(yAt(10))}" stroke="var(--eq)" stroke-width="3" clip-path="url(#clip-lr-plot)"/>`}
+  draw('lr-plot',regions(f,thr)+line+dots(D.tr));
+  const loss=-D.tr.reduce((s,p)=>{const q=Math.min(1-1e-9,Math.max(1e-9,f(p.x,p.y)));return s+(p.c?Math.log(q):Math.log(1-q))},0)/80;
+  $('lr-loss').textContent=loss.toFixed(3);statsSet('lr',f,D,thr)}
+function lrStop(){clearInterval(timer);timer=null;$('lr-play').textContent='▶ Train'}
+$('lr-e').oninput=$('lr-t').oninput=lrDraw;
+$('lr-play').onclick=()=>{if(timer)return lrStop();if(+$('lr-e').value>=300)$('lr-e').value=0;$('lr-play').textContent='❚❚ Pause';
+  timer=setInterval(()=>{const v=Math.min(300,+$('lr-e').value+5);$('lr-e').value=v;lrDraw();if(v>=300)lrStop()},matchMedia('(prefers-reduced-motion:reduce)').matches?10:70)};
+dsSeg('lr-ds',lDs,v=>{lDs=v;lrDraw()});lrDraw();
+
+// ================= knn =================
+let kDs='moons',kq={x:5,y:5.3};
+function knnDraw(){const D=DS[kDs],k=+$('knn-k').value,f=knnFn(D,k);$('knn-kv').textContent=k;
+  const N=knnN(D,kq.x,kq.y,k),nb1=N.reduce((s,o)=>s+o.p.c,0),r=N[N.length-1].d;
+  const lines=N.map(o=>`<line x1="${sx(kq.x)}" y1="${sy(kq.y)}" x2="${sx(o.p.x)}" y2="${sy(o.p.y)}" stroke="var(--ink)" stroke-width="1.3" opacity=".6"/>`).join('');
+  const circ=`<circle cx="${sx(kq.x)}" cy="${sy(kq.y)}" r="${r/10*PW}" fill="none" stroke="var(--kn)" stroke-width="2" stroke-dasharray="5 4" clip-path="url(#clip-knn-plot)"/>`;
+  const q=`<path d="M${sx(kq.x)-9},${sy(kq.y)}h18M${sx(kq.x)},${sy(kq.y)-9}v18" stroke="var(--ink)" stroke-width="3"/><circle cx="${sx(kq.x)}" cy="${sy(kq.y)}" r="11" fill="none" stroke="var(--kn)" stroke-width="3"/>`;
+  draw('knn-plot',regions(f)+circ+lines+dots(D.tr)+q);statsSet('knn',f,D);
+  const win=nb1*2>k?'B':'A';
+  $('knn-vote').innerHTML=`<b>Click the map</b> to move the query point (✚). Its ${k} nearest neighbours vote:<div class="vbar"><span style="width:${(k-nb1)/k*100}%;background:var(--ca)"></span><span style="width:${nb1/k*100}%;background:var(--cb)"></span></div><span class="ca">A: ${k-nb1}</span> · <span class="cb">B: ${nb1}</span> → predict <b class="${win==='A'?'ca':'cb'}">class ${win}</b>`}
+$('knn-plot').addEventListener('click',e=>{const p=svgPt($('knn-plot'),e);if(p.x<0||p.x>10||p.y<0||p.y>10)return;kq=p;knnDraw()});
+$('knn-k').oninput=knnDraw;dsSeg('knn-ds',kDs,v=>{kDs=v;knnDraw()});knnDraw();
+
+// ================= tree =================
+let tDs='moons';
+const fn2=f=>f==='x'?'x₁':'x₂';
+function rules(nd,ind=''){if(!nd.l){const b=nd.n1,a=nd.n-b;return `${ind}→ class ${b>a?'B':'A'}  (${a} A, ${b} B · gini ${(1-(a/nd.n)**2-(b/nd.n)**2).toFixed(2)})\n`}
+  return `${ind}if ${fn2(nd.f)} < ${nd.t.toFixed(2)}:\n`+rules(nd.l,ind+'    ')+`${ind}else:\n`+rules(nd.r,ind+'    ')}
+function treeDraw(){const D=DS[tDs],d=+$('tree-d').value,t=memo(D,'t'+d,()=>gtree(D.tr,d,null)),f=(x,y)=>tp(t,x,y);$('tree-dv').textContent=d;
+  draw('tree-plot',regions(f)+dots(D.tr));$('tree-leaves').textContent=leaves(t);statsSet('tree',f,D);
+  $('tree-rules').textContent=d<=3?rules(t):`Depth ${d} has ${leaves(t)} leaves: too many rules to read comfortably.\nDeeper = fits training data better, but harder to explain\nand more likely to memorise noise. Compare train vs test accuracy.`}
+$('tree-d').oninput=treeDraw;dsSeg('tree-ds',tDs,v=>{tDs=v;treeDraw()});treeDraw();
+
+// ================= forest =================
+let fDs='moons';
+function forestDraw(){const D=DS[fDs],k=+$('forest-k').value,f=forestVote(D,k);$('forest-kv').textContent=k;$('forest-n').textContent=k;
+  draw('forest-plot',regions(f)+dots(D.tr));statsSet('forest',f,D)}
+$('forest-k').oninput=forestDraw;dsSeg('forest-ds',fDs,v=>{fDs=v;forestDraw()});forestDraw();
+
+// ================= svm =================
+let vDs='blobs',vK='linear',vC=1,vG=2;
+function svmDraw(){const D=DS[vDs],m=svm(D,vK,vC,vG),cw=PW/CO,ch=PH/RO;let band='';
+  for(let r=0;r<RO;r++){let s=-1;const y=10-(r+.5)/RO*10;for(let c=0;c<=CO;c++){const inb=c<CO&&Math.abs(m.f((c+.5)/CO*10,y))<1;
+    if(inb&&s<0)s=c;if(!inb&&s>=0){band+=`<rect x="${(L+s*cw).toFixed(2)}" y="${(T+r*ch).toFixed(2)}" width="${((c-s)*cw).toFixed(2)}" height="${ch.toFixed(2)}" shape-rendering="crispEdges" fill="var(--ink)" opacity=".13"/>`;s=-1}}}
+  const svs=m.sv.map(p=>`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="9" fill="none" stroke="var(--ink)" stroke-width="1.8"/>`).join('');
+  draw('svm-plot',regions(m.p)+band+dots(D.tr)+svs);
+  $('svm-sv').textContent=m.sv.length+' of 80';statsSet('svm',m.p,D);
+  [...$('svm-g').children].forEach(b=>b.disabled=vK==='linear')}
+seg('svm-k',v=>{vK=v;svmDraw()});seg('svm-c',v=>{vC=+v;svmDraw()});seg('svm-g',v=>{vG=+v;svmDraw()});
+dsSeg('svm-ds',vDs,v=>{vDs=v;svmDraw()});svmDraw();
+
+// ================= naive bayes =================
+let nDs='blobs',nq={x:5,y:5};
+function nbDraw(){const D=DS[nDs],m=nb(D);
+  const ell=m.st.map((s,c)=>[1,2].map(k=>`<ellipse cx="${sx(s.m[0])}" cy="${sy(s.m[1])}" rx="${k*Math.sqrt(s.v[0])/10*PW}" ry="${k*Math.sqrt(s.v[1])/10*PH}" fill="none" stroke="var(--c${c?'b':'a'})" stroke-width="${k===1?2.4:1.4}" stroke-dasharray="${k===1?'':'5 4'}" clip-path="url(#clip-nb-plot)"/>`).join('')+`<circle cx="${sx(s.m[0])}" cy="${sy(s.m[1])}" r="4" fill="var(--c${c?'b':'a'})" stroke="var(--card)" stroke-width="2"/>`).join('');
+  const q=`<path d="M${sx(nq.x)-9},${sy(nq.y)}h18M${sx(nq.x)},${sy(nq.y)-9}v18" stroke="var(--ink)" stroke-width="3"/><circle cx="${sx(nq.x)}" cy="${sy(nq.y)}" r="11" fill="none" stroke="var(--nb)" stroke-width="3"/>`;
+  draw('nb-plot',regions(m.p)+dots(D.tr)+ell+q);statsSet('nb',m.p,D);
+  const P=m.parts(nq.x,nq.y),tot=P[0].prod+P[1].prod,pb=m.p(nq.x,nq.y),e=v=>v<1e-3?v.toExponential(1):v.toFixed(3);
+  $('nb-calc').innerHTML=`<b>Click the map</b> to move ✚ to (${nq.x.toFixed(1)}, ${nq.y.toFixed(1)}). Ellipses show 1σ and 2σ of each class's bell curves.
+   <div class="scroll"><table class="calc"><tr><th></th><th>Prior</th><th>P(x₁|class)</th><th>P(x₂|class)</th><th>Product</th></tr>
+   ${P.map((r,c)=>`<tr><td class="${c?'cb':'ca'}"><b>Class ${c?'B':'A'}</b></td><td>${r.prior.toFixed(2)}</td><td>${e(r.l1)}</td><td>${e(r.l2)}</td><td><b>${e(r.prod)}</b></td></tr>`).join('')}</table></div>
+   <div class="vbar"><span style="width:${(1-pb)*100}%;background:var(--ca)"></span><span style="width:${pb*100}%;background:var(--cb)"></span></div>
+   After normalising: <span class="ca">A ${pct(1-pb)}</span> · <span class="cb">B ${pct(pb)}</span> → predict <b class="${pb>=.5?'cb':'ca'}">class ${pb>=.5?'B':'A'}</b>${tot<1e-12?' (both products are tiny: this point is far from both classes)':''}`}
+$('nb-plot').addEventListener('click',e=>{const p=svgPt($('nb-plot'),e);if(p.x<0||p.x>10||p.y<0||p.y>10)return;nq=p;nbDraw()});
+dsSeg('nb-ds',nDs,v=>{nDs=v;nbDraw()});nbDraw();
+
+// ================= compare =================
+const ks=Object.keys(DSN),SC=HM.map(m=>ks.map(k=>acc(m.f(DS[k]),DS[k].te))),BEST=ks.map((_,j)=>Math.max(...SC.map(r=>r[j])));
+const FULL=['Logistic regression','KNN (k=5)','Decision tree (depth 4)','Random forest (50 trees)','SVM (RBF)','Gaussian Naive Bayes'];
+$('board').innerHTML=SC.map((r,i)=>`<tr><td class="${HM[i].c}">${FULL[i]}</td>${r.map((v,j)=>`<td class="num${v===BEST[j]?' best':''}">${pct(v)}</td>`).join('')}</tr>`).join('');
+const CMP=[
+ ['Logistic regression','Straight line','Fast (gradient descent)','Very fast','Recommended','Yes: weights and odds'],
+ ['KNN','Any shape, follows the data','None, just stores data','Slow on big data','Essential','By example: "these 5 similar cases"'],
+ ['Decision tree','Boxes (axis-aligned)','Fast (greedy splits)','Very fast','Not needed','Yes, when shallow: if/else rules'],
+ ['Random forest','Smoothed boxes','Medium (many trees)','Medium','Not needed','Partly: feature importances'],
+ ['SVM','Line, or curves with a kernel','Slow past ~100k rows','Fast','Essential','Hard with RBF kernel'],
+ ['Naive Bayes','Smooth curves (from bell curves)','Very fast (counts and means)','Very fast','Not needed','Yes: per-feature probabilities']];
+const HD=['Algorithm','Boundary shape','Training','Predicting','Scale features?','Explain it?'];
+$('cmp').innerHTML=CMP.map((r,i)=>`<tr>${r.map((c,j)=>`<td data-l="${HD[j]}"${j===0?` class="${HM[i].c}"`:''}>${c}</td>`).join('')}</tr>`).join('');
+
+// ================= chooser =================
+const NAMES=['Logistic regression','KNN','Decision tree','Random forest','SVM','Naive Bayes'];
+const Q=[
+ {k:'type',q:'What does your data look like?',o:[['Numeric / table columns','num'],['Text (word counts)','text']]},
+ {k:'rows',q:'How many labelled rows?',o:[['Under ~1,000','small'],['1k – 100k','mid'],['Over 100k','big']]},
+ {k:'shape',q:'How complex is the boundary likely to be?',o:[['Fairly simple','simple'],['Curvy / complex','complex'],['No idea','unsure']]},
+ {k:'explain',q:'Must you explain each decision?',o:[['Yes','yes'],['No, accuracy first','no']]}];
+const A={};
+$('qs').innerHTML=Q.map((x,i)=>`<div class="q"><div class="qt">${i+1}. ${x.q}</div><div class="opts">${x.o.map(o=>`<button class="opt" aria-pressed="false" data-k="${x.k}" data-v="${o[1]}">${o[0]}</button>`).join('')}</div></div>`).join('');
+$('qs').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{A[b.dataset.k]=b.dataset.v;b.parentNode.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));verdict()});
+function verdict(){const n=Object.keys(A).length;let pick=-1,why='';
+  if(n<Q.length){$('v-title').textContent='Keep going…';$('v-body').textContent=`${n} of ${Q.length} answered.`}
+  else{
+    if(A.type==='text'){pick=5;why='Multinomial Naive Bayes on word counts is a fast, strong baseline for text, even with little data. Logistic regression on TF-IDF features is the natural next thing to compare.'}
+    else if(A.explain==='yes'){pick=A.shape==='simple'?0:2;why=pick===0?'A straight-line boundary plus weights you can read as "this feature raises the odds by…". The standard choice in banking and healthcare.':'A shallow tree (depth 3–4) becomes a short list of if/else rules anyone can follow. Accept a little accuracy for transparency.'}
+    else if(A.shape==='simple'){pick=0;why='If a line separates the classes, logistic regression is fast, stable and gives calibrated probabilities. Try a linear SVM as a comparison.'}
+    else if(A.rows==='small'&&A.shape==='complex'){pick=4;why='Small data with a curved boundary is where an RBF-kernel SVM shines. Scale your features and tune C and γ with cross-validation.'}
+    else if(A.rows==='small'){pick=1;why='With little data and no idea of the shape, KNN is a quick, assumption-free baseline. Scale features first and try a few values of k.'}
+    else{pick=3;why='A random forest handles complex boundaries and mixed features with almost no tuning. When you need the last few percent, try gradient boosting (XGBoost / LightGBM).'}
+    $('v-title').innerHTML=`<span class="${HM[pick].c}">${NAMES[pick]}</span>`;$('v-body').textContent=why}
+  $('chips').innerHTML=NAMES.map((x,i)=>`<span class="${i===pick?'on':''}">${x}</span>`).join('')}
+verdict();
+
+// ================= quiz =================
+const QZ=[
+ {q:'Logistic regression is used mainly for…',a:['Predicting a continuous number','Classification, by outputting a probability','Clustering unlabelled data'],c:1,w:'The name is historical: it regresses the log-odds, then a threshold turns the probability into a class.'},
+ {q:'In KNN, what usually happens when k = 1?',a:['The boundary becomes jagged and overfits','The model becomes a straight line','Training gets slower'],c:0,w:'Each point controls its own little island, including noisy ones. Larger k smooths the boundary.'},
+ {q:'Why do decision tree boundaries look like boxes?',a:['Trees use the RBF kernel','Each split tests one feature against a threshold','Trees only work on two features'],c:1,w:'"x₁ < 4.2" is a vertical cut and "x₂ < 6" a horizontal one, so the regions are rectangles.'},
+ {q:'In an SVM, the support vectors are…',a:['All training points','The points on or inside the margin that define the boundary','The cluster centres of each class'],c:1,w:'Remove any other point and the boundary stays the same.'},
+ {q:'What is "naive" about Naive Bayes?',a:['It ignores the prior','It assumes features are independent within each class','It only works on text'],c:1,w:'That assumption lets it multiply each feature\'s likelihood separately.'},
+ {q:'Which two models must have scaled features to work well?',a:['Decision tree and random forest','KNN and SVM','Naive Bayes and decision tree'],c:1,w:'Both depend on distances. Trees only compare one feature to a threshold, so scale doesn\'t matter to them.'}];
+let right=0,tried=0;
+$('quizbox').innerHTML=QZ.map((x,i)=>`<div class="qcard" data-i="${i}"><b>${i+1}. ${x.q}</b><div class="ans">${x.a.map((t,j)=>`<button data-j="${j}">${t}</button>`).join('')}</div><div class="why">${x.w}</div></div>`).join('');
+$('quizbox').querySelectorAll('.qcard').forEach(c=>{const x=QZ[+c.dataset.i];c.querySelectorAll('.ans button').forEach(b=>b.onclick=()=>{
+  if(c.dataset.done)return;c.dataset.done=1;tried++;const j=+b.dataset.j;if(j===x.c)right++;
+  c.querySelectorAll('.ans button').forEach((y,k)=>{if(k===x.c)y.classList.add('right');else if(k===j)y.classList.add('wrong')});
+  c.querySelector('.why').style.display='block';$('score').textContent=`Score: ${right} / ${tried}`})});
+}
+</script>
+</body>
+</html>
