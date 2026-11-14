@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>scikit-learn Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Steel blue for actions, amber for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#1d6aa5; --accent-soft:#e3eff8; --yellow:#f39a2b; --yellow-soft:#fff1de;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#6cb4ea; --accent-soft:#15293b; --yellow:#f39a2b; --yellow-soft:#3a2914;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#6cb4ea; --accent-soft:#15293b; --yellow:#f39a2b; --yellow-soft:#3a2914;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#d6eaf8}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(243,154,43,.17);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(108,180,234,.14);box-shadow:inset 3px 0 0 #6cb4ea}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.dir{display:grid;gap:8px;margin:.6em 0 1em}
+.dir div{display:grid;grid-template-columns:150px 70px 1fr 70px;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.dir b{font-family:var(--f-mono);color:var(--accent)}
+.dir span{font-weight:600;text-align:center;background:var(--accent-soft);border-radius:6px;padding:3px 6px}
+.dir i{font:normal 13px var(--f-mono);text-align:center;color:var(--muted)}
+@media (max-width:600px){.dir div{grid-template-columns:1fr}}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>scikit‑<b>learn</b> Lab</h1><span>Data · Models · Evaluation · Pipelines · edit, run and step through every example</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore the original example">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Real Python 3 + scikit‑learn run in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "Getting Started", "level": "Beginner", "summary": "The fit → predict pattern every model shares.", "lessons": [{"title": "What is scikit-learn?", "code": "from sklearn.tree import DecisionTreeClassifier\n\n# [hours studied, hours slept]  ->  1 = passed, 0 = failed\nX = [[1, 4], [2, 5], [3, 6], [6, 7], [8, 6], [9, 8]]\ny = [0, 0, 0, 1, 1, 1]\n\nmodel = DecisionTreeClassifier(random_state=0)\nmodel.fit(X, y)\n\nnew_students = [[2, 7], [7, 5]]\nprint(model.predict(new_students))", "explain": "<p><b>Machine learning<\/b> means letting the computer <b>learn a rule from examples<\/b> instead of you writing the rule with <code>if<\/code> statements. <b>scikit‑learn<\/b> (imported as <code>sklearn<\/code>) is Python's most popular library for classic machine learning.<\/p>\n<p>Every model in scikit‑learn is used the same three‑step way:<\/p>\n<div class=\"order\"><span>1 · choose a model<\/span>→<span>2 · model.fit(X, y)<\/span>→<span>3 · model.predict(new_X)<\/span><\/div>\n<table class=\"tbl\"><tr><th>Word<\/th><th>Meaning here<\/th><\/tr>\n<tr><td><b>Sample<\/b><\/td><td>One example — one student (one row of <code>X<\/code>)<\/td><\/tr>\n<tr><td><b>Feature<\/b><\/td><td>One measurement about a sample — hours studied, hours slept (one column)<\/td><\/tr>\n<tr><td><b>X<\/b><\/td><td>All the features, as rows × columns<\/td><\/tr>\n<tr><td><b>y<\/b> (target / label)<\/td><td>The answer we want to predict — passed or failed<\/td><\/tr>\n<tr><td><b>Estimator<\/b><\/td><td>scikit‑learn's name for any model object<\/td><\/tr><\/table>\n<p>The model never saw <code>[2, 7]<\/code> or <code>[7, 5]<\/code>. It worked out its own rule from the six examples and applied it.<\/p>\n<div class=\"note\">By convention <code>X<\/code> is a capital letter (it's a 2‑D table) and <code>y<\/code> is lowercase (it's a 1‑D list of answers).<\/div>", "walk": [["1", "Import the model class from its sub‑module."], ["4", "Six students, two features each."], ["5", "The known result for each student, in the same order."], ["7", "Step 1: create an (empty) model."], ["8", "Step 2: learn the rule from X and y."], ["11", "Step 3: predict for students it has never seen."]], "trace": [[4, "X holds 6 rows (students) × 2 columns (features).", null], [5, "y holds 6 answers, one per row of X.", null], [7, "An untrained decision tree is created.", null], [8, "fit() studies the examples and learns a split rule.", null], [10, "Two students the model has never seen.", null], [11, "Low study hours → 0 (fail); high study hours → 1 (pass).", "[0 1]"]], "tip": "Every scikit-learn model follows the same pattern: create → fit(X, y) → predict(X_new).", "tryit": ["Add a third new student <code>[5, 5]<\/code>. What does the model predict?", "Swap <code>DecisionTreeClassifier<\/code> for <code>KNeighborsClassifier<\/code> from <code>sklearn.neighbors<\/code> — notice only the import and one line change."], "file": null, "expected": {"out": "[0 1]", "err": null, "line": null}}, {"title": "Features X and target y", "code": "from sklearn.datasets import load_iris\n\niris = load_iris()\nX = iris.data\ny = iris.target\n\nprint(\"X shape:\", X.shape)\nprint(\"y shape:\", y.shape)\nprint(\"Features:\", iris.feature_names)\nprint(\"Classes :\", iris.target_names)\nprint(\"First flower:\", X[0], \"->\", y[0])", "explain": "<p>scikit‑learn ships with small practice datasets. <b>Iris<\/b> is the classic one: 150 flowers, 4 measurements each, and 3 species to predict.<\/p>\n<p><code>.shape<\/code> is a NumPy property that tells you <b>(rows, columns)<\/b>.<\/p>\n<table class=\"tbl\"><tr><th><\/th><th>Shape<\/th><th>Meaning<\/th><\/tr>\n<tr><td><code>X<\/code><\/td><td><code>(150, 4)<\/code><\/td><td>150 samples × 4 features — always <b>2‑D<\/b><\/td><\/tr>\n<tr><td><code>y<\/code><\/td><td><code>(150,)<\/code><\/td><td>150 answers — <b>1‑D<\/b><\/td><\/tr><\/table>\n<p>The species are stored as numbers <code>0, 1, 2<\/code>; <code>target_names<\/code> tells you which name each number stands for. Models work with numbers, so text labels are usually turned into integers.<\/p>\n<div class=\"note\">Other built‑in datasets you'll meet in this lab: <code>load_wine<\/code>, <code>load_breast_cancer<\/code>, <code>load_diabetes<\/code>. They all have <code>.data<\/code>, <code>.target<\/code> and <code>.feature_names<\/code>.<\/div>", "walk": [["3", "Loads a 'Bunch' — a dictionary‑like object holding the data and its descriptions."], ["4", "The feature table."], ["5", "The species number for each flower."], ["7", "(rows, columns)."], ["11", "Row 0 of X and its label: species 0 = setosa."]], "trace": null, "tip": "X is a 2-D table (samples × features); y is a 1-D list of answers with the same number of rows.", "tryit": ["Print <code>X[:3]<\/code> to see the first three rows.", "Load <code>load_wine<\/code> instead. How many samples, features and classes does it have?"], "file": null, "expected": {"out": "X shape: (150, 4)\ny shape: (150,)\nFeatures: ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']\nClasses : ['setosa' 'versicolor' 'virginica']\nFirst flower: [5.1 3.5 1.4 0.2] -> 0", "err": null, "line": null}}, {"title": "The estimator API: fit, predict, score", "code": "from sklearn.datasets import load_iris\nfrom sklearn.neighbors import KNeighborsClassifier\n\nX, y = load_iris(return_X_y=True)\n\nmodel = KNeighborsClassifier(n_neighbors=3)\nprint(model)\n\nmodel.fit(X, y)\npreds = model.predict(X[::30])\nprint(\"Predictions:\", preds)\nprint(\"Actual     :\", y[::30])\nprint(\"Accuracy   :\", model.score(X, y))", "explain": "<p><code>return_X_y=True<\/code> is a shortcut that returns just the two arrays.<\/p>\n<p><b>K‑Nearest Neighbours<\/b> predicts by finding the <code>k<\/code> most similar training samples and taking a vote. Settings you choose <i>before<\/i> training, like <code>n_neighbors=3<\/code>, are called <b>hyperparameters<\/b>.<\/p>\n<table class=\"tbl\"><tr><th>Method<\/th><th>What it does<\/th><th>Returns<\/th><\/tr>\n<tr><td><code>fit(X, y)<\/code><\/td><td>Learns from the data<\/td><td>the model itself<\/td><\/tr>\n<tr><td><code>predict(X)<\/code><\/td><td>Predicts a label for each row<\/td><td>array of labels<\/td><\/tr>\n<tr><td><code>score(X, y)<\/code><\/td><td>Predicts and compares with <code>y<\/code><\/td><td>accuracy (classifiers) or R² (regressors)<\/td><\/tr><\/table>\n<div class=\"warn\"><b>This score is too optimistic.<\/b> We tested the model on the same flowers it learned from — like giving students the exam questions in advance. Module 2 fixes this with a proper train/test split.<\/div>", "walk": [["4", "Get the two arrays directly."], ["6", "Hyperparameter: look at the 3 nearest flowers."], ["7", "Printing a model shows only the settings you changed."], ["9", "Learn."], ["10", "Predict every 30th row (rows 0, 30, 60, 90, 120)."], ["13", "Fraction of correct predictions on the training data."]], "trace": null, "tip": "fit learns, predict guesses, score grades — the same three methods on every model.", "tryit": ["Change <code>n_neighbors<\/code> to 1. Why does the accuracy become exactly 1.0?"], "file": null, "expected": {"out": "KNeighborsClassifier(n_neighbors=3)\nPredictions: [0 0 1 1 2]\nActual     : [0 0 1 1 2]\nAccuracy   : 0.96", "err": null, "line": null}}, {"title": "Gotcha: X must be 2-D", "code": "from sklearn.linear_model import LinearRegression\n\nsizes = [50, 80, 100, 120]      # flat size in m²\nprices = [30, 48, 60, 72]       # price in lakh\n\nmodel = LinearRegression()\nmodel.fit(sizes, prices)", "explain": "<p>This is the error almost everyone hits first. <code>sizes<\/code> is a flat 1‑D list, but scikit‑learn <b>always<\/b> expects <code>X<\/code> to be 2‑D: one row per sample, one column per feature.<\/p>\n<div class=\"cmp\"><div><h5>What we passed<\/h5><code>[50, 80, 100, 120]<\/code><span>4 numbers — is that 4 samples or 1 sample with 4 features? scikit‑learn refuses to guess.<\/span><\/div>\n<div><h5>What it wants<\/h5><code>[[50], [80], [100], [120]]<\/code><span>4 rows × 1 column: four flats, one feature each.<\/span><\/div><\/div>\n<p>Read the error message — it even tells you the fix: <code>reshape(-1, 1)<\/code>. The next lesson shows it.<\/p>\n<div class=\"note\"><code>y<\/code> is allowed to be 1‑D. Only <code>X<\/code> must be 2‑D.<\/div>", "walk": [["3", "A 1‑D list — this is the problem."], ["4", "y can stay 1‑D; that's fine."], ["7", "fit() checks X's shape and raises ValueError."]], "trace": null, "tip": "X is always 2-D, even with a single feature: [[50], [80], ...].", "tryit": ["Fix it by writing <code>sizes = [[50], [80], [100], [120]]<\/code> and run again — no output means no error."], "file": null, "expected": {"out": "", "err": "ValueError: Expected 2D array, got 1D array instead:\narray=[ 50  80 100 120].\nReshape your data either using array.reshape(-1, 1) if your data has a single feature or array.reshape(1, -1) if it contains a single sample.", "line": 7}}, {"title": "Fixing it with reshape", "code": "import numpy as np\nfrom sklearn.linear_model import LinearRegression\n\nsizes = np.array([50, 80, 100, 120])\nprices = np.array([30, 48, 60, 72])\n\nX = sizes.reshape(-1, 1)\nprint(sizes.shape, \"->\", X.shape)\nprint(X)\n\nmodel = LinearRegression()\nmodel.fit(X, prices)\nprint(\"Price for 90 m²:\", model.predict([[90]])[0].round(1), \"lakh\")", "explain": "<p><code>reshape(-1, 1)<\/code> means: <b>\"1 column, and work out the number of rows yourself\"<\/b> (that's what <code>-1<\/code> stands for).<\/p>\n<table class=\"tbl\"><tr><th>Call<\/th><th>Result shape<\/th><th>Use when<\/th><\/tr>\n<tr><td><code>a.reshape(-1, 1)<\/code><\/td><td><code>(4, 1)<\/code><\/td><td>you have <b>many samples, one feature<\/b><\/td><\/tr>\n<tr><td><code>a.reshape(1, -1)<\/code><\/td><td><code>(1, 4)<\/code><\/td><td>you have <b>one sample, many features<\/b><\/td><\/tr><\/table>\n<p>Notice <code>predict([[90]])<\/code> also uses double brackets — one sample, one feature. <code>predict<\/code> returns an array, so <code>[0]<\/code> takes the first (and only) prediction.<\/p>", "walk": [["4", "A NumPy array — it has .shape and .reshape."], ["7", "Turn 4 numbers into 4 rows × 1 column."], ["8", "(4,) becomes (4, 1)."], ["12", "Now fit works."], ["13", "Predict for a 90 m² flat; [0] unwraps the array."]], "trace": null, "tip": "reshape(-1, 1) turns a flat list into a single-feature column.", "tryit": ["Predict prices for 60 and 150 m² in one call: <code>model.predict([[60], [150]])<\/code>."], "file": null, "expected": {"out": "(4,) -> (4, 1)\n[[ 50]\n [ 80]\n [100]\n [120]]\nPrice for 90 m²: 54.0 lakh", "err": null, "line": null}}]}, {"title": "Train, Test & Evaluate", "level": "Beginner → Intermediate", "summary": "Measuring how well a model works on new data.", "lessons": [{"title": "train_test_split", "code": "from sklearn.datasets import load_iris\nfrom sklearn.model_selection import train_test_split\n\nX, y = load_iris(return_X_y=True)\n\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.25, random_state=42\n)\n\nprint(\"All data :\", X.shape)\nprint(\"Train    :\", X_train.shape)\nprint(\"Test     :\", X_test.shape)\nprint(\"First 10 test labels:\", y_test[:10])", "explain": "<p>To know how a model behaves on <b>new<\/b> data, hide part of your data from it during training and use that part only for the final check.<\/p>\n<div class=\"cmp\"><div><h5>Training set<\/h5><span>The model learns from this. Usually 70–80% of the data.<\/span><\/div>\n<div><h5>Test set<\/h5><span>Kept aside. Used once, at the end, to estimate real‑world performance.<\/span><\/div><\/div>\n<p><code>train_test_split<\/code> shuffles the rows and returns <b>four<\/b> arrays — always in this order: <code>X_train, X_test, y_train, y_test<\/code>.<\/p>\n<table class=\"tbl\"><tr><th>Argument<\/th><th>Meaning<\/th><\/tr>\n<tr><td><code>test_size=0.25<\/code><\/td><td>25% of rows go to the test set (default is 0.25)<\/td><\/tr>\n<tr><td><code>random_state=42<\/code><\/td><td>Fixes the shuffle so you get the same split every run<\/td><\/tr><\/table>\n<div class=\"warn\">Getting the order of the four outputs wrong is a silent bug — nothing crashes, but your results become nonsense.<\/div>", "walk": [["6", "Four outputs, always in this order."], ["7", "25% for testing, fixed shuffle."], ["11", "112 rows to learn from."], ["12", "38 rows held back."], ["13", "Labels are shuffled, not in the original 0,0,0… order."]], "trace": null, "tip": "Train on one part, test on a part the model has never seen.", "tryit": ["Remove <code>random_state=42<\/code> and run twice. Do the test labels change?", "Use <code>test_size=0.2<\/code>. How many test rows now?"], "file": null, "expected": {"out": "All data : (150, 4)\nTrain    : (112, 4)\nTest     : (38, 4)\nFirst 10 test labels: [1 0 2 1 1 0 1 2 1 1]", "err": null, "line": null}}, {"title": "Why not test on training data?", "code": "from sklearn.datasets import load_breast_cancer\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.tree import DecisionTreeClassifier\n\nX, y = load_breast_cancer(return_X_y=True)\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, random_state=0)\n\nfor depth in [1, 3, None]:\n    tree = DecisionTreeClassifier(max_depth=depth, random_state=0)\n    tree.fit(X_train, y_train)\n    train_acc = tree.score(X_train, y_train)\n    test_acc = tree.score(X_test, y_test)\n    print(f\"depth={str(depth):4}  train={train_acc:.3f}  test={test_acc:.3f}\")", "explain": "<p>A decision tree with no depth limit (<code>None<\/code>) can keep splitting until it memorises <b>every<\/b> training sample — training accuracy hits 1.000. But that doesn't make it better on new data.<\/p>\n<table class=\"tbl\"><tr><th>Term<\/th><th>What you see<\/th><\/tr>\n<tr><td><b>Underfitting<\/b><\/td><td>Low train <i>and<\/i> low test score — the model is too simple<\/td><\/tr>\n<tr><td><b>Good fit<\/b><\/td><td>Train and test scores both high and close together<\/td><\/tr>\n<tr><td><b>Overfitting<\/b><\/td><td>Train score much higher than test — the model memorised noise<\/td><\/tr><\/table>\n<p>Only the <b>test<\/b> column tells you how the model will do in real life. The gap between the two columns is the warning sign.<\/p>", "walk": [["9", "Try three tree sizes: tiny, medium, unlimited."], ["10", "max_depth limits how many questions the tree may ask."], ["12", "Score on data it learned from."], ["13", "Score on unseen data — the honest number."]], "trace": [[5, "569 tumour samples, 30 features each.", null], [6, "Split 75% / 25%.", null], [9, "First pass: depth = 1 (a single question).", null], [11, "Fit a one‑split tree.", null], [14, "Simple tree: train and test are similar.", "depth=1     train=0.923  test=0.881"], [9, "Second pass: depth = 3.", null], [14, "Both scores go up together — a better fit.", "depth=3     train=0.977  test=0.937"], [9, "Third pass: depth = None (no limit).", null], [11, "The tree keeps splitting until every training sample is correct.", null], [14, "Train = 1.000 but test falls back to 0.881: overfitting.", "depth=None  train=1.000  test=0.881"]], "tip": "A perfect training score is a warning, not a win — trust the test score.", "tryit": ["Add depths 2, 5 and 10 to the list. Which depth gives the best test score?"], "file": null, "expected": {"out": "depth=1     train=0.923  test=0.881\ndepth=3     train=0.977  test=0.937\ndepth=None  train=1.000  test=0.881", "err": null, "line": null}}, {"title": "Accuracy, confusion matrix & report", "code": "from sklearn.metrics import accuracy_score, confusion_matrix, classification_report\n\ny_true = [1, 0, 1, 1, 0, 1, 0, 0, 1, 1]   # 1 = spam\ny_pred = [1, 0, 0, 1, 0, 1, 1, 0, 1, 1]\n\nprint(\"Accuracy:\", accuracy_score(y_true, y_pred))\nprint(\"Confusion matrix:\")\nprint(confusion_matrix(y_true, y_pred))\nprint(classification_report(y_true, y_pred, target_names=[\"ham\", \"spam\"]))", "explain": "<p>Accuracy alone can hide problems. The <b>confusion matrix<\/b> shows exactly which mistakes happen. For two classes it is laid out like this:<\/p>\n<table class=\"tbl\"><tr><th><\/th><th>Predicted 0 (ham)<\/th><th>Predicted 1 (spam)<\/th><\/tr>\n<tr><th>Actual 0<\/th><td><b>TN<\/b> true negative = 3<\/td><td><b>FP<\/b> false positive = 1<\/td><\/tr>\n<tr><th>Actual 1<\/th><td><b>FN<\/b> false negative = 1<\/td><td><b>TP<\/b> true positive = 5<\/td><\/tr><\/table>\n<table class=\"tbl\"><tr><th>Metric<\/th><th>Question it answers<\/th><th>Formula<\/th><\/tr>\n<tr><td><b>Precision<\/b><\/td><td>When it says spam, how often is it right?<\/td><td>TP / (TP + FP)<\/td><\/tr>\n<tr><td><b>Recall<\/b><\/td><td>Of all real spam, how much did it catch?<\/td><td>TP / (TP + FN)<\/td><\/tr>\n<tr><td><b>F1<\/b><\/td><td>One number balancing both<\/td><td>harmonic mean<\/td><\/tr>\n<tr><td><b>Support<\/b><\/td><td>How many real samples of that class<\/td><td>count<\/td><\/tr><\/table>\n<div class=\"warn\">If 99% of emails are ham, a model that always says \"ham\" gets 99% accuracy and catches zero spam. Always check recall on the class you care about.<\/div>", "walk": [["3", "The real answers."], ["4", "What a model predicted. Two mistakes: positions 2 and 6."], ["1", "8 of 10 correct = 0.8."], ["1", "Rows = actual, columns = predicted."], ["1", "Precision, recall and F1 per class in one table."]], "trace": null, "tip": "Rows of the confusion matrix are the truth; columns are the predictions.", "tryit": ["Change the last prediction to 0. Which numbers in the matrix and report change?"], "file": null, "expected": {"out": "Accuracy: 0.8\nConfusion matrix:\n[[3 1]\n [1 5]]\n              precision    recall  f1-score   support\n\n         ham       0.75      0.75      0.75         4\n        spam       0.83      0.83      0.83         6\n\n    accuracy                           0.80        10\n   macro avg       0.79      0.79      0.79        10\nweighted avg       0.80      0.80      0.80        10", "err": null, "line": null}}, {"title": "Cross-validation", "code": "from sklearn.datasets import load_iris\nfrom sklearn.model_selection import cross_val_score\nfrom sklearn.neighbors import KNeighborsClassifier\n\nX, y = load_iris(return_X_y=True)\nmodel = KNeighborsClassifier(n_neighbors=5)\n\nscores = cross_val_score(model, X, y, cv=5)\nprint(\"Fold scores:\", scores.round(3))\nprint(f\"Mean: {scores.mean():.3f}  (+/- {scores.std():.3f})\")", "explain": "<p>One train/test split can be lucky or unlucky. <b>K‑fold cross‑validation<\/b> repeats the split several times so every row gets a turn in the test set.<\/p>\n<div class=\"order\"><span>split into 5 folds<\/span>→<span>train on 4, test on 1<\/span>→<span>repeat 5 times<\/span>→<span>average the scores<\/span><\/div>\n<p><code>cross_val_score<\/code> does all of this in one line, creating a fresh copy of the model for each fold. You pass the <b>unfitted<\/b> model.<\/p>\n<ul><li>The <b>mean<\/b> is your best estimate of performance.<\/li>\n<li>The <b>standard deviation<\/b> tells you how stable it is — a big spread means results depend heavily on which rows you test on.<\/li><\/ul>\n<div class=\"note\">For classifiers, <code>cv=5<\/code> automatically uses <b>stratified<\/b> folds, so each fold keeps the same mix of classes.<\/div>", "walk": [["6", "Unfitted model — cross_val_score fits copies itself."], ["8", "5 fits, 5 test scores."], ["9", "One accuracy per fold."], ["10", "Average and spread."]], "trace": null, "tip": "Cross-validation gives a more reliable score than one split — report the mean and the spread.", "tryit": ["Try <code>cv=10<\/code>. Does the mean change much?", "Compare <code>n_neighbors=1<\/code> vs <code>15<\/code> using the mean score."], "file": null, "expected": {"out": "Fold scores: [0.967 1.    0.933 0.967 1.   ]\nMean: 0.973  (+/- 0.025)", "err": null, "line": null}}, {"title": "Stratify: keep the class balance", "code": "import numpy as np\nfrom sklearn.model_selection import train_test_split\n\ny = np.array([0] * 90 + [1] * 10)    # only 10% are positive\nX = np.arange(100).reshape(-1, 1)\n\n_, _, _, y_test_a = train_test_split(X, y, test_size=0.2, random_state=3)\n_, _, _, y_test_b = train_test_split(X, y, test_size=0.2, random_state=3,\n                                     stratify=y)\n\nprint(\"Counts [0s, 1s] in test set\")\nprint(\"Without stratify:\", np.bincount(y_test_a))\nprint(\"With stratify   :\", np.bincount(y_test_b))", "explain": "<p>When one class is rare, a random split can put too few (or too many) of the rare class into the test set, making your score misleading.<\/p>\n<p><code>stratify=y<\/code> tells <code>train_test_split<\/code> to keep the <b>same class proportions<\/b> in both parts. With 10% positives and a 20‑row test set, you should get exactly 2 positives. Without it, this seed gives 4 — double the real rate.<\/p>\n<p><code>np.bincount<\/code> counts how many 0s, 1s, … are in an array.<\/p>\n<div class=\"note\">The underscore <code>_<\/code> is a Python convention for \"I don't need this value\".<\/div>", "walk": [["4", "90 negatives, 10 positives."], ["7", "Plain random split: 4 positives — twice the real 10% rate."], ["9", "Same split size, but class mix preserved."], ["13", "18 zeros and 2 ones — the original 90/10 ratio."]], "trace": null, "tip": "Use stratify=y whenever classes are imbalanced.", "tryit": ["Try a few different <code>random_state<\/code> values. Does the stratified count ever change?"], "file": null, "expected": {"out": "Counts [0s, 1s] in test set\nWithout stratify: [16  4]\nWith stratify   : [18  2]", "err": null, "line": null}}]}, {"title": "Preprocessing", "level": "Intermediate", "summary": "Getting data into the shape models need.", "lessons": [{"title": "Scaling with StandardScaler", "code": "import numpy as np\nfrom sklearn.preprocessing import StandardScaler\n\n# [age in years, salary in rupees]\nX = np.array([[25, 30000],\n              [35, 60000],\n              [45, 90000]])\n\nscaler = StandardScaler()\nX_scaled = scaler.fit_transform(X)\n\nprint(\"Means:\", scaler.mean_.tolist())\nprint(\"Scaled:\")\nprint(X_scaled.round(2))", "explain": "<p>Age is in tens, salary is in tens of thousands. Models that measure <b>distance<\/b> (KNN, SVM, k‑means) or use gradient steps (logistic regression) would treat salary as thousands of times more important — just because of its units.<\/p>\n<p><b>Standardising<\/b> rescales each column to have <b>mean 0<\/b> and <b>standard deviation 1<\/b>:<\/p>\n<div class=\"snippet\">z = (x − mean) / std<\/div>\n<p>Preprocessors are called <b>transformers<\/b>. They have:<\/p>\n<table class=\"tbl\"><tr><th>Method<\/th><th>What it does<\/th><\/tr>\n<tr><td><code>fit(X)<\/code><\/td><td>Learns the mean and std of each column<\/td><\/tr>\n<tr><td><code>transform(X)<\/code><\/td><td>Applies the learned formula<\/td><\/tr>\n<tr><td><code>fit_transform(X)<\/code><\/td><td>Both in one step (use on training data only)<\/td><\/tr><\/table>\n<div class=\"note\">Tree‑based models (decision trees, random forests) don't need scaling — they compare values within one column at a time.<\/div>", "walk": [["5", "Two columns on wildly different scales."], ["10", "Learn means/stds, then apply them."], ["12", "Learned values are stored in attributes ending in _."], ["14", "Both columns are now on the same −1.22 … 1.22 scale."]], "trace": null, "tip": "Learned values live in attributes ending with an underscore: mean_, coef_, classes_ …", "tryit": ["Print <code>scaler.scale_<\/code> to see the standard deviation learned for each column."], "file": null, "expected": {"out": "Means: [35.0, 60000.0]\nScaled:\n[[-1.22 -1.22]\n [ 0.    0.  ]\n [ 1.22  1.22]]", "err": null, "line": null}}, {"title": "Fit on train, transform test", "code": "import numpy as np\nfrom sklearn.preprocessing import StandardScaler\n\ntrain = np.array([[10.0], [20.0], [30.0]])\ntest = np.array([[40.0]])\n\nscaler = StandardScaler()\nscaler.fit(train)\nprint(\"Learned mean:\", scaler.mean_[0])\n\nprint(\"Train:\", scaler.transform(train).ravel().round(2))\nprint(\"Test :\", scaler.transform(test).ravel().round(2))\n\nleaky = StandardScaler().fit(np.vstack([train, test]))\nprint(\"Leaky mean  :\", leaky.mean_[0])", "explain": "<p>The test set stands in for <b>future<\/b> data you don't have yet. So everything the pipeline learns — including the scaler's mean and std — must come from the <b>training set only<\/b>.<\/p>\n<div class=\"cmp\"><div><h5>✔ Correct<\/h5><code>scaler.fit(X_train)<\/code><code>scaler.transform(X_train)<\/code><code>scaler.transform(X_test)<\/code><\/div>\n<div><h5>✘ Data leakage<\/h5><code>scaler.fit(all_data)<\/code><span>The test set's values sneak into the training step, so test scores look better than they will be in real life.<\/span><\/div><\/div>\n<p>Notice the test value 40 becomes <b>2.45<\/b> — larger than any training value. That's fine: the scaler applies the same formula, it doesn't force test data into a range.<\/p>\n<div class=\"note\">Module 6 shows <code>Pipeline<\/code>, which handles this for you automatically.<\/div>", "walk": [["8", "Learn mean = 20 from training data only."], ["11", "transform the training data."], ["12", "Apply the SAME mean/std to the test data — never re‑fit."], ["14", "What leakage looks like: test data changed the mean."]], "trace": [[4, "Three training values.", null], [5, "One 'future' value.", null], [8, "fit() looks ONLY at train: mean 20, std ≈ 8.16.", null], [9, "", "Learned mean: 20.0"], [11, "(10−20)/8.16 = −1.22 and so on.", "Train: [-1.22  0.    1.22]"], [12, "Same formula: (40−20)/8.16 = 2.45.", "Test : [2.45]"], [14, "Fitting on train+test mixes in the future value…", null], [15, "…and the mean shifts to 25 — information leaked from the test set.", "Leaky mean  : 25.0"]], "tip": "fit on the training set; only transform the test set.", "tryit": ["Print <code>leaky.transform(test)<\/code>. How different is it from the correct 2.45?"], "file": null, "expected": {"out": "Learned mean: 20.0\nTrain: [-1.22  0.    1.22]\nTest : [2.45]\nLeaky mean  : 25.0", "err": null, "line": null}}, {"title": "MinMaxScaler vs StandardScaler", "code": "import numpy as np\nfrom sklearn.preprocessing import MinMaxScaler, StandardScaler\n\nmarks = np.array([[40], [55], [70], [85], [100]])\n\nmm = MinMaxScaler().fit_transform(marks)\nss = StandardScaler().fit_transform(marks)\n\nprint(\"Original :\", marks.ravel())\nprint(\"MinMax   :\", mm.ravel().round(2))\nprint(\"Standard :\", ss.ravel().round(2))", "explain": "<table class=\"tbl\"><tr><th><\/th><th><code>MinMaxScaler<\/code><\/th><th><code>StandardScaler<\/code><\/th><\/tr>\n<tr><td>Formula<\/td><td>(x − min) / (max − min)<\/td><td>(x − mean) / std<\/td><\/tr>\n<tr><td>Result range<\/td><td>exactly 0 to 1 (on training data)<\/td><td>centred on 0, usually −3 to 3<\/td><\/tr>\n<tr><td>Outliers<\/td><td>one extreme value squashes everything else<\/td><td>less sensitive<\/td><\/tr>\n<tr><td>Good default for<\/td><td>images, neural nets, bounded data<\/td><td>most other models<\/td><\/tr><\/table>\n<p><code>.ravel()<\/code> flattens the 2‑D column back into a 1‑D array so it prints on one line.<\/p>\n<div class=\"note\">There is also <code>RobustScaler<\/code>, which uses the median and quartiles — handy when your data has big outliers.<\/div>", "walk": [["6", "Squeeze into 0…1."], ["7", "Centre on 0, unit spread."], ["10", "40 → 0.0, 100 → 1.0."], ["11", "70 (the mean) → 0.0."]], "trace": null, "tip": "StandardScaler is the usual default; MinMaxScaler when you need a fixed 0–1 range.", "tryit": ["Change 100 to 1000 (an outlier). Which scaler's output is squashed more?"], "file": null, "expected": {"out": "Original : [ 40  55  70  85 100]\nMinMax   : [0.   0.25 0.5  0.75 1.  ]\nStandard : [-1.41 -0.71  0.    0.71  1.41]", "err": null, "line": null}}, {"title": "Encoding categories: OneHotEncoder", "code": "import numpy as np\nfrom sklearn.preprocessing import OneHotEncoder\n\ncities = np.array([[\"Delhi\"], [\"Pune\"], [\"Mumbai\"], [\"Pune\"]])\n\nenc = OneHotEncoder(sparse_output=False)\nencoded = enc.fit_transform(cities)\n\nprint(enc.get_feature_names_out())\nprint(encoded)", "explain": "<p>Models only understand numbers. You might think of coding Delhi = 0, Mumbai = 1, Pune = 2 — but then the model believes Pune is \"bigger\" than Delhi, which is meaningless.<\/p>\n<p><b>One‑hot encoding<\/b> creates one <b>yes/no column per category<\/b>:<\/p>\n<table class=\"tbl\"><tr><th>city<\/th><th>x0_Delhi<\/th><th>x0_Mumbai<\/th><th>x0_Pune<\/th><\/tr>\n<tr><td>Delhi<\/td><td>1<\/td><td>0<\/td><td>0<\/td><\/tr>\n<tr><td>Pune<\/td><td>0<\/td><td>0<\/td><td>1<\/td><\/tr>\n<tr><td>Mumbai<\/td><td>0<\/td><td>1<\/td><td>0<\/td><\/tr><\/table>\n<ul><li>Categories are sorted alphabetically.<\/li>\n<li><code>sparse_output=False<\/code> returns a normal array. By default you get a memory‑saving <b>sparse matrix<\/b>, which prints less clearly.<\/li>\n<li>Use <code>handle_unknown=\"ignore\"<\/code> so a city never seen in training becomes all zeros instead of raising an error.<\/li><\/ul>", "walk": [["4", "Still 2‑D: 4 rows × 1 column."], ["6", "Ask for a regular (dense) array."], ["9", "One new column per city."], ["10", "Exactly one 1 in each row."]], "trace": null, "tip": "One-hot encoding turns one text column into one 0/1 column per category.", "tryit": ["Run <code>enc.transform([[\"Chennai\"]])<\/code>. Read the error, then create the encoder with <code>handle_unknown=\"ignore\"<\/code> and try again."], "file": null, "expected": {"out": "['x0_Delhi' 'x0_Mumbai' 'x0_Pune']\n[[1. 0. 0.]\n [0. 0. 1.]\n [0. 1. 0.]\n [0. 0. 1.]]", "err": null, "line": null}}, {"title": "Missing values: SimpleImputer", "code": "import numpy as np\nfrom sklearn.impute import SimpleImputer\n\n# [age, salary in thousands]\nX = np.array([[25, 50],\n              [np.nan, 62],\n              [40, np.nan],\n              [35, 58]])\n\nimp = SimpleImputer(strategy=\"mean\")\nX_filled = imp.fit_transform(X)\n\nprint(\"Column means:\", imp.statistics_.round(1))\nprint(X_filled.round(1))", "explain": "<p>Real data has gaps. Most scikit‑learn models raise an error if they see <code>NaN<\/code> (\"not a number\"). <code>SimpleImputer<\/code> fills each gap with a value learned from that column.<\/p>\n<table class=\"tbl\"><tr><th>strategy<\/th><th>Fills with<\/th><th>Good for<\/th><\/tr>\n<tr><td><code>\"mean\"<\/code><\/td><td>column average<\/td><td>numbers without big outliers<\/td><\/tr>\n<tr><td><code>\"median\"<\/code><\/td><td>middle value<\/td><td>numbers with outliers (salaries!)<\/td><\/tr>\n<tr><td><code>\"most_frequent\"<\/code><\/td><td>most common value<\/td><td>categories<\/td><\/tr>\n<tr><td><code>\"constant\"<\/code><\/td><td><code>fill_value<\/code> you choose<\/td><td>e.g. \"unknown\"<\/td><\/tr><\/table>\n<p>The missing age becomes 33.3 — the mean of 25, 40 and 35. Like scalers, imputers must be <b>fit on training data only<\/b>.<\/p>", "walk": [["6", "A missing value."], ["10", "Fill gaps with each column's mean."], ["13", "What it learned: one fill value per column."], ["14", "No NaNs left."]], "trace": null, "tip": "Impute missing values before modelling — and learn the fill values from training data only.", "tryit": ["Switch to <code>strategy=\"median\"<\/code>. What values fill the gaps now?"], "file": null, "expected": {"out": "Column means: [33.3 56.7]\n[[25.  50. ]\n [33.3 62. ]\n [40.  56.7]\n [35.  58. ]]", "err": null, "line": null}}]}, {"title": "Regression", "level": "Intermediate", "summary": "Predicting numbers.", "lessons": [{"title": "Linear regression", "code": "import numpy as np\nfrom sklearn.linear_model import LinearRegression\n\nhours = np.array([[1], [2], [3], [4], [5]])\nscore = np.array([52, 57, 66, 70, 75])\n\nmodel = LinearRegression()\nmodel.fit(hours, score)\n\nprint(\"Slope    :\", model.coef_[0].round(2))\nprint(\"Intercept:\", model.intercept_.round(2))\nprint(\"6 hours ->\", model.predict([[6]])[0].round(1))", "explain": "<p><b>Regression<\/b> predicts a <b>number<\/b> (a price, a score, a temperature) rather than a category.<\/p>\n<p><code>LinearRegression<\/code> finds the straight line that best fits the points:<\/p>\n<div class=\"snippet\">score = slope × hours + intercept<\/div>\n<table class=\"tbl\"><tr><th>Attribute<\/th><th>Meaning<\/th><\/tr>\n<tr><td><code>coef_<\/code><\/td><td>One slope per feature — how much the prediction rises per unit of that feature<\/td><\/tr>\n<tr><td><code>intercept_<\/code><\/td><td>The prediction when every feature is 0<\/td><\/tr><\/table>\n<p>Here each extra hour of study adds about <b>5.9 marks<\/b>. \"Best fit\" means the line with the smallest total of squared errors — the <b>least squares<\/b> method.<\/p>\n<div class=\"warn\">Extrapolating far beyond your data is risky: the model would happily predict 135 marks for 15 hours.<\/div>", "walk": [["4", "One feature, already 2‑D."], ["8", "Find the best line."], ["10", "Slope: marks gained per hour."], ["11", "Where the line crosses hours = 0."], ["12", "Slope × 6 + intercept."]], "trace": [[4, "Five students' study hours (X).", null], [5, "Their exam marks (y).", null], [7, "An empty linear model.", null], [8, "Least squares finds slope 5.9 and intercept 46.3.", null], [10, "Each extra hour ≈ +5.9 marks.", "Slope    : 5.9"], [11, "Predicted marks for 0 hours.", "Intercept: 46.3"], [12, "5.9 × 6 + 46.3 = 81.7", "6 hours -> 81.7"]], "tip": "Linear regression learns one coefficient per feature plus an intercept.", "tryit": ["Add a second feature (hours slept) by making each row two numbers. How many values are in <code>coef_<\/code> now?"], "file": null, "expected": {"out": "Slope    : 5.9\nIntercept: 46.3\n6 hours -> 81.7", "err": null, "line": null}}, {"title": "Regression metrics: MAE, RMSE, R²", "code": "from sklearn.datasets import load_diabetes\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score\nfrom sklearn.model_selection import train_test_split\n\nX, y = load_diabetes(return_X_y=True)\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y, test_size=0.2, random_state=0)\n\nmodel = LinearRegression().fit(X_train, y_train)\npred = model.predict(X_test)\n\nmse = mean_squared_error(y_test, pred)\nprint(f\"MAE : {mean_absolute_error(y_test, pred):.1f}\")\nprint(f\"MSE : {mse:.1f}\")\nprint(f\"RMSE: {mse ** 0.5:.1f}\")\nprint(f\"R²  : {r2_score(y_test, pred):.3f}\")", "explain": "<p>The diabetes dataset predicts a disease‑progression number (roughly 25–346) from 10 health measurements.<\/p>\n<table class=\"tbl\"><tr><th>Metric<\/th><th>Meaning<\/th><th>Better is<\/th><\/tr>\n<tr><td><b>MAE<\/b> mean absolute error<\/td><td>Average size of the mistake, in the target's units<\/td><td>lower<\/td><\/tr>\n<tr><td><b>MSE<\/b> mean squared error<\/td><td>Squares errors first, so big mistakes count much more<\/td><td>lower<\/td><\/tr>\n<tr><td><b>RMSE<\/b><\/td><td>√MSE — back in the target's units<\/td><td>lower<\/td><\/tr>\n<tr><td><b>R²<\/b><\/td><td>Share of the variation explained: 1 = perfect, 0 = no better than always guessing the mean<\/td><td>higher<\/td><\/tr><\/table>\n<p><code>.fit()<\/code> returns the model itself, so <code>LinearRegression().fit(...)<\/code> creates and trains in one line.<\/p>\n<div class=\"note\">For regressors, <code>model.score(X, y)<\/code> returns R².<\/div>", "walk": [["10", "Create and fit in one go."], ["11", "Predictions for the unseen test rows."], ["14", "Off by ~46 points on average."], ["16", "Larger than MAE because big errors are punished more."], ["17", "Explains about a third of the variation."]], "trace": null, "tip": "Report MAE or RMSE in real units, and R² to show how much is explained.", "tryit": ["Print <code>model.score(X_test, y_test)<\/code> and compare it with R²."], "file": null, "expected": {"out": "MAE : 46.2\nMSE : 3424.3\nRMSE: 58.5\nR²  : 0.332", "err": null, "line": null}}, {"title": "Ridge & Lasso: regularisation", "code": "from sklearn.datasets import load_diabetes\nfrom sklearn.linear_model import Lasso, LinearRegression, Ridge\nfrom sklearn.model_selection import cross_val_score\n\nX, y = load_diabetes(return_X_y=True)\n\nfor model in [LinearRegression(), Ridge(alpha=0.1), Lasso(alpha=0.1)]:\n    r2 = cross_val_score(model, X, y, cv=5).mean()\n    model.fit(X, y)\n    zeros = (model.coef_ == 0).sum()\n    name = type(model).__name__\n    print(f\"{name:16} R²={r2:.3f}  zero coefs={zeros}\")", "explain": "<p><b>Regularisation<\/b> adds a penalty for large coefficients, which keeps the model simpler and less likely to overfit. The strength is set by <code>alpha<\/code>: bigger alpha = stronger penalty.<\/p>\n<table class=\"tbl\"><tr><th>Model<\/th><th>Penalty<\/th><th>Effect<\/th><\/tr>\n<tr><td><code>LinearRegression<\/code><\/td><td>none<\/td><td>Uses every feature freely<\/td><\/tr>\n<tr><td><code>Ridge<\/code><\/td><td>L2 (squares of coefs)<\/td><td>Shrinks all coefs towards 0<\/td><\/tr>\n<tr><td><code>Lasso<\/code><\/td><td>L1 (absolute coefs)<\/td><td>Can set some coefs to <b>exactly 0<\/b> — automatic feature selection<\/td><\/tr><\/table>\n<p>Lasso dropped some features entirely and scored about the same — a simpler model for free.<\/p>\n<div class=\"note\"><code>type(model).__name__<\/code> gets the class name as a string, handy for printing.<\/div>", "walk": [["7", "Loop over three model objects."], ["3", "5‑fold R², averaged."], ["9", "Fit on everything just to inspect the coefficients."], ["10", "Count coefficients that are exactly 0."]], "trace": null, "tip": "Ridge shrinks coefficients; Lasso can switch features off completely.", "tryit": ["Try <code>alpha=1.0<\/code> and <code>alpha=10<\/code> for both. What happens to R² and to the zero count?"], "file": null, "expected": {"out": "LinearRegression R²=0.482  zero coefs=0\nRidge            R²=0.480  zero coefs=0\nLasso            R²=0.480  zero coefs=3", "err": null, "line": null}}, {"title": "Curves with PolynomialFeatures", "code": "import numpy as np\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.preprocessing import PolynomialFeatures\n\nx = np.array([[1], [2], [3], [4], [5], [6]])\ny = np.array([1, 4, 9, 16, 25, 36])        # y = x²\n\nline = LinearRegression().fit(x, y)\nprint(\"Straight line R²:\", line.score(x, y).round(3))\n\npoly = PolynomialFeatures(degree=2, include_bias=False)\nx2 = poly.fit_transform(x)\nprint(\"Features for x=3:\", x2[2])\n\ncurve = LinearRegression().fit(x2, y)\nprint(\"Curve R²:\", curve.score(x2, y).round(3))\nprint(\"Predict x=7:\", curve.predict(poly.transform([[7]]))[0].round(1))", "explain": "<p>A straight line can't follow a curve. The trick: <b>add new features<\/b> such as x², then let ordinary linear regression combine them.<\/p>\n<p><code>PolynomialFeatures(degree=2)<\/code> turns each <code>x<\/code> into <code>[x, x²]<\/code>. The model is still \"linear\" — linear in its coefficients — but now it can draw a parabola.<\/p>\n<div class=\"warn\">High degrees (10, 15…) fit the training points perfectly and swing wildly between them — classic overfitting. Keep the degree small and check with a test set.<\/div>\n<p>Remember to apply the <b>same<\/b> <code>poly.transform<\/code> to any new data before predicting.<\/p>", "walk": [["6", "A perfect square relationship."], ["8", "A straight line misses the curve."], ["11", "Create x² features (no extra column of 1s)."], ["13", "x = 3 becomes [3, 9]."], ["15", "Linear regression on [x, x²] fits exactly."], ["17", "Transform the new x the same way first."]], "trace": null, "tip": "Add engineered features (like x²) to let a linear model fit curves.", "tryit": ["Change y to <code>x³<\/code> values and try <code>degree=3<\/code>."], "file": null, "expected": {"out": "Straight line R²: 0.958\nFeatures for x=3: [3. 9.]\nCurve R²: 1.0\nPredict x=7: 49.0", "err": null, "line": null}}]}, {"title": "Classification", "level": "Intermediate", "summary": "Predicting categories with popular models.", "lessons": [{"title": "Logistic regression & probabilities", "code": "from sklearn.linear_model import LogisticRegression\n\n# hours studied -> passed (1) or failed (0)\nX = [[0.5], [1], [1.5], [2], [3], [3.5], [4], [5]]\ny = [0, 0, 0, 0, 1, 1, 1, 1]\n\nclf = LogisticRegression()\nclf.fit(X, y)\n\nfor h in [1, 2.5, 4]:\n    p = clf.predict_proba([[h]])[0]\n    label = clf.predict([[h]])[0]\n    print(f\"{h} h: fail={p[0]:.2f} pass={p[1]:.2f} -> {label}\")", "explain": "<p>Despite its name, <b>logistic regression is a classifier<\/b>. It squeezes a straight line through an S‑shaped curve so the output is a <b>probability<\/b> between 0 and 1.<\/p>\n<table class=\"tbl\"><tr><th>Method<\/th><th>Returns<\/th><\/tr>\n<tr><td><code>predict(X)<\/code><\/td><td>the class label<\/td><\/tr>\n<tr><td><code>predict_proba(X)<\/code><\/td><td>one probability per class, per row (each row sums to 1)<\/td><\/tr><\/table>\n<p>By default <code>predict<\/code> picks the class with the higher probability — a <b>0.5 threshold<\/b> for two classes. At 2.5 hours the model is unsure, so the probabilities sit near 50/50.<\/p>\n<div class=\"note\">The probability columns follow <code>clf.classes_<\/code> — here <code>[0, 1]<\/code>, so column 0 is \"fail\".<\/div>", "walk": [["7", "A classifier, despite 'Regression' in the name."], ["10", "Three new students."], ["11", "[P(fail), P(pass)] for one student."], ["12", "The class with the higher probability."]], "trace": [[4, "Hours studied (1 feature).", null], [5, "0 = fail, 1 = pass. The switch happens between 2 and 3 hours.", null], [8, "Learns an S‑curve centred around 2.5 hours.", null], [10, "h = 1", null], [11, "Far below the switch point → mostly fail.", null], [13, "", "1 h: fail=0.88 pass=0.12 -> 0"], [10, "h = 2.5 — right on the boundary.", null], [13, "Close to 50/50: the model is unsure.", "2.5 h: fail=0.51 pass=0.49 -> 0"], [10, "h = 4", null], [13, "Well above the switch point → mostly pass.", "4 h: fail=0.12 pass=0.88 -> 1"]], "tip": "predict gives the label; predict_proba tells you how confident the model is.", "tryit": ["Print <code>clf.classes_<\/code>.", "Find the hours where pass probability crosses 0.5 by trying values between 2 and 3."], "file": null, "expected": {"out": "1 h: fail=0.88 pass=0.12 -> 0\n2.5 h: fail=0.51 pass=0.49 -> 0\n4 h: fail=0.12 pass=0.88 -> 1", "err": null, "line": null}}, {"title": "K-nearest neighbours: choosing k", "code": "from sklearn.datasets import load_iris\nfrom sklearn.model_selection import cross_val_score\nfrom sklearn.neighbors import KNeighborsClassifier\n\nX, y = load_iris(return_X_y=True)\n\nfor k in [1, 5, 15, 50, 100]:\n    knn = KNeighborsClassifier(n_neighbors=k)\n    score = cross_val_score(knn, X, y, cv=5).mean()\n    print(f\"k={k:3}  accuracy={score:.3f}\")", "explain": "<p>KNN stores the training data and, for a new point, takes a <b>vote among the k closest<\/b> training points.<\/p>\n<table class=\"tbl\"><tr><th>k<\/th><th>Behaviour<\/th><\/tr>\n<tr><td>very small (1)<\/td><td>follows every noisy point — can overfit<\/td><\/tr>\n<tr><td>medium<\/td><td>smooth, usually best<\/td><\/tr>\n<tr><td>very large<\/td><td>votes drown in far‑away points — underfits<\/td><\/tr><\/table>\n<p>With k = 100 on 120 training flowers, the vote is dominated by whatever species is most common, so accuracy collapses.<\/p>\n<div class=\"note\">Choosing k by checking cross‑validated scores is called <b>hyperparameter tuning<\/b>. <code>GridSearchCV<\/code> (Module 6) automates it.<\/div>", "walk": [["7", "Try a range of neighbour counts."], ["2", "Fair 5‑fold score for each k."], ["10", "Small and huge k both hurt."]], "trace": null, "tip": "Tune k with cross-validation; very small and very large k both hurt.", "tryit": ["Add <code>weights=\"distance\"<\/code> so closer neighbours count more. Does k = 50 improve?"], "file": null, "expected": {"out": "k=  1  accuracy=0.960\nk=  5  accuracy=0.973\nk= 15  accuracy=0.967\nk= 50  accuracy=0.913\nk=100  accuracy=0.647", "err": null, "line": null}}, {"title": "Decision trees: readable rules", "code": "from sklearn.datasets import load_iris\nfrom sklearn.tree import DecisionTreeClassifier, export_text\n\niris = load_iris()\ntree = DecisionTreeClassifier(max_depth=2, random_state=0)\ntree.fit(iris.data, iris.target)\n\nprint(export_text(tree, feature_names=iris.feature_names))\nprint(\"Prediction for [5.0, 3.4, 1.5, 0.2]:\",\n      iris.target_names[tree.predict([[5.0, 3.4, 1.5, 0.2]])[0]])", "explain": "<p>A decision tree learns a flowchart of <b>yes/no questions<\/b>. <code>export_text<\/code> prints it so you can read exactly what it learned.<\/p>\n<ul><li>Each <code>|---<\/code> line is a question about one feature.<\/li>\n<li>Indentation shows the path; <code>class: 0<\/code> is the answer at a leaf.<\/li>\n<li>The tree chooses the questions that best separate the classes (using <b>Gini impurity<\/b> by default).<\/li><\/ul>\n<p>Our flower has petal width 0.2 ≤ 0.80, so it lands on the first leaf: <b>setosa<\/b>.<\/p>\n<table class=\"tbl\"><tr><th>Setting<\/th><th>Controls<\/th><\/tr>\n<tr><td><code>max_depth<\/code><\/td><td>how many questions deep<\/td><\/tr>\n<tr><td><code>min_samples_leaf<\/code><\/td><td>smallest group allowed at a leaf<\/td><\/tr><\/table>\n<div class=\"note\">Trees need no scaling and are easy to explain — but a single tree overfits easily. Random forests fix that next.<\/div>", "walk": [["5", "At most 2 levels of questions."], ["2", "Print the learned rules."], ["10", "Turn the predicted number back into a species name."]], "trace": null, "tip": "Decision trees are flowcharts of if/else rules you can print and read.", "tryit": ["Change <code>max_depth<\/code> to 3. How many more rules appear?"], "file": null, "expected": {"out": "|--- petal width (cm) <= 0.80\n|   |--- class: 0\n|--- petal width (cm) >  0.80\n|   |--- petal width (cm) <= 1.75\n|   |   |--- class: 1\n|   |--- petal width (cm) >  1.75\n|   |   |--- class: 2\n\nPrediction for [5.0, 3.4, 1.5, 0.2]: setosa", "err": null, "line": null}}, {"title": "Random forests & feature importance", "code": "from sklearn.datasets import load_breast_cancer\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.model_selection import train_test_split\n\ndata = load_breast_cancer()\nX_train, X_test, y_train, y_test = train_test_split(\n    data.data, data.target, random_state=0)\n\nforest = RandomForestClassifier(n_estimators=100, random_state=0)\nforest.fit(X_train, y_train)\nprint(\"Test accuracy:\", round(forest.score(X_test, y_test), 3))\n\npairs = zip(forest.feature_importances_, data.feature_names)\nranked = sorted(pairs, reverse=True)\nprint(\"Top 5 features:\")\nfor imp, name in ranked[:5]:\n    print(f\"  {name:22} {imp:.3f}\")", "explain": "<p>A <b>random forest<\/b> trains many decision trees, each on a random sample of rows and features, and lets them <b>vote<\/b>. Individual trees overfit in different ways; their average is much more stable.<\/p>\n<table class=\"tbl\"><tr><th>Setting<\/th><th>Meaning<\/th><\/tr>\n<tr><td><code>n_estimators<\/code><\/td><td>number of trees (more = steadier, slower)<\/td><\/tr>\n<tr><td><code>max_depth<\/code><\/td><td>depth limit for each tree<\/td><\/tr>\n<tr><td><code>random_state<\/code><\/td><td>makes the randomness repeatable<\/td><\/tr><\/table>\n<p><code>feature_importances_<\/code> shows how much each feature helped the trees split — the values add up to 1. It's a quick way to see what the model relies on.<\/p>\n<div class=\"note\">The unlimited single tree in Module 2 scored 0.881 on this same split; the forest reaches 0.972 with no tuning at all. Forests are an excellent first model to try on tabular data.<\/div>", "walk": [["9", "100 trees, repeatable randomness."], ["11", "Accuracy on unseen data."], ["13", "Pair each importance with its feature name."], ["14", "Sort pairs by importance, biggest first."], ["16", "Show the top five."]], "trace": null, "tip": "Random forests average many trees — strong, robust and needing little tuning.", "tryit": ["Try <code>n_estimators=5<\/code> and <code>500<\/code>. How much does accuracy change?"], "file": null, "expected": {"out": "Test accuracy: 0.972\nTop 5 features:\n  worst perimeter        0.160\n  worst concave points   0.117\n  worst radius           0.117\n  mean concave points    0.103\n  worst area             0.063", "err": null, "line": null}}, {"title": "Gotcha: predicting before fit", "code": "from sklearn.linear_model import LogisticRegression\n\nclf = LogisticRegression()\nprint(clf)\n\nprint(clf.predict([[1.0, 2.0]]))", "explain": "<p>Creating a model only stores its <b>settings<\/b>. It has learned nothing until you call <code>fit<\/code>, so asking it to <code>predict<\/code> raises <code>NotFittedError<\/code>.<\/p>\n<p>This often happens when:<\/p>\n<ul><li>you fit one variable but predict with another (<code>model.fit(...)<\/code> then <code>clf.predict(...)<\/code>),<\/li>\n<li>a <code>fit<\/code> line was commented out or ran in a different notebook cell,<\/li>\n<li>you made a fresh copy of the model after fitting.<\/li><\/ul>\n<div class=\"note\">A handy check: fitted models have attributes ending in <code>_<\/code> (like <code>coef_<\/code>). Unfitted ones don't.<\/div>", "walk": [["3", "Settings only — nothing learned yet."], ["4", "Prints fine: it's a valid but empty model."], ["6", "Raises NotFittedError."]], "trace": null, "tip": "A model must be fit before it can predict, score or transform.", "tryit": ["Add <code>clf.fit([[0, 0], [1, 1], [2, 2], [3, 3]], [0, 0, 1, 1])<\/code> before the predict line."], "file": null, "expected": {"out": "LogisticRegression()", "err": "NotFittedError: This LogisticRegression instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator.", "line": 6}}]}, {"title": "Pipelines & Tuning", "level": "Intermediate → Advanced", "summary": "Chaining steps safely and finding the best settings.", "lessons": [{"title": "Pipeline: chain the steps", "code": "from sklearn.datasets import load_wine\nfrom sklearn.model_selection import cross_val_score\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\n\nX, y = load_wine(return_X_y=True)\n\nraw = KNeighborsClassifier()\npipe = Pipeline([\n    (\"scale\", StandardScaler()),\n    (\"knn\", KNeighborsClassifier()),\n])\n\nprint(\"Without scaling:\", cross_val_score(raw, X, y, cv=5).mean().round(3))\nprint(\"With pipeline  :\", cross_val_score(pipe, X, y, cv=5).mean().round(3))", "explain": "<p>A <code>Pipeline<\/code> glues preprocessing and a model into <b>one estimator<\/b>. It has the usual <code>fit<\/code>, <code>predict<\/code> and <code>score<\/code>.<\/p>\n<div class=\"order\"><span>pipe.fit(X, y)<\/span>→<span>scaler.fit_transform<\/span>→<span>knn.fit<\/span><\/div>\n<div class=\"order\"><span>pipe.predict(X)<\/span>→<span>scaler.transform<\/span>→<span>knn.predict<\/span><\/div>\n<p>Why it matters:<\/p>\n<ul><li><b>No leakage:<\/b> inside cross‑validation, the scaler is re‑fit on each training fold only.<\/li>\n<li><b>Less code:<\/b> one object to fit, save and reuse.<\/li>\n<li><b>Tunable:<\/b> grid search can tune any step's settings.<\/li><\/ul>\n<p>The wine features range from about 0.1 to 1,600, so unscaled KNN is badly confused — scaling lifts accuracy from roughly 0.69 to 0.95.<\/p>", "walk": [["9", "KNN on unscaled data."], ["10", "A list of (name, step) pairs. Only the last step can be a model."], ["15", "Distances are dominated by the biggest‑unit feature."], ["16", "Scaling happens inside each fold automatically."]], "trace": null, "tip": "Put preprocessing inside a Pipeline so it is always fit on training data only.", "tryit": ["Use <code>make_pipeline(StandardScaler(), KNeighborsClassifier())<\/code> from <code>sklearn.pipeline<\/code> — it names the steps for you."], "file": null, "expected": {"out": "Without scaling: 0.691\nWith pipeline  : 0.949", "err": null, "line": null}}, {"title": "ColumnTransformer for mixed data", "code": "import pandas as pd\nfrom sklearn.compose import ColumnTransformer\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import OneHotEncoder, StandardScaler\n\ndf = pd.DataFrame({\n    \"age\":    [22, 35, 58, 41, 29, 63, 33, 50],\n    \"income\": [25, 60, 85, 52, 31, 90, 45, 70],\n    \"city\":   [\"Pune\", \"Delhi\", \"Delhi\", \"Mumbai\",\n               \"Pune\", \"Mumbai\", \"Pune\", \"Delhi\"],\n    \"bought\": [0, 1, 1, 1, 0, 1, 0, 1],\n})\nX = df.drop(columns=\"bought\")\ny = df[\"bought\"]\n\nprep = ColumnTransformer([\n    (\"num\", StandardScaler(), [\"age\", \"income\"]),\n    (\"cat\", OneHotEncoder(), [\"city\"]),\n])\nmodel = Pipeline([(\"prep\", prep), (\"clf\", LogisticRegression())])\nmodel.fit(X, y)\n\nprint(prep.get_feature_names_out())\nnew = pd.DataFrame({\"age\": [30], \"income\": [40], \"city\": [\"Delhi\"]})\nprint(\"Will buy?\", model.predict(new)[0])", "explain": "<p>Real tables mix numbers and text. <code>ColumnTransformer<\/code> sends <b>different columns to different preprocessors<\/b>, then joins the results side by side.<\/p>\n<table class=\"tbl\"><tr><th>Name<\/th><th>Transformer<\/th><th>Columns<\/th><\/tr>\n<tr><td><code>\"num\"<\/code><\/td><td><code>StandardScaler()<\/code><\/td><td>age, income<\/td><\/tr>\n<tr><td><code>\"cat\"<\/code><\/td><td><code>OneHotEncoder()<\/code><\/td><td>city<\/td><\/tr><\/table>\n<p>scikit‑learn works directly with <b>pandas DataFrames<\/b>, so you can select columns by name. The output names are prefixed with the step name (<code>num__age<\/code>, <code>cat__city_Delhi<\/code> …).<\/p>\n<p>The whole thing — preprocessing and model — is one <code>Pipeline<\/code>, so new customers go in as a raw DataFrame and everything is applied in the right order.<\/p>\n<div class=\"note\">The first run of this lesson also loads pandas, so it takes a few seconds longer.<\/div>", "walk": [["7", "A small table: 2 numeric columns, 1 text column, 1 target."], ["14", "Everything except the target."], ["17", "Scale the numbers, one‑hot the city."], ["21", "Preprocessing + classifier as one estimator."], ["24", "5 columns go into the model."], ["25", "A raw new customer — no manual preprocessing needed."]], "trace": null, "tip": "ColumnTransformer applies the right preprocessing to each column type.", "tryit": ["Add <code>handle_unknown=\"ignore\"<\/code> to the encoder and predict for a customer from <code>\"Chennai\"<\/code>."], "file": null, "expected": {"out": "['num__age' 'num__income' 'cat__city_Delhi' 'cat__city_Mumbai'\n 'cat__city_Pune']\nWill buy? 1", "err": null, "line": null}}, {"title": "GridSearchCV: tuning hyperparameters", "code": "from sklearn.datasets import load_wine\nfrom sklearn.model_selection import GridSearchCV\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\n\nX, y = load_wine(return_X_y=True)\npipe = Pipeline([(\"scale\", StandardScaler()),\n                 (\"knn\", KNeighborsClassifier())])\n\ngrid = {\n    \"knn__n_neighbors\": [1, 3, 5, 7, 9],\n    \"knn__weights\": [\"uniform\", \"distance\"],\n}\nsearch = GridSearchCV(pipe, grid, cv=5)\nsearch.fit(X, y)\n\nprint(\"Combinations tried:\", len(search.cv_results_[\"params\"]))\nprint(\"Best params:\", search.best_params_)\nprint(\"Best CV score:\", round(search.best_score_, 3))", "explain": "<p><code>GridSearchCV<\/code> tries <b>every combination<\/b> in your grid, scores each with cross‑validation, and keeps the best.<\/p>\n<p>5 values × 2 values = <b>10 combinations<\/b>, each with 5 folds = 50 fits.<\/p>\n<p>To reach a setting inside a pipeline, write <code>stepname__parameter<\/code> with a <b>double underscore<\/b>: <code>knn__n_neighbors<\/code> means \"the <code>n_neighbors<\/code> of the step called <code>knn<\/code>\".<\/p>\n<table class=\"tbl\"><tr><th>After fit<\/th><th>Holds<\/th><\/tr>\n<tr><td><code>best_params_<\/code><\/td><td>the winning combination<\/td><\/tr>\n<tr><td><code>best_score_<\/code><\/td><td>its mean CV score<\/td><\/tr>\n<tr><td><code>best_estimator_<\/code><\/td><td>a pipeline refit on all data with those settings<\/td><\/tr><\/table>\n<div class=\"warn\">Big grids grow fast: 4 settings with 10 values each is 10,000 combinations. <code>RandomizedSearchCV<\/code> samples a fixed number instead.<\/div>", "walk": [["11", "Settings to try. Note the double underscore."], ["15", "Wrap the pipeline."], ["16", "Runs 10 × 5 = 50 fits."], ["19", "The winning settings."]], "trace": null, "tip": "Use stepname__param to tune settings inside a pipeline.", "tryit": ["Add <code>\"knn__p\": [1, 2]<\/code> (Manhattan vs Euclidean distance). How many combinations now?"], "file": null, "expected": {"out": "Combinations tried: 10\nBest params: {'knn__n_neighbors': 7, 'knn__weights': 'uniform'}\nBest CV score: 0.967", "err": null, "line": null}}, {"title": "Saving & loading a model", "code": "import joblib\nfrom sklearn.datasets import load_iris\nfrom sklearn.linear_model import LogisticRegression\n\nX, y = load_iris(return_X_y=True)\nmodel = LogisticRegression(max_iter=200).fit(X, y)\n\njoblib.dump(model, \"iris_model.joblib\")\nprint(\"Saved!\")\n\nloaded = joblib.load(\"iris_model.joblib\")\nprint(\"Loaded:\", loaded)\nprint(\"Same predictions?\", (loaded.predict(X) == model.predict(X)).all())", "explain": "<p>Training can take minutes or hours, so you save the fitted model and load it later — in a web app, a script, or another notebook.<\/p>\n<table class=\"tbl\"><tr><th>Function<\/th><th>Does<\/th><\/tr>\n<tr><td><code>joblib.dump(model, path)<\/code><\/td><td>writes the fitted model to a file<\/td><\/tr>\n<tr><td><code>joblib.load(path)<\/code><\/td><td>reads it back, ready to predict<\/td><\/tr><\/table>\n<p>Save the <b>whole pipeline<\/b>, not just the final model — otherwise you lose the scaler/encoder that new data must pass through.<\/p>\n<div class=\"warn\">Only load files you trust: loading a joblib/pickle file can run code. Also load with the same scikit‑learn version you saved with.<\/div>", "walk": [["6", "Allow more steps so the solver converges without a warning."], ["8", "Write to disk (here, the browser's in‑memory file system)."], ["11", "Read the trained model back."], ["13", "Compare every prediction: all identical."]], "trace": null, "tip": "Save the whole fitted pipeline with joblib.dump; load it with joblib.load.", "tryit": ["Save the GridSearchCV <code>best_estimator_<\/code> from the previous lesson instead."], "file": null, "expected": {"out": "Saved!\nLoaded: LogisticRegression(max_iter=200)\nSame predictions? True", "err": null, "line": null}}]}, {"title": "Unsupervised Learning", "level": "Intermediate", "summary": "Finding structure without labels.", "lessons": [{"title": "Clustering with KMeans", "code": "import numpy as np\nfrom sklearn.cluster import KMeans\n\n# customers: [visits per month, average spend in ₹100s]\nX = np.array([[2, 2], [3, 2.5], [2, 2.2],\n              [10, 9], [11, 9.5], [12, 10],\n              [6, 5], [7, 5.5]])\n\nkm = KMeans(n_clusters=3, n_init=10, random_state=0)\nlabels = km.fit_predict(X)\n\nprint(\"Labels :\", labels)\nprint(\"Centres:\")\nprint(km.cluster_centers_.round(1))", "explain": "<p>In <b>unsupervised<\/b> learning there is no <code>y<\/code> — the model looks for structure on its own. <b>Clustering<\/b> groups similar samples together.<\/p>\n<div class=\"order\"><span>place k centres<\/span>→<span>assign each point to the nearest centre<\/span>→<span>move centres to the middle of their points<\/span>→<span>repeat<\/span><\/div>\n<table class=\"tbl\"><tr><th>Name<\/th><th>Meaning<\/th><\/tr>\n<tr><td><code>n_clusters<\/code><\/td><td>how many groups you want (you must choose)<\/td><\/tr>\n<tr><td><code>n_init<\/code><\/td><td>restart from different starting centres and keep the best<\/td><\/tr>\n<tr><td><code>labels_<\/code> / <code>fit_predict<\/code><\/td><td>the cluster number for each sample<\/td><\/tr>\n<tr><td><code>cluster_centers_<\/code><\/td><td>the middle of each cluster<\/td><\/tr><\/table>\n<p>The cluster numbers are arbitrary names — \"cluster 2\" isn't bigger or better than \"cluster 0\".<\/p>\n<div class=\"note\">KMeans uses distances, so scale your features first when their units differ.<\/div>", "walk": [["5", "Three obvious groups: casual, regular and loyal customers."], ["9", "Ask for 3 clusters."], ["10", "Fit and return each point's cluster in one step."], ["14", "The average customer in each group."]], "trace": null, "tip": "KMeans groups unlabelled data into k clusters around centre points.", "tryit": ["Predict the cluster of a new customer: <code>km.predict([[9, 8]])<\/code>."], "file": null, "expected": {"out": "Labels : [1 1 1 0 0 0 2 2]\nCentres:\n[[11.   9.5]\n [ 2.3  2.2]\n [ 6.5  5.2]]", "err": null, "line": null}}, {"title": "Choosing k: the elbow method", "code": "from sklearn.cluster import KMeans\nfrom sklearn.datasets import load_iris\nfrom sklearn.preprocessing import StandardScaler\n\nX, _ = load_iris(return_X_y=True)\nX = StandardScaler().fit_transform(X)\n\nfor k in range(1, 7):\n    km = KMeans(n_clusters=k, n_init=10, random_state=0).fit(X)\n    bar = \"#\" * int(km.inertia_ / 10)\n    print(f\"k={k}  inertia={km.inertia_:6.1f}  {bar}\")", "explain": "<p><b>Inertia<\/b> is the total squared distance from each point to its cluster centre. Lower means tighter clusters — but it <b>always<\/b> falls as k grows (with k = number of points it's zero), so you can't just pick the minimum.<\/p>\n<p>Instead, look for the <b>elbow<\/b>: the k after which adding clusters stops helping much. Here the drop is huge from 1→2, still worthwhile 2→3, and small after that — so 2 or 3 is a sensible choice (iris really has 3 species).<\/p>\n<div class=\"note\">Another popular measure is <code>silhouette_score<\/code> from <code>sklearn.metrics<\/code>, where higher is better and you can pick the maximum directly.<\/div>", "walk": [["5", "Ignore the labels — pretend we don't know them."], ["8", "Try 1 to 6 clusters."], ["10", "A text bar chart of inertia."], ["11", "Watch where the bars stop shrinking quickly."]], "trace": null, "tip": "Plot inertia against k and pick the 'elbow' where improvement slows.", "tryit": ["Import <code>silhouette_score<\/code> and print it for k = 2…6 (it needs k ≥ 2)."], "file": null, "expected": {"out": "k=1  inertia= 600.0  ############################################################\nk=2  inertia= 222.4  ######################\nk=3  inertia= 139.8  #############\nk=4  inertia= 114.1  ###########\nk=5  inertia=  90.8  #########\nk=6  inertia=  80.0  ########", "err": null, "line": null}}, {"title": "PCA: reducing dimensions", "code": "from sklearn.datasets import load_iris\nfrom sklearn.decomposition import PCA\nfrom sklearn.preprocessing import StandardScaler\n\nX, y = load_iris(return_X_y=True)\nX_scaled = StandardScaler().fit_transform(X)\n\npca = PCA(n_components=2)\nX_2d = pca.fit_transform(X_scaled)\n\nprint(\"Shape:\", X.shape, \"->\", X_2d.shape)\nprint(\"Variance kept:\", pca.explained_variance_ratio_.round(3))\nprint(\"Total:\", pca.explained_variance_ratio_.sum().round(3))\nprint(\"First flower in 2-D:\", X_2d[0].round(2))", "explain": "<p><b>Principal Component Analysis<\/b> squeezes many features into fewer new ones, keeping as much of the variation (information) as possible.<\/p>\n<ul><li>Each new feature — a <b>principal component<\/b> — is a weighted mix of the original features.<\/li>\n<li>Component 1 captures the most variation, component 2 the next most, and so on.<\/li>\n<li><code>explained_variance_ratio_<\/code> tells you the share each one keeps.<\/li><\/ul>\n<p>Here 4 features shrink to 2 while keeping about <b>96%<\/b> of the information — enough to draw the flowers on a 2‑D chart.<\/p>\n<table class=\"tbl\"><tr><th>Use PCA to<\/th><\/tr>\n<tr><td>visualise high‑dimensional data in 2‑D or 3‑D<\/td><\/tr>\n<tr><td>speed up models by removing redundant features<\/td><\/tr>\n<tr><td>reduce noise<\/td><\/tr><\/table>\n<div class=\"note\">Always scale before PCA, otherwise large‑unit features dominate the components.<\/div>", "walk": [["6", "Scale first."], ["8", "Keep the 2 strongest directions."], ["11", "150 × 4 becomes 150 × 2."], ["12", "Share of information in each component."], ["13", "≈ 96% kept with half the features."]], "trace": null, "tip": "PCA compresses many features into a few components that keep most of the information.", "tryit": ["Use <code>PCA(n_components=0.99)<\/code> — a fraction means 'keep enough components for 99% variance'. How many does it keep?"], "file": null, "expected": {"out": "Shape: (150, 4) -> (150, 2)\nVariance kept: [0.73  0.229]\nTotal: 0.958\nFirst flower in 2-D: [-2.26  0.48]", "err": null, "line": null}}]}, {"title": "Putting It Together", "level": "Project", "summary": "Comparing models and building an end-to-end workflow.", "lessons": [{"title": "Comparing models", "code": "from sklearn.datasets import load_breast_cancer\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.model_selection import cross_val_score\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.tree import DecisionTreeClassifier\n\nX, y = load_breast_cancer(return_X_y=True)\n\nmodels = {\n    \"Logistic\": make_pipeline(StandardScaler(), LogisticRegression()),\n    \"KNN\": make_pipeline(StandardScaler(), KNeighborsClassifier()),\n    \"Tree\": DecisionTreeClassifier(random_state=0),\n    \"Forest\": RandomForestClassifier(n_estimators=50, random_state=0),\n}\n\nfor name, model in models.items():\n    scores = cross_val_score(model, X, y, cv=5)\n    print(f\"{name:9} {scores.mean():.3f} +/- {scores.std():.3f}\")", "explain": "<p>Because every estimator shares the same API, comparing models is just a loop. Here's a cheat‑sheet of what you've met:<\/p>\n<table class=\"tbl\"><tr><th>Model<\/th><th>Task<\/th><th>Needs scaling?<\/th><th>Strengths<\/th><\/tr>\n<tr><td><code>LinearRegression<\/code> / <code>Ridge<\/code> / <code>Lasso<\/code><\/td><td>regression<\/td><td>helps<\/td><td>simple, explainable coefficients<\/td><\/tr>\n<tr><td><code>LogisticRegression<\/code><\/td><td>classification<\/td><td>yes<\/td><td>fast, gives probabilities<\/td><\/tr>\n<tr><td><code>KNeighbors…<\/code><\/td><td>both<\/td><td>yes<\/td><td>no training step, intuitive<\/td><\/tr>\n<tr><td><code>DecisionTree…<\/code><\/td><td>both<\/td><td>no<\/td><td>readable rules; overfits alone<\/td><\/tr>\n<tr><td><code>RandomForest…<\/code><\/td><td>both<\/td><td>no<\/td><td>strong default for tables<\/td><\/tr>\n<tr><td><code>KMeans<\/code><\/td><td>clustering<\/td><td>yes<\/td><td>simple grouping<\/td><\/tr>\n<tr><td><code>PCA<\/code><\/td><td>dimensionality reduction<\/td><td>yes<\/td><td>compression, visualisation<\/td><\/tr><\/table>\n<p><code>make_pipeline<\/code> is a shortcut for <code>Pipeline<\/code> that names the steps automatically.<\/p>\n<div class=\"note\">Start simple (logistic regression) as a baseline. A complex model is only worth it if it clearly beats the baseline.<\/div>", "walk": [["12", "A dictionary: name → estimator."], ["13", "Scale‑sensitive models get a scaler in front."], ["15", "Trees and forests don't need scaling."], ["19", "Same code for every model."], ["21", "Mean ± spread across 5 folds."]], "trace": null, "tip": "Same API for every model means you can compare them with one loop.", "tryit": ["Add <code>\"SVM\": make_pipeline(StandardScaler(), SVC())<\/code> with <code>from sklearn.svm import SVC<\/code>."], "file": null, "expected": {"out": "Logistic  0.981 +/- 0.007\nKNN       0.965 +/- 0.010\nTree      0.917 +/- 0.016\nForest    0.963 +/- 0.017", "err": null, "line": null}}, {"title": "Project: tumour classifier end-to-end", "code": "from sklearn.datasets import load_breast_cancer\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import classification_report, confusion_matrix\nfrom sklearn.model_selection import GridSearchCV, train_test_split\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\n\ndata = load_breast_cancer()\nX_train, X_test, y_train, y_test = train_test_split(\n    data.data, data.target, test_size=0.2,\n    stratify=data.target, random_state=42)\n\npipe = Pipeline([(\"scale\", StandardScaler()),\n                 (\"clf\", LogisticRegression(max_iter=1000))])\n\nsearch = GridSearchCV(pipe, {\"clf__C\": [0.01, 0.1, 1, 10]}, cv=5)\nsearch.fit(X_train, y_train)\nprint(\"Best C:\", search.best_params_[\"clf__C\"])\nprint(\"CV accuracy:\", round(search.best_score_, 3))\n\npred = search.predict(X_test)\nprint(\"Test confusion matrix:\")\nprint(confusion_matrix(y_test, pred))\nprint(classification_report(y_test, pred, target_names=data.target_names))", "explain": "<p>This brings the whole course together in the order you'd use in a real project:<\/p>\n<table class=\"tbl\"><tr><th>Step<\/th><th>Where<\/th><th>Lesson<\/th><\/tr>\n<tr><td><b>1 · Load data<\/b><\/td><td><code>load_breast_cancer()<\/code><\/td><td>1.2<\/td><\/tr>\n<tr><td><b>2 · Hold out a test set<\/b><\/td><td><code>train_test_split(..., stratify=...)<\/code><\/td><td>2.1, 2.5<\/td><\/tr>\n<tr><td><b>3 · Build a pipeline<\/b><\/td><td>scaler + logistic regression<\/td><td>3.1, 5.1, 6.1<\/td><\/tr>\n<tr><td><b>4 · Tune with CV<\/b><\/td><td><code>GridSearchCV<\/code> over <code>C<\/code><\/td><td>2.4, 6.3<\/td><\/tr>\n<tr><td><b>5 · Evaluate once on test<\/b><\/td><td>confusion matrix + report<\/td><td>2.3<\/td><\/tr><\/table>\n<p><code>C<\/code> is logistic regression's regularisation setting — the <b>inverse<\/b> of strength, so a small <code>C<\/code> means a strong penalty (the opposite of <code>alpha<\/code> in Ridge).<\/p>\n<p>The <code>GridSearchCV<\/code> object refits the best pipeline on all the training data, so you can call <code>search.predict<\/code> directly.<\/p>\n<div class=\"warn\">In medicine the costly mistake is a <b>false negative<\/b> — calling a malignant tumour benign. Look at the recall for <code>malignant<\/code>, not just overall accuracy.<\/div>", "walk": [["9", "Hold out 20%, keeping the class mix."], ["13", "Scaling is inside the pipeline — no leakage."], ["16", "Try four regularisation strengths."], ["17", "4 settings × 5 folds = 20 fits, training data only."], ["21", "Use the test set exactly once, at the end."], ["3", "Check recall for malignant."]], "trace": null, "tip": "Split → pipeline → tune with CV → evaluate once on the test set.", "tryit": ["Swap in <code>RandomForestClassifier()<\/code> and tune <code>clf__n_estimators<\/code>.", "Change the decision threshold: use <code>search.predict_proba(X_test)[:, 0] &gt; 0.3<\/code> to flag more tumours as malignant and see how recall changes."], "file": null, "expected": {"out": "Best C: 0.1\nCV accuracy: 0.98\nTest confusion matrix:\n[[40  2]\n [ 1 71]]\n              precision    recall  f1-score   support\n\n   malignant       0.98      0.95      0.96        42\n      benign       0.97      0.99      0.98        72\n\n    accuracy                           0.97       114\n   macro avg       0.97      0.97      0.97       114\nweighted avg       0.97      0.97      0.97       114", "err": null, "line": null}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, step = -1, walkSel = -1, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("sklab-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs".split(" "));
+const LIB = new Set("np pd sklearn joblib".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def"; }
+      else if (BI.has(w) || LIB.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0) hlLines.add(tr[step][0]);
+  if (walkSel >= 0) {
+    const r = L().walk[walkSel][0].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === errLine ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (errLine) mk += `<div class="mark err" style="${at(errLine)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  edits[key(mi, li)] = ta.value; errLine = null;
+  if (step >= 0) step = -1;
+  renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+const isEdited = () => ta.value !== L().code;
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+
+/* ---------- output console ---------- */
+function showOutput(out, err, line, pill, meta, pillCls) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) h += `<span class="errl">${esc(err)}<small>${line ? "Raised on line " + line + " (highlighted in red)" : ""}</small></span>`;
+  o.innerHTML = h;
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  errLine = line || null; paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const cur = step >= 0 ? tr[step] : null;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${cur ? `<span class="ln">line ${cur[0]}</span>${cur[1]}` : "Watch Python move through the code one line at a time. The amber bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[2] !== null).map(t => t[2]);
+  const isNew = tr[step][2] !== null;
+  errLine = null;
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderStepper(); paintEditor(); scrollToLine(tr[step][0]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker, so a runaway loop can be stopped) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = `
+import sys, traceback, json
+def __run(src):
+    g = {"__name__": "__main__"}
+    try:
+        exec(compile(src, "<exec>", "exec"), g)
+        return ""
+    except BaseException as e:
+        line = None
+        for fr in traceback.extract_tb(e.__traceback__):
+            if fr.filename == "<exec>": line = fr.lineno
+        if isinstance(e, SyntaxError):
+            line, msg = e.lineno, e.msg
+        else:
+            msg = str(e)
+        return json.dumps({"err": type(e).__name__ + ": " + msg, "line": line})
+`;
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(async p => { await p.loadPackage(["numpy","scikit-learn"]); py = p; py.runPython(${JSON.stringify(RUNNER)}); py.runPython("import warnings; warnings.filterwarnings('ignore', category=DeprecationWarning); import numpy, sklearn, sklearn.base"); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  try { await py.loadPackagesFromImports(e.data.code); } catch (x) {}
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.code); } catch (x) { r = JSON.stringify({err:String(x), line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); pending = null; setBusy(false);
+      let err = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; }
+      showOutput(d.out, err, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live");
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run() {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  pending = { id: ++runId, code: ta.value };
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading scikit‑learn…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python + scikit‑learn (about 20–40 s, once)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 30 seconds and was stopped. Check for a loop that never ends, or make the model/grid smaller.", null, "Stopped", "", "");
+    } else failRun("Python + scikit‑learn took too long to load.");
+  }, wReady ? 30000 : 180000);
+}
+$("runBtn").onclick = run;
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = L().code; step = -1; errLine = null; renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("sklab-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${md.title}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${x.title}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("fname").textContent = l.file || `module${mi + 1}_lesson${li + 1}.py`;
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errLine = null;
+  ta.value = edits[key(mi, li)] ?? l.code; ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${w[0].includes("-") ? "lines " : "line "}${w[0]}</span><span>${w[1]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][0].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>

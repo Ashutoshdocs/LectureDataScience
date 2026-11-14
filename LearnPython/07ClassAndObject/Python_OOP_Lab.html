@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python OOP Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Python OOP Lab. Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Python <b>OOP</b> Lab</h1><span>classes · objects · encapsulation · inheritance · polymorphism · abstraction</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore the original example">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Real Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "Classes & Objects", "level": "Beginner", "summary": "", "lessons": [{"title": "Your first class & object", "code": "class Dog:\n    pass\n\na = Dog()\nb = Dog()\n\nprint(type(a))\nprint(a == b, a is a)\nprint(isinstance(a, Dog))\n\na.name = \"Bruno\"\nprint(a.name)", "explain": "<p><b>Object‑oriented programming (OOP)<\/b> is a way of organising code around <b>objects<\/b>: bundles of <em>data<\/em> plus the <em>actions<\/em> that work on that data. A student, a bank account or a shopping cart can each become an object.<\/p>\n<div class=\"def2\"><div><b>Class<\/b><span>A <u>blueprint<\/u>. It describes what every object of that kind will have and can do. <code>class Dog:<\/code><\/span><\/div><div><b>Object (instance)<\/b><span>One real thing <u>built from<\/u> the blueprint. <code>a = Dog()<\/code> makes one.<\/span><\/div><\/div>\n<table class=\"tbl\"><tr><th>Blueprint (class)<\/th><th>Objects (instances)<\/th><\/tr>\n<tr><td><code>Dog<\/code><\/td><td>Bruno, Tommy, Sheru<\/td><\/tr>\n<tr><td><code>Car<\/code><\/td><td>your car, my car<\/td><\/tr>\n<tr><td><code>str<\/code> — yes, built‑in types are classes too!<\/td><td><code>\"hi\"<\/code>, <code>\"Python\"<\/code><\/td><\/tr><\/table>\n<h4>Things to notice<\/h4>\n<ul><li>Class names use <b>CapitalWords<\/b> by convention: <code>Dog<\/code>, <code>BankAccount<\/code>.<\/li>\n<li><code>pass<\/code> means “empty for now”.<\/li>\n<li>Calling the class like a function — <code>Dog()<\/code> — creates a <b>new, separate<\/b> object each time, so <code>a == b<\/code> is <code>False<\/code>.<\/li><\/ul>", "walk": [["1-2", "An empty class: the simplest blueprint possible."], ["4-5", "Two separate objects built from the same class."], ["7", "The type of <code>a<\/code> is our own class, <code>Dog<\/code>."], ["8", "Different objects are not equal; an object is always itself."], ["9", "<code>isinstance<\/code> works with your own classes too."], ["11-12", "You can attach data to an object — but the next lesson shows the proper way."]], "trace": null, "tip": "A class is the blueprint; an object is one thing built from it. ClassName() builds a new object.", "tryit": ["Make a class <code>Cat<\/code>, create two cats and give each a different <code>name<\/code>.", "Print <code>type(\"hi\")<\/code> and <code>type(5)<\/code>. What do they have in common with <code>Dog<\/code>?"], "file": null, "expected": {"out": "<class '__main__.Dog'>\nFalse True\nTrue\nBruno", "err": null, "line": null}}, {"title": "The __init__ method & attributes", "code": "class Student:\n    def __init__(self, name, marks):\n        self.name = name\n        self.marks = marks\n        print(\"Created\", name)\n\ns1 = Student(\"Asha\", 92)\ns2 = Student(\"Ravi\", 78)\n\nprint(s1.name, s1.marks)\nprint(s2.name, s2.marks)\nprint(s1.__dict__)", "explain": "<p><code>__init__<\/code> (say “dunder init”) is a special method that Python runs <b>automatically<\/b> every time a new object is created. Its job is to give the object its starting data.<\/p>\n<div class=\"order\"><span>Student(\"Asha\", 92)<\/span>new empty object → <span>__init__ runs<\/span>fills in data → <span>s1<\/span>receives the object<\/div>\n<h4>What is <code>self<\/code>?<\/h4>\n<p><code>self<\/code> is the object being built (or used). <code>self.name = name<\/code> means “store this name <em>on this particular object<\/em>”. Python passes <code>self<\/code> for you — you never write it when calling.<\/p>\n<div class=\"def2\"><div><b>Attribute<\/b><span>A variable that belongs to an object: <code>s1.name<\/code>, <code>s1.marks<\/code>.<\/span><\/div><div><b>Instance<\/b><span>Another word for object. <code>s1<\/code> and <code>s2<\/code> are two instances of <code>Student<\/code>, each with its own attributes.<\/span><\/div><\/div>\n<p><code>obj.__dict__<\/code> shows every attribute an object holds, as a dictionary.<\/p>\n<p>Press <b>Step through<\/b> to watch Python jump into <code>__init__<\/code> for each student.<\/p>", "walk": [["1-5", "The blueprint: every Student gets a name and marks."], ["7", "Creates Asha. Python calls <code>__init__(s1, \"Asha\", 92)<\/code> for you."], ["8", "Creates Ravi — a separate object with its own data."], ["10-11", "Read attributes with a dot."], ["12", "All of s1's attributes as a dictionary."]], "trace": [[1, "Define the class <code>Student<\/code> with <code>__init__()<\/code>.", null], [7, "Run <code>s1 = Student(&quot;Asha&quot;, 92)<\/code>.", null], [3, "A new <code>Student<\/code> object is made, and <code>Student.__init__()<\/code> runs on it with <code>name = &#x27;Asha&#x27;<\/code>, <code>marks = 92<\/code>. Store the name on this object: <code>self.name = name<\/code>. Now <code>self.name<\/code> = <code>&#x27;Asha&#x27;<\/code>.", null], [4, "Store the marks: <code>self.marks = marks<\/code>. Now <code>self.marks<\/code> = <code>92<\/code>.", null], [5, "Run <code>print(&quot;Created&quot;, name)<\/code>.", "Created Asha"], [7, "Back on line 7: <code>Student.__init__()<\/code> has finished. Now <code>s1<\/code> = <code>&lt;Student object&gt;<\/code>.", null], [8, "Run <code>s2 = Student(&quot;Ravi&quot;, 78)<\/code>.", null], [3, "A new <code>Student<\/code> object is made, and <code>Student.__init__()<\/code> runs on it with <code>name = &#x27;Ravi&#x27;<\/code>, <code>marks = 78<\/code>. Store the name on this object: <code>self.name = name<\/code>. Now <code>self.name<\/code> = <code>&#x27;Ravi&#x27;<\/code>.", null], [4, "Store the marks: <code>self.marks = marks<\/code>. Now <code>self.marks<\/code> = <code>78<\/code>.", null], [5, "Run <code>print(&quot;Created&quot;, name)<\/code>.", "Created Ravi"], [8, "Back on line 8: <code>Student.__init__()<\/code> has finished. Now <code>s2<\/code> = <code>&lt;Student object&gt;<\/code>.", null], [10, "Run <code>print(s1.name, s1.marks)<\/code>.", "Asha 92"], [11, "Run <code>print(s2.name, s2.marks)<\/code>.", "Ravi 78"], [12, "Run <code>print(s1.__dict__)<\/code>.", "{'name': 'Asha', 'marks': 92}"]], "tip": "__init__ sets up each new object. self.x = ... stores data on that one object.", "tryit": ["Add a <code>city<\/code> attribute and print it for both students.", "Try <code>Student(\"Meera\")<\/code> with one argument. Read the error."], "file": null, "expected": {"out": "Created Asha\nCreated Ravi\nAsha 92\nRavi 78\n{'name': 'Asha', 'marks': 92}", "err": null, "line": null}}, {"title": "Methods and self", "code": "class Counter:\n    def __init__(self):\n        self.count = 0\n\n    def increment(self, by=1):\n        self.count += by\n\n    def show(self):\n        print(\"count =\", self.count)\n\nc = Counter()\nc.increment()\nc.increment(5)\nc.show()\nCounter.show(c)", "explain": "<p>A <b>method<\/b> is a function defined inside a class. It describes something the object can <em>do<\/em>. Methods always take <code>self<\/code> first, so they can read and change that object's attributes.<\/p>\n<div class=\"cmp\"><div><h5>You write<\/h5><ul><li><code>c.increment(5)<\/code><\/li><\/ul><\/div><div><h5>Python runs<\/h5><ul><li><code>Counter.increment(c, 5)<\/code> — the object goes in as <code>self<\/code><\/li><\/ul><\/div><\/div>\n<p>Line 15 shows this directly: <code>Counter.show(c)<\/code> does exactly what <code>c.show()<\/code> does.<\/p>\n<div class=\"note\">Methods can have default arguments like any function: <code>by=1<\/code> means <code>c.increment()<\/code> adds 1.<\/div>\n<div class=\"warn\">Forgetting <code>self<\/code> in the method header (<code>def show():<\/code>) is the most common beginner error. Python will complain that the method got 1 argument but expected 0.<\/div>", "walk": [["1-3", "Each new Counter starts at 0."], ["5-6", "A method that changes the object's data."], ["8-9", "A method that reports the object's data."], ["11-13", "Create a counter and increase it by 1, then by 5."], ["14", "Show the count: 6."], ["15", "The long form of the same call — proof that the object becomes <code>self<\/code>."]], "trace": [[1, "Define the class <code>Counter<\/code> with <code>__init__()<\/code>, <code>increment()<\/code>, <code>show()<\/code>.", null], [11, "Run <code>c = Counter()<\/code>.", null], [3, "A new <code>Counter<\/code> object is made, and <code>Counter.__init__()<\/code> runs on it. Run <code>self.count = 0<\/code>. Now <code>self.count<\/code> = <code>0<\/code>.", null], [11, "Back on line 11: <code>Counter.__init__()<\/code> has finished. Now <code>c<\/code> = <code>&lt;Counter object&gt;<\/code>.", null], [12, "Run <code>c.increment()<\/code>.", null], [6, "Jump into <code>Counter.increment()<\/code> with <code>by = 1<\/code>. Run <code>self.count += by<\/code>. Now <code>self.count<\/code> = <code>1<\/code>.", null], [12, "Back on line 12: <code>Counter.increment()<\/code> has finished.", null], [13, "Run <code>c.increment(5)<\/code>.", null], [6, "Jump into <code>Counter.increment()<\/code> with <code>by = 5<\/code>. Run <code>self.count += by<\/code>. Now <code>self.count<\/code> = <code>6<\/code>.", null], [13, "Back on line 13: <code>Counter.increment()<\/code> has finished.", null], [14, "Run <code>c.show()<\/code>.", null], [9, "Jump into <code>Counter.show()<\/code>. Run <code>print(&quot;count =&quot;, self.count)<\/code>.", "count = 6"], [14, "Back on line 14: <code>Counter.show()<\/code> has finished.", null], [15, "Run <code>Counter.show(c)<\/code>.", null], [9, "Jump into <code>Counter.show()<\/code>. Run <code>print(&quot;count =&quot;, self.count)<\/code>.", "count = 6"], [15, "Back on line 15: <code>Counter.show()<\/code> has finished.", null]], "tip": "A method is a function inside a class. obj.method() automatically passes obj as self.", "tryit": ["Add a <code>reset()<\/code> method that sets the count back to 0.", "Remove <code>self<\/code> from <code>def show(self):<\/code> and run it. Read the error."], "file": null, "expected": {"out": "count = 6\ncount = 6", "err": null, "line": null}}, {"title": "Class vs instance attributes", "code": "class Car:\n    wheels = 4\n    count = 0\n\n    def __init__(self, brand):\n        self.brand = brand\n        Car.count += 1\n\na = Car(\"Tata\")\nb = Car(\"Honda\")\nb.wheels = 3\n\nprint(a.brand, a.wheels)\nprint(b.brand, b.wheels)\nprint(Car.wheels, Car.count)", "explain": "<table class=\"tbl\"><tr><th><\/th><th>Instance attribute<\/th><th>Class attribute<\/th><\/tr>\n<tr><td>Created<\/td><td>Inside methods: <code>self.brand = ...<\/code><\/td><td>Directly in the class body: <code>wheels = 4<\/code><\/td><\/tr>\n<tr><td>Belongs to<\/td><td>One object<\/td><td>The class — shared by <b>all<\/b> objects<\/td><\/tr>\n<tr><td>Good for<\/td><td>Data that differs per object<\/td><td>Constants and counters for the whole class<\/td><\/tr><\/table>\n<h4>How Python looks up <code>a.wheels<\/code><\/h4>\n<div class=\"order\"><span>1<\/span>Look on the object → <span>2<\/span>not there? Look on the class<\/div>\n<p>On line 11, <code>b.wheels = 3<\/code> creates a <b>new instance attribute on b only<\/b>. It hides the class value for <code>b<\/code>, but <code>a<\/code> and <code>Car<\/code> still see 4.<\/p>\n<div class=\"note\">To update a shared value, change it on the class: <code>Car.count += 1<\/code>, not <code>self.count += 1<\/code>.<\/div>", "walk": [["2-3", "Class attributes: shared by every Car."], ["6", "Instance attribute: each car has its own brand."], ["7", "Update the shared counter through the class."], ["9-10", "Two cars created, so <code>Car.count<\/code> becomes 2."], ["11", "Gives <code>b<\/code> its own <code>wheels<\/code>; the class value is untouched."], ["13-15", "a uses the class value 4, b uses its own 3, the class still says 4."]], "trace": null, "tip": "Class attributes are shared by every object; instance attributes belong to one object.", "tryit": ["Print <code>a.__dict__<\/code> and <code>b.__dict__<\/code>. Which one has <code>wheels<\/code>?", "Change line 7 to <code>self.count += 1<\/code>. What does <code>Car.count<\/code> print now?"], "file": null, "expected": {"out": "Tata 4\nHonda 3\n4 2", "err": null, "line": null}}, {"title": "Problem: a bank account", "code": "class BankAccount:\n    def __init__(self, owner, balance=0):\n        self.owner = owner\n        self.balance = balance\n\n    def deposit(self, amount):\n        self.balance += amount\n        print(f\"Deposited {amount}. Balance: {self.balance}\")\n\n    def withdraw(self, amount):\n        if amount > self.balance:\n            print(\"Insufficient funds!\")\n            return\n        self.balance -= amount\n        print(f\"Withdrew {amount}. Balance: {self.balance}\")\n\nacc = BankAccount(\"Asha\", 1000)\nacc.deposit(500)\nacc.withdraw(2000)\nacc.withdraw(300)", "explain": "<p><b>Problem.<\/b> Model a bank account that can take deposits and withdrawals, and refuses to go below zero.<\/p>\n<h4>Plan<\/h4>\n<ol><li><b>Data<\/b> (attributes): who owns it and the balance.<\/li><li><b>Actions<\/b> (methods): <code>deposit<\/code> and <code>withdraw<\/code>.<\/li><li>Put the rule (“no overdraft”) <b>inside<\/b> <code>withdraw<\/code>, so it can never be skipped.<\/li><\/ol>\n<div class=\"note\">This is the heart of OOP: the data and the rules that protect it live together in one place. Code outside the class just says <code>acc.withdraw(300)<\/code> and trusts the object to do the right thing.<\/div>\n<p>A bare <code>return<\/code> leaves the method early — the rest of <code>withdraw<\/code> is skipped when funds are short. Step through to see it.<\/p>", "walk": [["1-4", "Every account has an owner and a balance (default 0)."], ["6-8", "Deposit adds money and reports the new balance."], ["10-13", "Guard: refuse if the amount is too big, and leave the method."], ["14-15", "Otherwise subtract and report."], ["17-20", "Open an account, then try three transactions."]], "trace": [[1, "Define the class <code>BankAccount<\/code> with <code>__init__()<\/code>, <code>deposit()<\/code>, <code>withdraw()<\/code>.", null], [17, "Run <code>acc = BankAccount(&quot;Asha&quot;, 1000)<\/code>.", null], [3, "A new <code>BankAccount<\/code> object is made, and <code>BankAccount.__init__()<\/code> runs on it with <code>owner = &#x27;Asha&#x27;<\/code>, <code>balance = 1000<\/code>. Run <code>self.owner = owner<\/code>. Now <code>self.owner<\/code> = <code>&#x27;Asha&#x27;<\/code>.", null], [4, "Run <code>self.balance = balance<\/code>. Now <code>self.balance<\/code> = <code>1000<\/code>.", null], [17, "Back on line 17: <code>BankAccount.__init__()<\/code> has finished. Now <code>acc<\/code> = <code>&lt;BankAccount object&gt;<\/code>.", null], [18, "Run <code>acc.deposit(500)<\/code>.", null], [7, "Jump into <code>BankAccount.deposit()<\/code> with <code>amount = 500<\/code>. Run <code>self.balance += amount<\/code>. Now <code>self.balance<\/code> = <code>1500<\/code>.", null], [8, "Run <code>print(f&quot;Deposited {amount}. Balance: {self.balance}&quot;)<\/code>.", "Deposited 500. Balance: 1500"], [18, "Back on line 18: <code>BankAccount.deposit()<\/code> has finished.", null], [19, "Run <code>acc.withdraw(2000)<\/code>.", null], [11, "Jump into <code>BankAccount.withdraw()<\/code> with <code>amount = 2000<\/code>. Check: is the amount more than the balance?", null], [12, "Run <code>print(&quot;Insufficient funds!&quot;)<\/code>.", "Insufficient funds!"], [13, "Run <code>return<\/code>.", null], [19, "Back on line 19: <code>BankAccount.withdraw()<\/code> has finished.", null], [20, "Run <code>acc.withdraw(300)<\/code>.", null], [11, "Jump into <code>BankAccount.withdraw()<\/code> with <code>amount = 300<\/code>. Check: is the amount more than the balance?", null], [14, "Run <code>self.balance -= amount<\/code>. Now <code>self.balance<\/code> = <code>1200<\/code>.", null], [15, "Run <code>print(f&quot;Withdrew {amount}. Balance: {self.balance}&quot;)<\/code>.", "Withdrew 300. Balance: 1200"], [20, "Back on line 20: <code>BankAccount.withdraw()<\/code> has finished.", null]], "tip": "Keep data and the rules that protect it in the same class.", "tryit": ["Add a <code>show()<\/code> method that prints <code>Asha: Rs 1200<\/code>.", "Make <code>deposit<\/code> refuse amounts that are zero or negative."], "file": null, "expected": {"out": "Deposited 500. Balance: 1500\nInsufficient funds!\nWithdrew 300. Balance: 1200", "err": null, "line": null}}]}, {"title": "Encapsulation", "level": "Beginner → Intermediate", "summary": "", "lessons": [{"title": "Public, protected & private", "code": "class Account:\n    def __init__(self, owner, pin):\n        self.owner = owner\n        self._branch = \"Pune\"\n        self.__pin = pin\n\n    def check_pin(self, guess):\n        return guess == self.__pin\n\nacc = Account(\"Ravi\", 4321)\nprint(acc.owner)\nprint(acc._branch)\nprint(acc.check_pin(1111), acc.check_pin(4321))\nprint(acc._Account__pin)\nprint(acc.__pin)", "explain": "<p><b>Encapsulation<\/b> means hiding an object's inner details and letting the outside world use it only through its methods. It's the first of OOP's <b>four pillars<\/b>.<\/p>\n<table class=\"tbl\"><tr><th>Name<\/th><th>Meaning<\/th><th>Enforced?<\/th><\/tr>\n<tr><td><code>owner<\/code><\/td><td><b>Public<\/b> — use freely<\/td><td>—<\/td><\/tr>\n<tr><td><code>_branch<\/code><\/td><td><b>Protected<\/b> — “internal, please don't touch”<\/td><td>No, just a convention<\/td><\/tr>\n<tr><td><code>__pin<\/code><\/td><td><b>Private<\/b> — hidden from outside<\/td><td>Partly: Python renames it<\/td><\/tr><\/table>\n<h4>Name mangling<\/h4>\n<p>Python quietly renames <code>__pin<\/code> to <code>_Account__pin<\/code>. So <code>acc.__pin<\/code> fails (line 15), while the class's own methods can still use <code>self.__pin<\/code>.<\/p>\n<div class=\"note\">Python trusts programmers: nothing is truly secret (line 14 sneaks in). Underscores are a clear signal of intent rather than a lock.<\/div>\n<p>The error on line 15 is expected.<\/p>", "walk": [["3-5", "One public, one protected, one private attribute."], ["7-8", "A public method is the approved way to use the private PIN."], ["11-12", "Public and protected attributes are both readable."], ["13", "Checking the PIN without ever revealing it."], ["14", "The mangled name — possible, but you shouldn't."], ["15", "The private name is hidden: AttributeError."]], "trace": null, "tip": "Hide internal data behind methods. _name means internal; __name is renamed so outsiders can't reach it by accident.", "tryit": ["Add a method <code>change_pin(old, new)<\/code> that only changes the PIN if <code>old<\/code> is right.", "Print <code>acc.__dict__<\/code> and spot the mangled name."], "file": null, "expected": {"out": "Ravi\nPune\nFalse True\n4321", "err": "AttributeError: 'Account' object has no attribute '__pin'", "line": 15}}, {"title": "Properties: getters & setters", "code": "class Temperature:\n    def __init__(self, celsius):\n        self.celsius = celsius\n\n    @property\n    def celsius(self):\n        return self._celsius\n\n    @celsius.setter\n    def celsius(self, value):\n        if value < -273.15:\n            raise ValueError(\"Below absolute zero!\")\n        self._celsius = value\n\n    @property\n    def fahrenheit(self):\n        return self._celsius * 9 / 5 + 32\n\nt = Temperature(25)\nprint(t.celsius, t.fahrenheit)\nt.celsius = 100\nprint(t.fahrenheit)\nt.celsius = -300", "explain": "<p>A <b>property<\/b> looks like a plain attribute from outside (<code>t.celsius<\/code>) but runs a method behind the scenes. That lets you <b>check values<\/b> or <b>calculate them<\/b> without changing how people use your class.<\/p>\n<div class=\"def2\"><div><b>@property<\/b><span>The <u>getter<\/u>: runs when you read <code>t.celsius<\/code>.<\/span><\/div><div><b>@celsius.setter<\/b><span>The <u>setter<\/u>: runs when you write <code>t.celsius = 100<\/code>. A good place for validation.<\/span><\/div><\/div>\n<ul><li>The real value lives in <code>_celsius<\/code>; the property guards it.<\/li>\n<li>Even <code>__init__<\/code> goes through the setter (line 3), so a bad starting value is caught too.<\/li>\n<li><code>fahrenheit<\/code> has no setter: it's a <b>read‑only, calculated<\/b> property, always in sync with Celsius.<\/li><\/ul>\n<p><code>raise ValueError(...)<\/code> stops the program with an error you choose — line 23 shows it, on purpose.<\/p>", "walk": [["3", "Assignment in __init__ goes through the setter below."], ["5-7", "Getter: return the stored value."], ["9-13", "Setter: reject impossible values, otherwise store."], ["15-17", "A calculated property — no brackets needed to use it."], ["19-22", "Read, update and re‑read like plain attributes."], ["23", "The setter refuses -300: ValueError."]], "trace": null, "tip": "Use @property when you want attribute-style access but need to validate or calculate the value.", "tryit": ["Add a <code>kelvin<\/code> read‑only property.", "Try <code>t.fahrenheit = 50<\/code>. Why does it fail?"], "file": null, "expected": {"out": "25 77.0\n212.0", "err": "ValueError: Below absolute zero!", "line": 12}}, {"title": "Class methods & static methods", "code": "class Date:\n    def __init__(self, day, month, year):\n        self.day, self.month, self.year = day, month, year\n\n    @classmethod\n    def from_string(cls, text):\n        d, m, y = map(int, text.split(\"-\"))\n        return cls(d, m, y)\n\n    @staticmethod\n    def is_leap(year):\n        return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)\n\n    def show(self):\n        print(f\"{self.day:02d}/{self.month:02d}/{self.year}\")\n\nd = Date.from_string(\"13-11-2026\")\nd.show()\nprint(Date.is_leap(2024), Date.is_leap(2026))", "explain": "<table class=\"tbl\"><tr><th>Kind<\/th><th>First parameter<\/th><th>Can use<\/th><th>Typical use<\/th><\/tr>\n<tr><td>Instance method<\/td><td><code>self<\/code> (the object)<\/td><td>Object + class data<\/td><td>Most methods<\/td><\/tr>\n<tr><td><code>@classmethod<\/code><\/td><td><code>cls<\/code> (the class)<\/td><td>Class data<\/td><td><b>Alternative constructors<\/b> like <code>from_string<\/code><\/td><\/tr>\n<tr><td><code>@staticmethod<\/code><\/td><td>none<\/td><td>Only its arguments<\/td><td>Helper functions that belong with the class<\/td><\/tr><\/table>\n<p><code>from_string<\/code> builds a <code>Date<\/code> from text like <code>\"13-11-2026\"<\/code>. Using <code>cls(...)<\/code> instead of <code>Date(...)<\/code> means child classes (Module 3) get the right type automatically.<\/p>\n<p><code>is_leap<\/code> doesn't need any particular date — it's just a useful calculation kept in a sensible home.<\/p>", "walk": [["2-3", "Normal constructor using tuple unpacking."], ["5-8", "A class method: split the text, convert to ints, build a Date."], ["10-12", "A static method: pure calculation, no self or cls."], ["14-15", "An instance method printing with zero padding."], ["17-18", "Create a Date from text, then show it."], ["19", "Call the static method on the class."]], "trace": null, "tip": "@classmethod gets the class (great for alternative constructors); @staticmethod gets nothing extra.", "tryit": ["Add a class method <code>today_2026()<\/code> that returns <code>Date(1, 1, 2026)<\/code>.", "Call <code>d.is_leap(2000)<\/code> on the object. Does it still work?"], "file": null, "expected": {"out": "13/11/2026\nTrue False", "err": null, "line": null}}]}, {"title": "Inheritance", "level": "Intermediate", "summary": "", "lessons": [{"title": "Inheriting from a parent", "code": "class Animal:\n    def __init__(self, name):\n        self.name = name\n\n    def eat(self):\n        print(self.name, \"is eating\")\n\nclass Dog(Animal):\n    def bark(self):\n        print(self.name, \"says Woof!\")\n\nd = Dog(\"Bruno\")\nd.eat()\nd.bark()\nprint(isinstance(d, Animal), issubclass(Dog, Animal))", "explain": "<p><b>Inheritance<\/b> lets a new class reuse an existing one. Write the parent in brackets: <code>class Dog(Animal):<\/code>. The child gets <b>everything<\/b> the parent has, and can add more.<\/p>\n<div class=\"def2\"><div><b>Parent (base / super) class<\/b><span><code>Animal<\/code> — the general idea.<\/span><\/div><div><b>Child (derived / sub) class<\/b><span><code>Dog<\/code> — a more specific kind of Animal.<\/span><\/div><\/div>\n<p>Use inheritance for an <b>“is‑a”<\/b> relationship: a Dog <em>is an<\/em> Animal. <code>Dog<\/code> has no <code>__init__<\/code> or <code>eat<\/code> of its own, so Python finds them in <code>Animal<\/code>.<\/p>\n<div class=\"order\"><span>d.eat()<\/span>look in Dog → <span>not found<\/span>look in Animal → <span>found<\/span>run it<\/div>\n<p>Every class secretly inherits from <code>object<\/code>, which is where things like <code>__dict__<\/code> come from.<\/p>", "walk": [["1-6", "The parent class with shared data and behaviour."], ["8-10", "Dog inherits from Animal and adds <code>bark<\/code>."], ["12", "Uses Animal's <code>__init__<\/code>."], ["13", "Inherited method."], ["14", "Dog's own method."], ["15", "A Dog counts as an Animal."]], "trace": null, "tip": "class Child(Parent): gives the child all of the parent's attributes and methods for free.", "tryit": ["Add a <code>Cat(Animal)<\/code> class with a <code>meow()<\/code> method.", "Call <code>Animal(\"Generic\").bark()<\/code>. Why does it fail?"], "file": null, "expected": {"out": "Bruno is eating\nBruno says Woof!\nTrue True", "err": null, "line": null}}, {"title": "Overriding methods & super()", "code": "class Employee:\n    def __init__(self, name, salary):\n        self.name = name\n        self.salary = salary\n\n    def describe(self):\n        return f\"{self.name} earns {self.salary}\"\n\nclass Manager(Employee):\n    def __init__(self, name, salary, team):\n        super().__init__(name, salary)\n        self.team = team\n\n    def describe(self):\n        base = super().describe()\n        return base + f\" and manages {self.team} people\"\n\ne = Employee(\"Asha\", 50000)\nm = Manager(\"Ravi\", 90000, 5)\nprint(e.describe())\nprint(m.describe())", "explain": "<p>A child can <b>override<\/b> a parent's method by defining one with the same name. Python always uses the child's version first.<\/p>\n<p>Often you want to <em>extend<\/em> the parent's work, not throw it away. <code>super()<\/code> gives you the parent class, so you can call its version and then add to it.<\/p>\n<div class=\"cmp\"><div><h5>Without super()<\/h5><ul><li>Copy <code>self.name = name<\/code> and <code>self.salary = salary<\/code> again in Manager<\/li><li>Repeated code, easy to get out of sync<\/li><\/ul><\/div>\n<div><h5>With super()<\/h5><ul><li><code>super().__init__(name, salary)<\/code><\/li><li>Parent sets up its part; child adds <code>team<\/code><\/li><\/ul><\/div><\/div>\n<p>Step through and watch Python hop from <code>Manager.describe<\/code> into <code>Employee.describe<\/code> and back.<\/p>", "walk": [["1-7", "The parent: name, salary and a description."], ["9-12", "Manager's own __init__ hands name and salary to the parent, then adds team."], ["14-16", "Override describe(), reusing the parent's text."], ["18-19", "One plain employee, one manager."], ["20-21", "Same method name, different behaviour."]], "trace": [[1, "Define the class <code>Employee<\/code> with <code>__init__()<\/code>, <code>describe()<\/code>.", null], [9, "Define the class <code>Manager<\/code> (a child of <code>Employee<\/code>) with <code>__init__()<\/code>, <code>describe()<\/code>.", null], [18, "Run <code>e = Employee(&quot;Asha&quot;, 50000)<\/code>.", null], [3, "A new <code>Employee<\/code> object is made, and <code>Employee.__init__()<\/code> runs on it with <code>name = &#x27;Asha&#x27;<\/code>, <code>salary = 50000<\/code>. Run <code>self.name = name<\/code>. Now <code>self.name<\/code> = <code>&#x27;Asha&#x27;<\/code>.", null], [4, "Run <code>self.salary = salary<\/code>. Now <code>self.salary<\/code> = <code>50000<\/code>.", null], [18, "Back on line 18: <code>Employee.__init__()<\/code> has finished. Now <code>e<\/code> = <code>&lt;Employee object&gt;<\/code>.", null], [19, "Run <code>m = Manager(&quot;Ravi&quot;, 90000, 5)<\/code>.", null], [11, "A new <code>Manager<\/code> object is made, and <code>Manager.__init__()<\/code> runs on it with <code>name = &#x27;Ravi&#x27;<\/code>, <code>salary = 90000<\/code>, <code>team = 5<\/code>. Run <code>super().__init__(name, salary)<\/code>.", null], [3, "Through <code>super()<\/code>, jump into the parent's <code>Employee.__init__()<\/code> to set up its part with <code>name = &#x27;Ravi&#x27;<\/code>, <code>salary = 90000<\/code>. Run <code>self.name = name<\/code>. Now <code>self.name<\/code> = <code>&#x27;Ravi&#x27;<\/code>.", null], [4, "Run <code>self.salary = salary<\/code>. Now <code>self.salary<\/code> = <code>90000<\/code>.", null], [11, "Back on line 11: <code>Employee.__init__()<\/code> has finished.", null], [12, "Run <code>self.team = team<\/code>. Now <code>self.team<\/code> = <code>5<\/code>.", null], [19, "Back on line 19: <code>Manager.__init__()<\/code> has finished. Now <code>m<\/code> = <code>&lt;Manager object&gt;<\/code>.", null], [20, "Run <code>print(e.describe())<\/code>.", null], [7, "Jump into <code>Employee.describe()<\/code>. Run <code>return f&quot;{self.name} earns {self.salary}&quot;<\/code>.", null], [20, "Back on line 20: <code>Employee.describe()<\/code> returned <code>&#x27;Asha earns 50000&#x27;<\/code>.", "Asha earns 50000"], [21, "Run <code>print(m.describe())<\/code>.", null], [15, "Jump into <code>Manager.describe()<\/code>. Run <code>base = super().describe()<\/code>.", null], [7, "Jump into <code>Employee.describe()<\/code>. Run <code>return f&quot;{self.name} earns {self.salary}&quot;<\/code>.", null], [15, "Back on line 15: <code>Employee.describe()<\/code> returned <code>&#x27;Ravi earns 90000&#x27;<\/code>. Now <code>base<\/code> = <code>&#x27;Ravi earns 90000&#x27;<\/code>.", null], [16, "Run <code>return base + f&quot; and manages {self.team} people&quot;<\/code>.", null], [21, "Back on line 21: <code>Manager.describe()<\/code> returned <code>&#x27;Ravi earns 90000 and manages 5 people&#x27;<\/code>.", "Ravi earns 90000 and manages 5 people"]], "tip": "Override to change behaviour; call super() to reuse the parent's version inside your own.", "tryit": ["Add an <code>Intern(Employee)<\/code> whose <code>describe()<\/code> adds <code>\" (intern)\"<\/code>.", "Delete the <code>super().__init__<\/code> line and print <code>m.describe()<\/code>. Read the error."], "file": null, "expected": {"out": "Asha earns 50000\nRavi earns 90000 and manages 5 people", "err": null, "line": null}}, {"title": "Multilevel & multiple inheritance", "code": "class Vehicle:\n    def info(self):\n        return \"I move\"\n\nclass Car(Vehicle):\n    def wheels(self):\n        return 4\n\nclass ElectricCar(Car):\n    def charge(self):\n        return \"Charging...\"\n\nclass Camera:\n    def snap(self):\n        return \"Click!\"\n\nclass SmartCar(ElectricCar, Camera):\n    pass\n\ns = SmartCar()\nprint(s.info(), s.wheels(), s.charge(), s.snap())\nprint([c.__name__ for c in SmartCar.__mro__])", "explain": "<table class=\"tbl\"><tr><th>Type<\/th><th>Shape<\/th><th>Here<\/th><\/tr>\n<tr><td>Single<\/td><td>One parent<\/td><td><code>Car(Vehicle)<\/code><\/td><\/tr>\n<tr><td>Multilevel<\/td><td>A chain: grandparent → parent → child<\/td><td><code>Vehicle → Car → ElectricCar<\/code><\/td><\/tr>\n<tr><td>Multiple<\/td><td>More than one parent<\/td><td><code>SmartCar(ElectricCar, Camera)<\/code><\/td><\/tr>\n<tr><td>Hierarchical<\/td><td>Many children share one parent<\/td><td>e.g. <code>Car<\/code> and <code>Bike<\/code> both from <code>Vehicle<\/code><\/td><\/tr><\/table>\n<h4>Method Resolution Order (MRO)<\/h4>\n<p>When a method is called, Python searches classes in a fixed order called the <b>MRO<\/b>: the class itself, then its parents left to right, ending at <code>object<\/code>. <code>ClassName.__mro__<\/code> shows the order.<\/p>\n<div class=\"warn\">Multiple inheritance is powerful but easy to overuse. If two parents define the same method, the one listed <b>first<\/b> wins. Keep extra parents small and focused (like <code>Camera<\/code>).<\/div>", "walk": [["1-11", "A three‑level chain: Vehicle → Car → ElectricCar."], ["13-15", "An unrelated class with one ability."], ["17-18", "SmartCar has two parents and gets everything from both."], ["20-21", "Methods from four different classes on one object."], ["22", "The search order Python uses."]], "trace": null, "tip": "Python searches for methods along the MRO: the class, its parents left to right, then object.", "tryit": ["Add an <code>info()<\/code> method to <code>Camera<\/code>. Which one does <code>s.info()<\/code> use? Why?", "Swap the parents to <code>SmartCar(Camera, ElectricCar)<\/code> and print the MRO again."], "file": null, "expected": {"out": "I move 4 Charging... Click!\n['SmartCar', 'ElectricCar', 'Car', 'Vehicle', 'Camera', 'object']", "err": null, "line": null}}]}, {"title": "Polymorphism", "level": "Intermediate", "summary": "", "lessons": [{"title": "Same method, different objects", "code": "class Circle:\n    def __init__(self, r):\n        self.r = r\n\n    def area(self):\n        return round(3.14 * self.r ** 2, 2)\n\nclass Square:\n    def __init__(self, side):\n        self.side = side\n\n    def area(self):\n        return self.side ** 2\n\nshapes = [Circle(1), Square(3), Circle(2)]\nfor s in shapes:\n    print(type(s).__name__, s.area())", "explain": "<p><b>Polymorphism<\/b> (“many forms”) means one piece of code can work with objects of different classes, as long as they offer the same method.<\/p>\n<p>The loop on lines 16‑17 doesn't know or care whether <code>s<\/code> is a Circle or a Square. It just calls <code>s.area()<\/code>, and each object answers in its own way.<\/p>\n<div class=\"note\">Without polymorphism you'd write <code>if type(s) == Circle: ... elif type(s) == Square: ...<\/code> and edit it every time you add a shape. With it, adding a <code>Triangle<\/code> class needs <b>no changes<\/b> to the loop.<\/div>\n<p>Step through to see which <code>area()<\/code> Python jumps into on each pass.<\/p>", "walk": [["1-6", "Circle knows how to compute its own area."], ["8-13", "Square has a method with the same name."], ["15", "A list mixing both kinds of object."], ["16-17", "One loop, one method call, different behaviour."]], "trace": [[1, "Define the class <code>Circle<\/code> with <code>__init__()<\/code>, <code>area()<\/code>.", null], [8, "Define the class <code>Square<\/code> with <code>__init__()<\/code>, <code>area()<\/code>.", null], [15, "Run <code>shapes = [Circle(1), Square(3), Circle(2)]<\/code>.", null], [3, "A new <code>Circle<\/code> object is made, and <code>Circle.__init__()<\/code> runs on it with <code>r = 1<\/code>. Run <code>self.r = r<\/code>. Now <code>self.r<\/code> = <code>1<\/code>.", null], [15, "Back on line 15: <code>Circle.__init__()<\/code> has finished.", null], [10, "A new <code>Square<\/code> object is made, and <code>Square.__init__()<\/code> runs on it with <code>side = 3<\/code>. Run <code>self.side = side<\/code>. Now <code>self.side<\/code> = <code>3<\/code>.", null], [15, "Back on line 15: <code>Square.__init__()<\/code> has finished.", null], [3, "A new <code>Circle<\/code> object is made, and <code>Circle.__init__()<\/code> runs on it with <code>r = 2<\/code>. Run <code>self.r = r<\/code>. Now <code>self.r<\/code> = <code>2<\/code>.", null], [15, "Back on line 15: <code>Circle.__init__()<\/code> has finished. Now <code>shapes<\/code> = <code>[&lt;__main__.Circle object at 0x7fcd62f59d30&gt;, &lt;__main__.Sq…<\/code>.", null], [16, "Run <code>for s in shapes:<\/code>. Now <code>s<\/code> = <code>&lt;Circle object&gt;<\/code>.", null], [17, "Run <code>print(type(s).__name__, s.area())<\/code>.", null], [6, "Jump into <code>Circle.area()<\/code>. Run <code>return round(3.14 * self.r ** 2, 2)<\/code>.", null], [17, "Back on line 17: <code>Circle.area()<\/code> returned <code>3.14<\/code>.", "Circle 3.14"], [16, "Run <code>for s in shapes:<\/code>. Now <code>s<\/code> = <code>&lt;Square object&gt;<\/code>.", null], [17, "Run <code>print(type(s).__name__, s.area())<\/code>.", null], [13, "Jump into <code>Square.area()<\/code>. Run <code>return self.side ** 2<\/code>.", null], [17, "Back on line 17: <code>Square.area()<\/code> returned <code>9<\/code>.", "Square 9"], [16, "Run <code>for s in shapes:<\/code>. Now <code>s<\/code> = <code>&lt;Circle object&gt;<\/code>.", null], [17, "Run <code>print(type(s).__name__, s.area())<\/code>.", null], [6, "Jump into <code>Circle.area()<\/code>. Run <code>return round(3.14 * self.r ** 2, 2)<\/code>.", null], [17, "Back on line 17: <code>Circle.area()<\/code> returned <code>12.56<\/code>.", "Circle 12.56"], [16, "Run <code>for s in shapes:<\/code>.", null]], "tip": "Give different classes the same method name, and one loop can handle them all.", "tryit": ["Add a <code>Rectangle(w, h)<\/code> class and put one in the list.", "Use <code>sum(s.area() for s in shapes)<\/code> to get the total area."], "file": null, "expected": {"out": "Circle 3.14\nSquare 9\nCircle 12.56", "err": null, "line": null}}, {"title": "Magic methods: __str__, __repr__, __len__", "code": "class Book:\n    def __init__(self, title, pages):\n        self.title = title\n        self.pages = pages\n\n    def __str__(self):\n        return f\"'{self.title}' ({self.pages} pages)\"\n\n    def __repr__(self):\n        return f\"Book({self.title!r}, {self.pages})\"\n\n    def __len__(self):\n        return self.pages\n\nb = Book(\"Python Basics\", 320)\nprint(b)\nprint([b])\nprint(len(b))\nprint(str(b) == b.__str__())", "explain": "<p>Methods with double underscores on both sides are called <b>magic<\/b> or <b>dunder<\/b> methods. You don't call them directly — Python calls them when you use built‑in features.<\/p>\n<table class=\"tbl\"><tr><th>You write<\/th><th>Python calls<\/th><th>Purpose<\/th><\/tr>\n<tr><td><code>print(b)<\/code>, <code>str(b)<\/code><\/td><td><code>__str__<\/code><\/td><td>Friendly text for users<\/td><\/tr>\n<tr><td><code>[b]<\/code>, the console<\/td><td><code>__repr__<\/code><\/td><td>Precise text for programmers<\/td><\/tr>\n<tr><td><code>len(b)<\/code><\/td><td><code>__len__<\/code><\/td><td>Size<\/td><\/tr>\n<tr><td><code>Book(...)<\/code><\/td><td><code>__init__<\/code><\/td><td>Set up a new object<\/td><\/tr><\/table>\n<p>Without <code>__str__<\/code>, printing an object shows something unhelpful like <code>&lt;__main__.Book object at 0x7f…&gt;<\/code>.<\/p>\n<div class=\"note\">A good <code>__repr__<\/code> looks like the code that would recreate the object. <code>!r<\/code> inside an f‑string uses repr, so the title gets quotes.<\/div>", "walk": [["6-7", "What users see when the book is printed."], ["9-10", "What programmers see, e.g. inside a list."], ["12-13", "Makes <code>len()<\/code> work on a Book."], ["16", "print uses __str__."], ["17", "Lists show their items with __repr__."], ["18-19", "len() and str() call the magic methods for us."]], "trace": null, "tip": "Define __str__ for print(), __repr__ for debugging, and other dunders to plug into Python's built-ins.", "tryit": ["Delete <code>__str__<\/code> and run again. What does <code>print(b)<\/code> show now?", "Add <code>__bool__<\/code> so a book with 0 pages counts as <code>False<\/code>."], "file": null, "expected": {"out": "'Python Basics' (320 pages)\n[Book('Python Basics', 320)]\n320\nTrue", "err": null, "line": null}}, {"title": "Operator overloading", "code": "class Vector:\n    def __init__(self, x, y):\n        self.x, self.y = x, y\n\n    def __add__(self, other):\n        return Vector(self.x + other.x, self.y + other.y)\n\n    def __mul__(self, k):\n        return Vector(self.x * k, self.y * k)\n\n    def __eq__(self, other):\n        return self.x == other.x and self.y == other.y\n\n    def __repr__(self):\n        return f\"Vector({self.x}, {self.y})\"\n\na = Vector(2, 3)\nb = Vector(1, 1)\nprint(a + b)\nprint(a * 3)\nprint(a + b == Vector(3, 4))", "explain": "<p><b>Operator overloading<\/b> means teaching Python's operators (<code>+<\/code>, <code>*<\/code>, <code>==<\/code>, <code>&lt;<\/code>…) what to do with <em>your<\/em> objects. It's polymorphism again: <code>+<\/code> already means different things for ints, strings and lists.<\/p>\n<table class=\"tbl\"><tr><th>Operator<\/th><th>Magic method<\/th><\/tr>\n<tr><td><code>a + b<\/code><\/td><td><code>a.__add__(b)<\/code><\/td><\/tr>\n<tr><td><code>a - b<\/code><\/td><td><code>__sub__<\/code><\/td><\/tr>\n<tr><td><code>a * k<\/code><\/td><td><code>__mul__<\/code><\/td><\/tr>\n<tr><td><code>a == b<\/code><\/td><td><code>__eq__<\/code><\/td><\/tr>\n<tr><td><code>a &lt; b<\/code><\/td><td><code>__lt__<\/code> (lets <code>sorted()<\/code> work)<\/td><\/tr><\/table>\n<p>Each method <b>returns a new Vector<\/b> rather than changing <code>self<\/code>, just like <code>2 + 3<\/code> doesn't change the 2.<\/p>\n<div class=\"note\">Without <code>__eq__<\/code>, <code>==<\/code> only checks whether two names point to the very same object — so two vectors with equal numbers would still be “not equal”.<\/div>", "walk": [["5-6", "Defines what <code>+<\/code> means: add matching parts."], ["8-9", "<code>*<\/code> scales by a number."], ["11-12", "<code>==<\/code> compares the numbers, not identity."], ["14-15", "Readable output."], ["19-21", "Use the operators like built‑in maths."]], "trace": null, "tip": "Implement __add__, __eq__ and friends so your objects work with +, == and other operators.", "tryit": ["Add <code>__sub__<\/code> and print <code>a - b<\/code>.", "Add <code>__lt__<\/code> comparing lengths, then sort a list of vectors."], "file": null, "expected": {"out": "Vector(3, 4)\nVector(6, 9)\nTrue", "err": null, "line": null}}, {"title": "Duck typing", "code": "class Duck:\n    def speak(self):\n        return \"Quack\"\n\nclass Robot:\n    def speak(self):\n        return \"Beep boop\"\n\nclass Stone:\n    pass\n\nfor thing in [Duck(), Robot(), Stone()]:\n    print(thing.speak())", "explain": "<p><em>“If it walks like a duck and quacks like a duck, it's a duck.”<\/em> Python doesn't check an object's <b>class<\/b> before calling a method — it just tries it. Any object with a <code>speak()<\/code> method can be used here, even though <code>Duck<\/code> and <code>Robot<\/code> share no parent.<\/p>\n<div class=\"cmp\"><div><h5>Inheritance‑based<\/h5><ul><li>Objects share a common parent class<\/li><li>Relationship is written down<\/li><\/ul><\/div><div><h5>Duck typing<\/h5><ul><li>Objects just need the same method name<\/li><li>Flexible, very “Pythonic”<\/li><\/ul><\/div><\/div>\n<p>The catch: if an object <b>doesn't<\/b> have the method, you only find out when the code runs. <code>Stone<\/code> causes an <code>AttributeError<\/code> on line 13 — that's expected here.<\/p>\n<div class=\"note\">Guard with <code>hasattr(thing, \"speak\")<\/code>, or use an abstract class (Module 5) to make the rule explicit.<\/div>", "walk": [["1-7", "Two unrelated classes that both have speak()."], ["9-10", "A class with no speak()."], ["12-13", "Works for Duck and Robot, then fails on Stone."]], "trace": null, "tip": "Python cares what an object can do, not what class it is. Missing methods fail at run time.", "tryit": ["Fix the loop with <code>if hasattr(thing, \"speak\"):<\/code>.", "Give <code>Stone<\/code> a <code>speak()<\/code> that returns <code>\"...\"<\/code>."], "file": null, "expected": {"out": "Quack\nBeep boop", "err": "AttributeError: 'Stone' object has no attribute 'speak'", "line": 13}}]}, {"title": "Abstraction & Composition", "level": "Intermediate", "summary": "", "lessons": [{"title": "Abstract classes", "code": "from abc import ABC, abstractmethod\n\nclass Payment(ABC):\n    @abstractmethod\n    def pay(self, amount):\n        pass\n\n    def receipt(self, amount):\n        print(\"Receipt:\", self.pay(amount))\n\nclass UPI(Payment):\n    def pay(self, amount):\n        return f\"Paid Rs {amount} via UPI\"\n\nclass Card(Payment):\n    def pay(self, amount):\n        return f\"Paid Rs {amount} by card\"\n\nfor method in [UPI(), Card()]:\n    method.receipt(250)\n\np = Payment()", "explain": "<p><b>Abstraction<\/b> means showing <em>what<\/em> something does and hiding <em>how<\/em>. The person paying just calls <code>receipt(250)<\/code>; the details of UPI or cards are hidden in the child classes.<\/p>\n<p>An <b>abstract class<\/b> is a template that can't be used on its own. It lists methods that every child <b>must<\/b> provide.<\/p>\n<div class=\"def2\"><div><b>ABC<\/b><span>Inherit from <code>ABC<\/code> (Abstract Base Class) to make a class abstract.<\/span><\/div><div><b>@abstractmethod<\/b><span>Marks a method as “children must write this”. A child that forgets can't be created.<\/span><\/div><\/div>\n<ul><li>Abstract classes can still contain normal, shared methods — <code>receipt()<\/code> is written once and works for every payment type.<\/li>\n<li>Creating <code>Payment()<\/code> directly raises <code>TypeError<\/code> on line 22, as intended.<\/li><\/ul>\n<div class=\"note\">This turns the duck‑typing promise from Module 4 into a rule Python checks for you.<\/div>", "walk": [["1", "Import the tools for abstract classes."], ["3-6", "The template: every Payment must define pay()."], ["8-9", "Shared behaviour that relies on pay()."], ["11-17", "Two concrete payment types, each with its own pay()."], ["19-20", "Polymorphism: one loop, two kinds of payment."], ["22", "An abstract class can't be created: TypeError."]], "trace": null, "tip": "An abstract class sets the rules (which methods must exist); child classes fill in the details.", "tryit": ["Add a <code>Cash(Payment)<\/code> class.", "Create a <code>Wallet(Payment)<\/code> without a <code>pay<\/code> method and try to make one."], "file": null, "expected": {"out": "Receipt: Paid Rs 250 via UPI\nReceipt: Paid Rs 250 by card", "err": "TypeError: Can't instantiate abstract class Payment without an implementation for abstract method 'pay'", "line": 22}}, {"title": "Composition: has-a vs is-a", "code": "class Engine:\n    def __init__(self, hp):\n        self.hp = hp\n\n    def start(self):\n        return f\"{self.hp} hp engine roars\"\n\nclass Car:\n    def __init__(self, brand, hp):\n        self.brand = brand\n        self.engine = Engine(hp)\n\n    def drive(self):\n        print(self.brand, \"->\", self.engine.start())\n\nCar(\"Tata\", 120).drive()\nCar(\"Mahindra\", 180).drive()", "explain": "<p>Not every relationship is inheritance. A car isn't an engine — it <b>has<\/b> an engine. Building objects out of other objects is called <b>composition<\/b>.<\/p>\n<table class=\"tbl\"><tr><th>Ask<\/th><th>Answer<\/th><th>Use<\/th><\/tr>\n<tr><td>Is a Dog an Animal?<\/td><td>Yes — “is‑a”<\/td><td>Inheritance: <code>class Dog(Animal)<\/code><\/td><\/tr>\n<tr><td>Is a Car an Engine?<\/td><td>No — a Car <b>has‑an<\/b> Engine<\/td><td>Composition: <code>self.engine = Engine(hp)<\/code><\/td><\/tr><\/table>\n<p><code>Car.drive()<\/code> <b>delegates<\/b> part of its job to its engine with <code>self.engine.start()<\/code>.<\/p>\n<div class=\"note\">Many experienced developers “prefer composition over inheritance”: parts can be swapped (a different engine) without rewriting a family tree of classes.<\/div>", "walk": [["1-6", "A small, self‑contained Engine class."], ["8-11", "Each Car builds and keeps its own Engine."], ["13-14", "The car asks its engine to do part of the work."], ["16-17", "Two cars, each with a different engine."]], "trace": [[1, "Define the class <code>Engine<\/code> with <code>__init__()<\/code>, <code>start()<\/code>.", null], [8, "Define the class <code>Car<\/code> with <code>__init__()<\/code>, <code>drive()<\/code>.", null], [16, "Run <code>Car(&quot;Tata&quot;, 120).drive()<\/code>.", null], [10, "A new <code>Car<\/code> object is made, and <code>Car.__init__()<\/code> runs on it with <code>brand = &#x27;Tata&#x27;<\/code>, <code>hp = 120<\/code>. Run <code>self.brand = brand<\/code>. Now <code>self.brand<\/code> = <code>&#x27;Tata&#x27;<\/code>.", null], [11, "Run <code>self.engine = Engine(hp)<\/code>.", null], [3, "A new <code>Engine<\/code> object is made, and <code>Engine.__init__()<\/code> runs on it with <code>hp = 120<\/code>. Run <code>self.hp = hp<\/code>. Now <code>self.hp<\/code> = <code>120<\/code>.", null], [11, "Back on line 11: <code>Engine.__init__()<\/code> has finished. Now <code>self.engine<\/code> = <code>&lt;Engine object&gt;<\/code>.", null], [16, "Back on line 16: <code>Car.__init__()<\/code> has finished.", null], [14, "Jump into <code>Car.drive()<\/code>. Run <code>print(self.brand, &quot;-&gt;&quot;, self.engine.start())<\/code>.", null], [6, "Jump into <code>Engine.start()<\/code>. Run <code>return f&quot;{self.hp} hp engine roars&quot;<\/code>.", null], [14, "Back on line 14: <code>Engine.start()<\/code> returned <code>&#x27;120 hp engine roars&#x27;<\/code>.", "Tata -> 120 hp engine roars"], [16, "Back on line 16: <code>Car.drive()<\/code> has finished.", null], [17, "Run <code>Car(&quot;Mahindra&quot;, 180).drive()<\/code>.", null], [10, "A new <code>Car<\/code> object is made, and <code>Car.__init__()<\/code> runs on it with <code>brand = &#x27;Mahindra&#x27;<\/code>, <code>hp = 180<\/code>. Run <code>self.brand = brand<\/code>. Now <code>self.brand<\/code> = <code>&#x27;Mahindra&#x27;<\/code>.", null], [11, "Run <code>self.engine = Engine(hp)<\/code>.", null], [3, "A new <code>Engine<\/code> object is made, and <code>Engine.__init__()<\/code> runs on it with <code>hp = 180<\/code>. Run <code>self.hp = hp<\/code>. Now <code>self.hp<\/code> = <code>180<\/code>.", null], [11, "Back on line 11: <code>Engine.__init__()<\/code> has finished. Now <code>self.engine<\/code> = <code>&lt;Engine object&gt;<\/code>.", null], [17, "Back on line 17: <code>Car.__init__()<\/code> has finished.", null], [14, "Jump into <code>Car.drive()<\/code>. Run <code>print(self.brand, &quot;-&gt;&quot;, self.engine.start())<\/code>.", null], [6, "Jump into <code>Engine.start()<\/code>. Run <code>return f&quot;{self.hp} hp engine roars&quot;<\/code>.", null], [14, "Back on line 14: <code>Engine.start()<\/code> returned <code>&#x27;180 hp engine roars&#x27;<\/code>.", "Mahindra -> 180 hp engine roars"], [17, "Back on line 17: <code>Car.drive()<\/code> has finished.", null]], "tip": "Use inheritance for is-a, composition for has-a. Composition keeps classes small and swappable.", "tryit": ["Add a <code>Wheel<\/code> class and give each car a list of four wheels.", "Make an <code>ElectricEngine<\/code> with its own <code>start()<\/code> and give one car that instead."], "file": null, "expected": {"out": "Tata -> 120 hp engine roars\nMahindra -> 180 hp engine roars", "err": null, "line": null}}]}, {"title": "Putting It Together", "level": "Project", "summary": "", "lessons": [{"title": "The four pillars at a glance", "code": "class Shape:\n    def area(self):\n        raise NotImplementedError\n\nclass Rect(Shape):\n    def __init__(self, w, h):\n        self._w, self._h = w, h\n\n    def area(self):\n        return self._w * self._h\n\nclass Square(Rect):\n    def __init__(self, side):\n        super().__init__(side, side)\n\nfor s in [Rect(2, 5), Square(4)]:\n    print(type(s).__name__, s.area(), isinstance(s, Shape))", "explain": "<p>Everything in this lab fits into OOP's <b>four pillars<\/b>. This short example uses all of them.<\/p>\n<table class=\"tbl\"><tr><th>Pillar<\/th><th>Big idea<\/th><th>In this code<\/th><th>Module<\/th><\/tr>\n<tr><td><b>Encapsulation<\/b><\/td><td>Bundle data with methods; hide internals<\/td><td><code>_w<\/code>, <code>_h<\/code> used only through <code>area()<\/code><\/td><td>2<\/td><\/tr>\n<tr><td><b>Inheritance<\/b><\/td><td>Reuse a parent's code<\/td><td><code>Square(Rect)<\/code> reuses Rect via <code>super()<\/code><\/td><td>3<\/td><\/tr>\n<tr><td><b>Polymorphism<\/b><\/td><td>Same call, different behaviour<\/td><td>The loop calls <code>area()<\/code> on any shape<\/td><td>4<\/td><\/tr>\n<tr><td><b>Abstraction<\/b><\/td><td>Show what, hide how<\/td><td><code>Shape<\/code> just promises an <code>area()<\/code><\/td><td>5<\/td><\/tr><\/table>\n<p><code>raise NotImplementedError<\/code> is a lightweight way to say “children must override this” — the ABC approach from Module 5 is stricter.<\/p>", "walk": [["1-3", "Abstraction: a general Shape that only promises area()."], ["5-10", "Encapsulation: Rect keeps width and height internal."], ["12-14", "Inheritance: a Square is a Rect with equal sides."], ["16-17", "Polymorphism: one loop for every kind of shape."]], "trace": null, "tip": "Encapsulation, inheritance, polymorphism, abstraction — the four pillars of OOP.", "tryit": ["Add a <code>Circle(Shape)<\/code> and include it in the loop.", "Call <code>Shape().area()<\/code>. What happens?"], "file": null, "expected": {"out": "Rect 10 True\nSquare 16 True", "err": null, "line": null}}, {"title": "Project: library manager", "code": "from abc import ABC, abstractmethod\n\nclass Item(ABC):\n    count = 0\n\n    def __init__(self, title):\n        self.title = title\n        self.__available = True\n        Item.count += 1\n\n    @property\n    def available(self):\n        return self.__available\n\n    def borrow(self):\n        if not self.__available:\n            print(f\"Sorry, {self.title} is already out\")\n            return\n        self.__available = False\n        print(f\"Borrowed {self.title} for {self.loan_days()} days\")\n\n    def give_back(self):\n        self.__available = True\n        print(f\"Returned {self.title}\")\n\n    @abstractmethod\n    def loan_days(self):\n        pass\n\nclass Book(Item):\n    def loan_days(self):\n        return 14\n\nclass DVD(Item):\n    def loan_days(self):\n        return 3\n\nitems = [Book(\"Python Crash Course\"), DVD(\"Ocean Life\"), Book(\"Clean Code\")]\nitems[0].borrow()\nitems[1].borrow()\nitems[0].borrow()\nitems[0].give_back()\n\nprint(\"Items in library:\", Item.count)\nfor it in items:\n    status = \"in\" if it.available else \"out\"\n    print(f\"{type(it).__name__:5} {it.title:20} {status}\")", "explain": "<p>A small library system that brings the whole lab together.<\/p>\n<table class=\"tbl\"><tr><th>Concept<\/th><th>Where<\/th><\/tr>\n<tr><td>Class attribute<\/td><td><code>Item.count<\/code> tracks how many items exist<\/td><\/tr>\n<tr><td>Encapsulation<\/td><td>Private <code>__available<\/code>, changed only by <code>borrow()<\/code>/<code>give_back()<\/code><\/td><\/tr>\n<tr><td>Property<\/td><td><code>available<\/code> is read‑only from outside<\/td><\/tr>\n<tr><td>Abstraction<\/td><td><code>Item<\/code> is abstract and demands <code>loan_days()<\/code><\/td><\/tr>\n<tr><td>Inheritance<\/td><td><code>Book<\/code> and <code>DVD<\/code> reuse all of <code>Item<\/code><\/td><\/tr>\n<tr><td>Polymorphism<\/td><td><code>borrow()<\/code> calls <code>self.loan_days()<\/code> — 14 or 3 depending on the object<\/td><\/tr><\/table>\n<div class=\"note\">Notice that <code>borrow()<\/code> is written <b>once<\/b> in the parent, yet gives the right loan period for every item type. That's inheritance and polymorphism working together.<\/div>", "walk": [["3-9", "Abstract parent: title, private availability flag, shared counter."], ["11-13", "Read‑only property exposing the private flag."], ["15-24", "Borrow and return, with a guard against double‑borrowing."], ["26-28", "Every child must say how long it can be borrowed."], ["30-36", "Two concrete item types."], ["38-42", "Borrow, try to borrow again, then return."], ["44-47", "A formatted report of every item."]], "trace": null, "tip": "Good OOP code reads like the real world: items you can borrow, each knowing its own rules.", "tryit": ["Add a <code>Magazine<\/code> type with a 7‑day loan.", "Add a <code>Member<\/code> class that keeps a list of borrowed items (composition!)."], "file": null, "expected": {"out": "Borrowed Python Crash Course for 14 days\nBorrowed Ocean Life for 3 days\nSorry, Python Crash Course is already out\nReturned Python Crash Course\nItems in library: 3\nBook  Python Crash Course  in\nDVD   Ocean Life           out\nBook  Clean Code           in", "err": null, "line": null}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, step = -1, walkSel = -1, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pyoop-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs divmod pow hash bool super property classmethod staticmethod issubclass hasattr getattr map self cls".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0) hlLines.add(tr[step][0]);
+  if (walkSel >= 0) {
+    const r = L().walk[walkSel][0].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === errLine ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (errLine) mk += `<div class="mark err" style="${at(errLine)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  edits[key(mi, li)] = ta.value; errLine = null;
+  if (step >= 0) step = -1;
+  renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+const isEdited = () => ta.value !== L().code;
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+
+/* ---------- output console ---------- */
+function showOutput(out, err, line, pill, meta, pillCls) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) h += `<span class="errl">${esc(err)}<small>${line ? "Raised on line " + line + " (highlighted in red)" : ""}</small></span>`;
+  o.innerHTML = h;
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  errLine = line || null; paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const cur = step >= 0 ? tr[step] : null;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${cur ? `<span class="ln">line ${cur[0]}</span>${cur[1]}` : "Watch Python move through the code one line at a time. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[2] !== null).map(t => t[2]);
+  const isNew = tr[step][2] !== null;
+  errLine = null;
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderStepper(); paintEditor(); scrollToLine(tr[step][0]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker, so a runaway loop can be stopped) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = `
+import sys, traceback, json
+def __run(src):
+    g = {"__name__": "__main__"}
+    try:
+        exec(compile(src, "<exec>", "exec"), g)
+        return ""
+    except BaseException as e:
+        line = None
+        for fr in traceback.extract_tb(e.__traceback__):
+            if fr.filename == "<exec>": line = fr.lineno
+        if isinstance(e, SyntaxError):
+            line, msg = e.lineno, e.msg
+        else:
+            msg = str(e)
+        return json.dumps({"err": type(e).__name__ + ": " + msg, "line": line})
+`;
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.code); } catch (x) { r = JSON.stringify({err:String(x), line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); pending = null; setBusy(false);
+      let err = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; }
+      showOutput(d.out, err, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live");
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run() {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  pending = { id: ++runId, code: ta.value };
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? 8000 : 60000);
+}
+$("runBtn").onclick = run;
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = L().code; step = -1; errLine = null; renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pyoop-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${md.title}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${x.title}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("fname").textContent = l.file || `module${mi + 1}_lesson${li + 1}.py`;
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errLine = null;
+  ta.value = edits[key(mi, li)] ?? l.code; ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${w[0].includes("-") ? "lines " : "line "}${w[0]}</span><span>${w[1]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][0].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
