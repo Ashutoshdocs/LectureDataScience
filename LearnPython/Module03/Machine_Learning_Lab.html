@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Machine Learning Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&family=Schibsted+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Machine Learning Lab. Layout: lesson rail on top, then a split workbench — dark code editor on the left, output + explanation on the right. Python blue for actions, Python yellow for "the line running now". */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#18202e; --muted:#5b6678; --line:#dde2ea;
+  --accent:#2f62c9; --accent-soft:#e6eefc; --yellow:#f5c518; --yellow-soft:#fff6d1;
+  --ok:#1f8a4c; --err:#c23b3b; --err-soft:#fdecec;
+  --code-bg:#121826; --code-gutter:#0d121d; --code-ink:#d7deea; --code-dim:#5d6a82;
+  --f-display:"Schibsted Grotesk",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0f131b; --surface:#161c27; --ink:#e4e9f2; --muted:#9aa5b8; --line:#283142;
+  --accent:#7aa5ff; --accent-soft:#1d2a45; --yellow:#f5c518; --yellow-soft:#3a3214;
+  --ok:#55c98a; --err:#ff8080; --err-soft:#3a1d22; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);display:flex;flex-direction:column}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--accent-soft);padding:.08em .35em;border-radius:4px}
+
+/* top */
+header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:800 19px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand h1 b{color:var(--accent)}
+.brand span{color:var(--muted);font-size:13px}
+.progress{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:120px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);transition:width .3s}
+
+nav.mods{display:flex;gap:6px;padding:10px 18px 0;overflow-x:auto;background:var(--surface);scrollbar-width:thin}
+.mod{flex:0 0 auto;border:1px solid var(--line);background:transparent;border-bottom:none;border-radius:8px 8px 0 0;padding:7px 12px 8px;font-size:13px;color:var(--muted);display:flex;gap:7px;align-items:center;white-space:nowrap}
+.mod .n{font:700 12px var(--f-mono);width:20px;height:20px;border-radius:5px;display:grid;place-items:center;background:var(--line);color:var(--ink)}
+.mod.on{background:var(--bg);color:var(--ink);font-weight:600;border-color:var(--line)}
+.mod.on .n{background:var(--accent);color:#fff}
+.mod.done .n{background:var(--ok);color:#fff}
+.lessons{display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--line);overflow-x:auto;align-items:center;scrollbar-width:thin}
+.lessons .lvl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;white-space:nowrap;font-weight:600}
+.les{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.les .k{font:500 11px var(--f-mono);color:var(--muted)}
+.les.seen .k::after{content:" ✓";color:var(--ok)}
+.les.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.les.on .k{color:#dfe8ff}
+
+/* workbench */
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.left{display:flex;flex-direction:column;min-height:0;background:var(--code-bg);color:var(--code-ink)}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #222b3c;flex-wrap:wrap}
+.file{font:500 13px var(--f-mono);color:var(--code-ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.file .dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}
+.file .mod-flag{color:var(--yellow);font-size:11px}
+.tbtn{border:1px solid #2c374c;background:#1a2233;color:var(--code-ink);border-radius:7px;padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
+.tbtn:hover{background:#222c40}
+.tbtn.run{background:var(--yellow);border-color:var(--yellow);color:#1b1b1b;font-weight:600}
+.tbtn.run:hover{filter:brightness(1.05)}
+.tbtn:disabled{opacity:.55;cursor:progress}
+.kbd{font:500 11px var(--f-mono);opacity:.7}
+
+.editor{flex:1;min-height:260px;display:flex;position:relative;overflow:hidden;font:14px/22px var(--f-mono)}
+.gutter{width:46px;flex:0 0 46px;background:var(--code-gutter);color:var(--code-dim);text-align:right;padding:14px 10px 14px 0;overflow:hidden;user-select:none}
+.gutter div{height:22px}
+.gutter div.hl{color:var(--yellow);font-weight:700}
+.gutter div.er{color:#ff8a8a;font-weight:700}
+.codearea{position:relative;flex:1;overflow:hidden}
+.layer{position:absolute;inset:0 auto auto 0;will-change:transform}
+.layer pre{margin:0;padding:14px 18px;white-space:pre;font:inherit;color:var(--code-ink);tab-size:4}
+.mark{position:absolute;left:0;right:-2000px;height:22px;pointer-events:none}
+.mark.run{background:rgba(245,197,24,.16);box-shadow:inset 3px 0 0 var(--yellow)}
+.mark.walk{background:rgba(122,165,255,.14);box-shadow:inset 3px 0 0 #7aa5ff}
+.mark.err{background:rgba(255,100,100,.15);box-shadow:inset 3px 0 0 #ff6b6b}
+textarea#code{position:absolute;inset:0;width:100%;height:100%;resize:none;border:0;outline:none;background:transparent;color:transparent;caret-color:#fff;padding:14px 18px;margin:0;font:inherit;white-space:pre;overflow:auto;tab-size:4}
+textarea#code::selection{background:rgba(122,165,255,.35)}
+.edfoot{padding:8px 14px;border-top:1px solid #222b3c;font-size:12px;color:var(--code-dim);display:flex;gap:14px;flex-wrap:wrap}
+.tk-k{color:#ff9ac1}.tk-b{color:#7fd7ff}.tk-s{color:#b5e38c}.tk-n{color:#f8b86a}.tk-c{color:#6d7a93;font-style:italic}.tk-f{color:#ffd76a}.tk-o{color:#ff9ac1;font-weight:700}
+
+.right{min-height:0;overflow-y:auto;background:var(--bg)}
+.rin{max-width:760px;padding:20px 26px 40px;display:flex;flex-direction:column;gap:20px}
+.lhead .eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.lhead h2{font:700 26px/1.2 var(--f-display);margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+
+.console{border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.chead b{font-weight:600}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.pill.live{background:var(--ok);color:#fff}
+.pill.step{background:var(--yellow);color:#1b1b1b}
+.pill.wait{background:var(--accent-soft);color:var(--accent)}
+.chead .meta{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cbody{font:13.5px/1.6 var(--f-mono);padding:12px 16px;margin:0;white-space:pre-wrap;word-break:break-word;min-height:56px;background:var(--surface)}
+.cbody .empty{color:var(--muted);font-style:italic;font-family:var(--f-body)}
+.cbody .errl{color:var(--err);background:var(--err-soft);display:block;margin:4px -16px -12px;padding:8px 16px;border-top:1px solid var(--line)}
+.cbody .errl small{display:block;color:var(--muted);font-family:var(--f-body);font-size:12px}
+.cbody .new{animation:fl .5s}
+@keyframes fl{from{background:var(--yellow-soft)}to{background:transparent}}
+
+.stepper{border-top:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:8px;background:var(--yellow-soft)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sbtn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 12px;font-size:13px}
+.sbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.sbtn:disabled{opacity:.45;cursor:default}
+.scount{font-size:12px;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums}
+.snote{font-size:14px;min-height:22px}
+.snote .ln{font:600 12px var(--f-mono);background:var(--yellow);color:#1b1b1b;border-radius:4px;padding:1px 6px;margin-right:6px}
+.stepper.off{background:var(--surface);color:var(--muted);font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+.card h3{font:700 15px var(--f-display);margin:0 0 8px;letter-spacing:.01em}
+.explain{max-width:68ch}
+.explain p{margin:0 0 .8em}
+.explain h4{font:700 15px var(--f-display);margin:1.2em 0 .4em}
+.explain ul,.explain ol{margin:0 0 .9em;padding-left:1.3em}
+.explain li{margin:.2em 0}
+.explain .note,.explain .warn{border-radius:8px;padding:10px 14px;margin:.9em 0;font-size:14px}
+.explain .note{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.explain .warn{background:var(--yellow-soft);border-left:3px solid var(--yellow)}
+.explain .snippet{font:13px/1.6 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:10px 14px;border-radius:8px;overflow-x:auto}
+.tbl{border-collapse:collapse;width:100%;font-size:14px;margin:.4em 0 1em;display:block;overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.analogy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:.6em 0 1em}
+.analogy div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:2px}
+.analogy span{font:700 12px var(--f-mono);color:var(--accent)}
+.analogy small{font-weight:400;color:var(--muted);font-size:12.5px}
+.def2,.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:.6em 0 1em}
+.def2>div,.cmp>div{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.def2 span{color:var(--muted)}
+.def2 u{text-decoration:none;background:var(--yellow-soft);box-shadow:inset 0 -2px 0 var(--yellow)}
+.cmp h5{margin:0;font:700 15px var(--f-mono);color:var(--accent)}
+.cmp ul{margin:0}
+.pack{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:.8em 0;font-size:14px}
+.pack span{color:var(--muted);font-size:13px}
+.order{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:.4em 0 1em;color:var(--muted)}
+.order span{font:600 13px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:4px 10px;border-radius:6px}
+.lgb{font:13px/1.4 var(--f-mono);margin:.6em 0 1em}
+.lgb div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px 10px;margin-top:6px}
+.lgb .b{border-color:var(--muted)}.lgb .g{border-color:#6aa1ff}.lgb .e{border-color:#a58bff}.lgb .l{border-color:var(--yellow);background:var(--yellow-soft);font-weight:700}
+
+.walk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.walk li button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:78px 1fr;gap:10px;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;line-height:1.5}
+.walk li button:hover,.walk li button.on{background:var(--accent-soft)}
+.walk li button:focus-visible{outline:2px solid var(--accent)}
+.walk .ln{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--ink);color:var(--bg);border-radius:12px;padding:14px 18px;font-size:15px;font-weight:500}
+.tip b{font:700 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--yellow);padding-top:4px;white-space:nowrap}
+.tryit ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+.pager{display:flex;gap:10px;justify-content:space-between}
+.pager button{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;text-align:left;font-size:14px;display:flex;flex-direction:column}
+.pager button small{color:var(--muted);font-size:12px}
+.pager button.nx{text-align:right;align-items:flex-end}
+.pager button:hover:not(:disabled){border-color:var(--accent)}
+.pager button:disabled{opacity:.4;cursor:default}
+
+@media (max-width:900px){
+  body{height:auto;display:block}
+  main{grid-template-columns:1fr}
+  .left{min-height:0}
+  .editor{height:46vh;min-height:300px;flex:none}
+  .right{overflow:visible}
+  .rin{padding:18px 16px 40px}
+  .analogy,.def2,.cmp{grid-template-columns:1fr}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><h1>Machine <b>Learning</b> Lab</h1><span>supervised · unsupervised · reinforcement — built from scratch in plain Python</span></div>
+  <div class="progress"><span id="progTxt">0 / 0 lessons</span><div class="bar"><i id="progBar" style="width:0"></i></div></div>
+</header>
+<nav class="mods" id="mods" aria-label="Modules"></nav>
+<div class="lessons" id="lessons" role="tablist" aria-label="Lessons"></div>
+
+<main>
+  <section class="left" aria-label="Code editor">
+    <div class="edhead">
+      <div class="file"><span class="dot"></span><span id="fname">main.py</span><span class="mod-flag" id="modFlag" hidden>● edited</span></div>
+      <button class="tbtn" id="resetBtn" title="Restore the original example">↺ Reset</button>
+      <button class="tbtn" id="copyBtn">Copy</button>
+      <button class="tbtn run" id="runBtn">▶ Run <span class="kbd">Ctrl+↵</span></button>
+    </div>
+    <div class="editor">
+      <div class="gutter" id="gutter"></div>
+      <div class="codearea">
+        <div class="layer" id="layer"><div id="marks"></div><pre id="hl" aria-hidden="true"></pre></div>
+        <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Python code"></textarea>
+      </div>
+    </div>
+    <div class="edfoot"><span>Editable — change anything and press Run</span><span>Tab = 4 spaces</span><span>Real Python 3 runs in your browser</span></div>
+  </section>
+
+  <section class="right" id="right" aria-label="Output and explanation">
+    <div class="rin">
+      <div class="lhead"><div class="eyebrow" id="eyebrow"></div><h2 id="ltitle"></h2></div>
+
+      <div class="console">
+        <div class="chead"><b>Output</b><span class="pill" id="opill">Expected</span><span class="meta" id="ometa"></span></div>
+        <pre class="cbody" id="out"></pre>
+        <div class="stepper" id="stepper"></div>
+      </div>
+
+      <div class="card explain" id="explain"></div>
+      <div class="card" id="walkCard"><h3>Line‑by‑line walkthrough</h3><p class="hint">Click a row to highlight those lines in the editor.</p><ul class="walk" id="walk"></ul></div>
+      <div class="tip" id="tip"><b>Key idea</b><span id="tipTxt"></span></div>
+      <div class="card tryit" id="tryCard"><h3>Try it yourself</h3><ol id="tryit"></ol></div>
+      <div class="pager"><button id="prevBtn"><small>← Previous</small><span id="prevT"></span></button><button class="nx" id="nextBtn"><small>Next →</small><span id="nextT"></span></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DATA = [{"title": "What is Machine Learning?", "level": "Beginner", "summary": "", "lessons": [{"title": "Rules vs learning", "code": "# Traditional programming: WE write the rule\ndef is_expensive_rule(size):\n    return size > 1.5\n\n# Machine learning: the computer finds the rule from examples\nsizes  = [0.6, 0.8, 1.0, 1.2, 1.8, 2.0, 2.4]\nlabels = [0,   0,   0,   0,   1,   1,   1]   # 1 = expensive\n\nbest_t, best_correct = None, -1\nfor t in sizes:\n    correct = 0\n    for s, y in zip(sizes, labels):\n        guess = 1 if s >= t else 0\n        if guess == y:\n            correct += 1\n    if correct > best_correct:\n        best_t, best_correct = t, correct\n\nprint(\"Learned rule: expensive if size >=\", best_t)\nprint(\"Correct on\", best_correct, \"of\", len(sizes), \"examples\")\nprint(\"New house of 1.9 ->\", \"expensive\" if 1.9 >= best_t else \"affordable\")\nprint(\"Hand-written rule says 1.9 is expensive:\", is_expensive_rule(1.9))", "explain": "<p>In <b>traditional programming<\/b> a person writes the rule: <code>if size &gt; 1.5: expensive<\/code>. In <b>machine learning (ML)<\/b> we give the computer <b>examples<\/b> and it works out the rule for itself.<\/p>\n<div class=\"cmp\"><div><h5>Traditional programming<\/h5><ul><li>Input: data + <b>rules<\/b><\/li><li>Output: answers<\/li><\/ul><\/div><div><h5>Machine learning<\/h5><ul><li>Input: data + <b>answers<\/b> (examples)<\/li><li>Output: the <b>rule<\/b> (a model)<\/li><\/ul><\/div><\/div>\n<p>The loop on lines 10–17 tries every possible cut‑off <code>t<\/code>, counts how many examples it gets right, and keeps the best one. That's learning in its simplest form: <b>try, measure, keep what works<\/b>.<\/p>\n<div class=\"note\"><b>Definition.<\/b> A <b>model<\/b> is the rule that learning produces. Here the model is just one number, <code>best_t<\/code>. Later models have more numbers, but the idea is the same.<\/div>\n<p>All the code in this lab is plain Python with no libraries, so you can see every step. Real projects use libraries like scikit‑learn that do the same things faster.<\/p>", "walk": [["1-3", "A rule a human chose by hand."], ["6-7", "Examples: house sizes (in 1000 sq ft) and whether each was expensive."], ["9", "Remember the best cut‑off found so far."], ["10-15", "For each possible cut‑off, count the correct guesses."], ["16-17", "Keep it if it beats the best so far."], ["19-22", "The learned rule, its accuracy, and a prediction for a new house."]], "trace": null, "tip": "Traditional code: you write the rule. Machine learning: you give examples and the computer finds the rule.", "tryit": ["Add the house <code>(1.5, 1)<\/code> to the data. Does the learned cut‑off change?", "Change one label to make the data “noisy”. Can it still get 7 out of 7?"], "file": null, "expected": {"out": "Learned rule: expensive if size >= 1.8\nCorrect on 7 of 7 examples\nNew house of 1.9 -> expensive\nHand-written rule says 1.9 is expensive: True", "err": null, "line": null}}, {"title": "The three types of ML", "code": "# 1) Supervised: every example comes WITH the answer (label)\nhouses = [(1.0, 82), (1.5, 104), (2.0, 132)]   # (size, price)\n\n# 2) Unsupervised: examples with NO answers\ncustomers = [(12, 2), (45, 10), (95, 5)]       # (spend, visits)\n\n# 3) Reinforcement: no dataset, an agent learns from rewards\ndef reward(action):\n    return 1 if action == \"right\" else -1\n\nprint(\"Supervised   ->\", len(houses), \"labelled examples; learn size -> price\")\nprint(\"Unsupervised ->\", len(customers), \"unlabelled points; find groups\")\nprint(\"Reinforcement-> reward for 'right':\", reward(\"right\"),\n      \"| for 'left':\", reward(\"left\"))", "explain": "<p>Machine learning comes in three main types. The difference is <b>what kind of feedback<\/b> the computer gets while learning.<\/p>\n<table class=\"tbl\"><tr><th>Type<\/th><th>Learns from<\/th><th>Goal<\/th><th>Example in this lab<\/th><\/tr>\n<tr><td><b>Supervised<\/b><\/td><td>Examples <b>with answers<\/b> (labels)<\/td><td>Predict the answer for new inputs<\/td><td>House price prediction<\/td><\/tr>\n<tr><td><b>Unsupervised<\/b><\/td><td>Examples <b>without answers<\/b><\/td><td>Find hidden patterns or groups<\/td><td>Customer segmentation<\/td><\/tr>\n<tr><td><b>Reinforcement<\/b><\/td><td><b>Rewards<\/b> from trying actions<\/td><td>Learn the best actions to take<\/td><td>Game‑playing agent<\/td><\/tr><\/table>\n<div class=\"analogy\"><div><span>Supervised<\/span>A student with a teacher who marks every answer right or wrong.<\/div><div><span>Unsupervised<\/span>Sorting a box of mixed buttons into piles, with nobody telling you the categories.<\/div><div><span>Reinforcement<\/span>Learning to ride a bike: nobody gives answers, you just feel what works.<\/div><\/div>", "walk": [["1-2", "Supervised data: each size comes with its price (the label)."], ["4-5", "Unsupervised data: just numbers, no answers attached."], ["7-9", "Reinforcement: no dataset, just a reward for each action."], ["11-14", "A one‑line summary of each type."]], "trace": null, "tip": "Supervised = answers given. Unsupervised = no answers, find structure. Reinforcement = learn from rewards.", "tryit": ["Which type is “predict whether an email is spam”? Why?", "Which type is “group songs that sound similar”?"], "file": null, "expected": {"out": "Supervised   -> 3 labelled examples; learn size -> price\nUnsupervised -> 3 unlabelled points; find groups\nReinforcement-> reward for 'right': 1 | for 'left': -1", "err": null, "line": null}}, {"title": "Features, labels & train/test split", "code": "import random\n\nhouses = [(0.6, 62), (0.8, 68), (1.0, 82), (1.2, 88),\n          (1.5, 104), (1.8, 118), (2.0, 132), (2.4, 150)]\n\nX = [size for size, price in houses]     # features (inputs)\ny = [price for size, price in houses]    # labels (answers)\nprint(\"X:\", X)\nprint(\"y:\", y)\n\nrandom.seed(7)\nrandom.shuffle(houses)\ncut = int(len(houses) * 0.75)\ntrain, test = houses[:cut], houses[cut:]\nprint(\"Train:\", train)\nprint(\"Test: \", test)", "explain": "<h4>Key words<\/h4>\n<div class=\"def2\"><div><b>Feature (X)<\/b><span>An input the model uses — here, the house size. Real models often have many features: size, bedrooms, location…<\/span><\/div><div><b>Label (y)<\/b><span>The answer we want to predict — here, the price in lakh. Only supervised learning has labels.<\/span><\/div><\/div>\n<p>Each row of data (one house) is called a <b>sample<\/b> or <b>example<\/b>.<\/p>\n<h4>Why split the data?<\/h4>\n<p>If you test a model on the same examples it learned from, it can look perfect just by memorising them. So we hide some data:<\/p>\n<table class=\"tbl\"><tr><th>Set<\/th><th>Used for<\/th><th>Typical share<\/th><\/tr>\n<tr><td><b>Training set<\/b><\/td><td>Learning the model<\/td><td>70–80%<\/td><\/tr>\n<tr><td><b>Test set<\/b><\/td><td>Checking it on unseen data, like a final exam<\/td><td>20–30%<\/td><\/tr><\/table>\n<div class=\"note\"><code>random.seed(7)<\/code> makes the “random” shuffle the same every run, so your output matches the expected output. Change the seed to get a different split.<\/div>", "walk": [["3-4", "Eight houses: (size in 1000 sq ft, price in lakh)."], ["6-7", "Pull out the features and the labels with list comprehensions."], ["11-12", "Shuffle so the split isn't just small vs large houses."], ["13-14", "75% for training, the rest for testing."], ["15-16", "Six training houses, two test houses."]], "trace": null, "tip": "Features are inputs, labels are answers. Always keep some data back for testing.", "tryit": ["Change the split to 50/50. How many houses go into each set?", "Remove <code>random.shuffle<\/code>. Why is the test set now a bad exam?"], "file": null, "expected": {"out": "X: [0.6, 0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.4]\ny: [62, 68, 82, 88, 104, 118, 132, 150]\nTrain: [(2.0, 132), (2.4, 150), (1.0, 82), (1.5, 104), (0.6, 62), (1.2, 88)]\nTest:  [(0.8, 68), (1.8, 118)]", "err": null, "line": null}}]}, {"title": "Supervised: House Prices", "level": "Beginner → Intermediate", "summary": "", "lessons": [{"title": "The data & a baseline guess", "code": "houses = [(0.6, 62), (0.8, 68), (1.0, 82), (1.2, 88),\n          (1.5, 104), (1.8, 118), (2.0, 132), (2.4, 150)]\n\nprices = [p for s, p in houses]\navg = sum(prices) / len(prices)\nprint(\"Baseline guess for every house:\", avg)\n\nerrors = [abs(p - avg) for p in prices]\nmae = sum(errors) / len(errors)\nprint(\"Mean absolute error:\", round(mae, 2), \"lakh\")\n\nfor s, p in houses[:3]:\n    print(f\"size {s}: real {p}, guessed {avg}, off by {abs(p - avg)}\")", "explain": "<p><b>Task:<\/b> predict a house's price from its size. Because every training example comes with its real price, this is <b>supervised learning<\/b>. Predicting a number is called <b>regression<\/b>.<\/p>\n<p>Before building anything clever, make a <b>baseline<\/b>: the simplest possible guess. Here we guess the average price for every house, whatever its size.<\/p>\n<h4>Measuring error<\/h4>\n<p><b>Mean Absolute Error (MAE)<\/b> = the average of how far off each guess is. An MAE of 25.5 means we're wrong by about Rs 25.5 lakh on average.<\/p>\n<div class=\"note\">A baseline gives you a number to beat. If your fancy model can't beat “just guess the average”, something is wrong.<\/div>", "walk": [["1-2", "The training data: size (1000 sq ft) and price (lakh)."], ["4-6", "The average price becomes our one‑size‑fits‑all guess."], ["8-10", "How far off is that guess, on average?"], ["12-13", "Small houses are badly over‑priced by the baseline."]], "trace": null, "tip": "Always start with a simple baseline. A real model must beat it.", "tryit": ["Use the <b>median<\/b> price as the baseline instead. Is the MAE better or worse?", "Print the error for the two largest houses."], "file": null, "expected": {"out": "Baseline guess for every house: 100.5\nMean absolute error: 25.5 lakh\nsize 0.6: real 62, guessed 100.5, off by 38.5\nsize 0.8: real 68, guessed 100.5, off by 32.5\nsize 1.0: real 82, guessed 100.5, off by 18.5", "err": null, "line": null}}, {"title": "A line as a model", "code": "houses = [(1.0, 82), (1.5, 104), (2.0, 132)]\n\ndef predict(size, w, b):\n    return w * size + b\n\ndef mse(w, b):\n    total = 0\n    for s, p in houses:\n        err = predict(s, w, b) - p\n        total += err ** 2\n    return total / len(houses)\n\nfor w, b in [(40, 30), (50, 30), (60, 20)]:\n    print(f\"w={w}, b={b} -> MSE {mse(w, b):.1f}\")", "explain": "<p>Bigger houses cost more, roughly in a straight line. So our model will be a line:<\/p>\n<div class=\"order\"><span>price<\/span>= <span>w × size<\/span>+ <span>b<\/span><\/div>\n<div class=\"def2\"><div><b>w (weight)<\/b><span>How much the price rises for each extra 1000 sq ft.<\/span><\/div><div><b>b (bias)<\/b><span>The starting price when size is zero — the line's height.<\/span><\/div><\/div>\n<p>Learning means finding the best <code>w<\/code> and <code>b<\/code>. To compare choices we need a score: <b>Mean Squared Error (MSE)<\/b>, the average of the squared errors. Squaring makes every error positive and punishes big mistakes much more than small ones.<\/p>\n<p>Line 13 tries three guesses. <code>w=50, b=30<\/code> gives by far the lowest MSE, so it's the best line of the three. Step through to watch <code>mse()<\/code> add up the errors.<\/p>", "walk": [["1", "Three houses to keep the numbers small."], ["3-4", "The model: a straight line."], ["6-11", "Score a line: average squared error over all houses."], ["13-14", "Try three lines and compare their scores."]], "trace": [[1, "Run <code>houses = [(1.0, 82), (1.5, 104), (2.0, 132)]<\/code>. Now <code>houses<\/code> = <code>[(1.0, 82), (1.5, 104), (2.0, 132)]<\/code>.", null], [3, "Define the function <code>predict()<\/code>.", null], [6, "Define the function <code>mse()<\/code>.", null], [13, "Run <code>for w, b in [(40, 30), (50, 30), (60, 20)]:<\/code>. Now <code>w<\/code> = <code>40<\/code>, <code>b<\/code> = <code>30<\/code>.", null], [14, "Run <code>print(f&quot;w={w}, b={b} -&gt; MSE {mse(w, b):.1f}&quot;)<\/code>.", null], [7, "Jump into <code>mse()<\/code> with <code>w = 40<\/code>, <code>b = 30<\/code>. Run <code>total = 0<\/code>. Now <code>total<\/code> = <code>0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>1.0<\/code>, <code>p<\/code> = <code>82<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 1.0<\/code>, <code>w = 40<\/code>, <code>b = 30<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>70.0<\/code>. Now <code>err<\/code> = <code>-12.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>144.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>1.5<\/code>, <code>p<\/code> = <code>104<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 1.5<\/code>, <code>w = 40<\/code>, <code>b = 30<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>90.0<\/code>. Now <code>err<\/code> = <code>-14.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>340.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>2.0<\/code>, <code>p<\/code> = <code>132<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 2.0<\/code>, <code>w = 40<\/code>, <code>b = 30<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>110.0<\/code>. Now <code>err<\/code> = <code>-22.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>824.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>.", null], [11, "Run <code>return total / len(houses)<\/code>.", null], [14, "Back on line 14: <code>mse()<\/code> returned <code>274.6667<\/code>.", "w=40, b=30 -> MSE 274.7"], [13, "Run <code>for w, b in [(40, 30), (50, 30), (60, 20)]:<\/code>. Now <code>w<\/code> = <code>50<\/code>.", null], [14, "Run <code>print(f&quot;w={w}, b={b} -&gt; MSE {mse(w, b):.1f}&quot;)<\/code>.", null], [7, "Jump into <code>mse()<\/code> with <code>w = 50<\/code>, <code>b = 30<\/code>. Run <code>total = 0<\/code>. Now <code>total<\/code> = <code>0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>1.0<\/code>, <code>p<\/code> = <code>82<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 1.0<\/code>, <code>w = 50<\/code>, <code>b = 30<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>80.0<\/code>. Now <code>err<\/code> = <code>-2.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>4.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>1.5<\/code>, <code>p<\/code> = <code>104<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 1.5<\/code>, <code>w = 50<\/code>, <code>b = 30<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>105.0<\/code>. Now <code>err<\/code> = <code>1.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>5.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>2.0<\/code>, <code>p<\/code> = <code>132<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 2.0<\/code>, <code>w = 50<\/code>, <code>b = 30<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>130.0<\/code>. Now <code>err<\/code> = <code>-2.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>9.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>.", null], [11, "Run <code>return total / len(houses)<\/code>.", null], [14, "Back on line 14: <code>mse()<\/code> returned <code>3.0<\/code>.", "w=50, b=30 -> MSE 3.0"], [13, "Run <code>for w, b in [(40, 30), (50, 30), (60, 20)]:<\/code>. Now <code>w<\/code> = <code>60<\/code>, <code>b<\/code> = <code>20<\/code>.", null], [14, "Run <code>print(f&quot;w={w}, b={b} -&gt; MSE {mse(w, b):.1f}&quot;)<\/code>.", null], [7, "Jump into <code>mse()<\/code> with <code>w = 60<\/code>, <code>b = 20<\/code>. Run <code>total = 0<\/code>. Now <code>total<\/code> = <code>0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>1.0<\/code>, <code>p<\/code> = <code>82<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 1.0<\/code>, <code>w = 60<\/code>, <code>b = 20<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>80.0<\/code>. Now <code>err<\/code> = <code>-2.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>4.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>1.5<\/code>, <code>p<\/code> = <code>104<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 1.5<\/code>, <code>w = 60<\/code>, <code>b = 20<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>110.0<\/code>. Now <code>err<\/code> = <code>6.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>40.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>. Now <code>s<\/code> = <code>2.0<\/code>, <code>p<\/code> = <code>132<\/code>.", null], [9, "Predict this house's price and find the error.", null], [4, "Jump into <code>predict()<\/code> with <code>size = 2.0<\/code>, <code>w = 60<\/code>, <code>b = 20<\/code>. Run <code>return w * size + b<\/code>.", null], [9, "Back on line 9: <code>predict()<\/code> returned <code>140.0<\/code>. Now <code>err<\/code> = <code>8.0<\/code>.", null], [10, "Square the error and add it to the total. Now <code>total<\/code> = <code>104.0<\/code>.", null], [8, "Run <code>for s, p in houses:<\/code>.", null], [11, "Run <code>return total / len(houses)<\/code>.", null], [14, "Back on line 14: <code>mse()<\/code> returned <code>34.6667<\/code>.", "w=60, b=20 -> MSE 34.7"], [13, "Run <code>for w, b in [(40, 30), (50, 30), (60, 20)]:<\/code>.", null]], "tip": "A model is a formula with adjustable numbers. Learning = finding the numbers with the lowest error.", "tryit": ["Try <code>(52, 28)<\/code>. Can you beat an MSE of 3.0 by hand?", "Change <code>err ** 2<\/code> to <code>abs(err)<\/code>. Which line wins now?"], "file": null, "expected": {"out": "w=40, b=30 -> MSE 274.7\nw=50, b=30 -> MSE 3.0\nw=60, b=20 -> MSE 34.7", "err": null, "line": null}}, {"title": "Learning with gradient descent", "code": "houses = [(0.6, 62), (0.8, 68), (1.0, 82), (1.2, 88),\n          (1.5, 104), (1.8, 118), (2.0, 132), (2.4, 150)]\n\nw, b = 0.0, 0.0\nlr = 0.1\nn = len(houses)\n\nfor epoch in range(1, 501):\n    dw = db = 0.0\n    for s, p in houses:\n        err = (w * s + b) - p\n        dw += 2 * err * s / n\n        db += 2 * err / n\n    w -= lr * dw\n    b -= lr * db\n    if epoch in (1, 10, 50, 100, 500):\n        loss = sum(((w * s + b) - p) ** 2 for s, p in houses) / n\n        print(f\"epoch {epoch:3}: w={w:6.2f} b={b:6.2f} loss={loss:8.2f}\")\n\nprint(f\"Learned: price = {w:.1f} * size + {b:.1f}\")", "explain": "<p>Guessing <code>w<\/code> and <code>b<\/code> by hand doesn't scale. <b>Gradient descent<\/b> finds them automatically, and it's the same idea that trains huge neural networks.<\/p>\n<div class=\"analogy\"><div><span>Picture this<\/span>You're on a foggy hill and want to reach the bottom. You can't see far, so you feel which way the ground slopes and take a small step downhill. Repeat.<\/div><\/div>\n<ol><li>Start with any <code>w<\/code> and <code>b<\/code> (here 0 and 0).<\/li>\n<li>Work out the <b>gradient<\/b> (<code>dw<\/code>, <code>db<\/code>): which direction makes the error grow.<\/li>\n<li>Step the opposite way, scaled by the <b>learning rate<\/b> <code>lr<\/code>.<\/li>\n<li>Repeat for many <b>epochs<\/b> (passes through the data).<\/li><\/ol>\n<p>The loss drops from 1374 to about 3.1, and the line settles at <b>price ≈ 49.8 × size + 30.1<\/b>.<\/p>\n<div class=\"warn\"><b>Learning rate matters.<\/b> Too small and learning crawls; too big and it overshoots and the loss explodes. Try <code>lr = 0.5<\/code>.<\/div>", "walk": [["4-6", "Start from zero, choose a step size, count the houses."], ["8-13", "Each epoch: add up how the error changes with w and b."], ["14-15", "Take one step downhill."], ["16-18", "Report progress now and then."], ["20", "The line it learned."]], "trace": null, "tip": "Gradient descent: measure the slope of the error, step downhill, repeat.", "tryit": ["Set <code>lr = 0.01<\/code>. How many epochs does it need now?", "Set <code>lr = 0.5<\/code> and watch what happens to the loss."], "file": null, "expected": {"out": "epoch   1: w= 31.79 b= 20.10 loss= 1374.01\nepoch  10: w= 49.30 b= 30.95 loss=    3.20\nepoch  50: w= 49.60 b= 30.48 loss=    3.12\nepoch 100: w= 49.75 b= 30.25 loss=    3.10\nepoch 500: w= 49.82 b= 30.13 loss=    3.10\nLearned: price = 49.8 * size + 30.1", "err": null, "line": null}}, {"title": "The best-fit formula & predictions", "code": "houses = [(0.6, 62), (0.8, 68), (1.0, 82), (1.2, 88),\n          (1.5, 104), (1.8, 118), (2.0, 132), (2.4, 150)]\n\nxs = [s for s, p in houses]\nys = [p for s, p in houses]\nmx = sum(xs) / len(xs)\nmy = sum(ys) / len(ys)\n\nnum = sum((x - mx) * (y - my) for x, y in zip(xs, ys))\nden = sum((x - mx) ** 2 for x in xs)\nw = num / den\nb = my - w * mx\nprint(f\"price = {w:.2f} * size + {b:.2f}\")\n\nfor size in [0.9, 1.6, 3.0]:\n    print(f\"{size} thousand sq ft -> Rs {w * size + b:.1f} lakh\")", "explain": "<p>For a straight line there's also a direct formula, called <b>least squares<\/b>, that gives the best <code>w<\/code> and <code>b<\/code> in one go:<\/p>\n<div class=\"order\"><span>w<\/span>= Σ(x − x̄)(y − ȳ) ÷ Σ(x − x̄)² → <span>b<\/span>= ȳ − w·x̄<\/div>\n<p>(x̄ and ȳ are the averages of sizes and prices.) It gives the same answer as gradient descent — <b>49.82<\/b> and <b>30.13<\/b> — which is a good check that our learning worked.<\/p>\n<h4>Making predictions<\/h4>\n<p>Once trained, the model predicts prices for houses it has <b>never seen<\/b>. That's the whole point of supervised learning.<\/p>\n<div class=\"warn\"><b>Careful with extrapolation.<\/b> The 3.0 prediction is outside the sizes we trained on (0.6–2.4). The model has to assume the straight line keeps going, so treat that number with suspicion.<\/div>", "walk": [["4-7", "Averages of sizes and prices."], ["9-12", "The least‑squares formula for the best line."], ["13", "Same line as gradient descent found."], ["15-16", "Predict prices for three new houses."]], "trace": null, "tip": "Training gives you w and b; prediction is just plugging new inputs into w × size + b.", "tryit": ["Predict a 1.2 house and compare with its real price, 88.", "Add a very expensive outlier, <code>(1.0, 250)<\/code>. How much does the line move?"], "file": null, "expected": {"out": "price = 49.82 * size + 30.13\n0.9 thousand sq ft -> Rs 75.0 lakh\n1.6 thousand sq ft -> Rs 109.8 lakh\n3.0 thousand sq ft -> Rs 179.6 lakh", "err": null, "line": null}}, {"title": "Testing on unseen data", "code": "import random\n\nrandom.seed(1)\nhouses = []\nfor i in range(40):\n    size = round(random.uniform(0.5, 3.0), 2)\n    price = round(30 + 50 * size + random.gauss(0, 6), 1)\n    houses.append((size, price))\n\nrandom.shuffle(houses)\ntrain, test = houses[:30], houses[30:]\n\ndef fit(data):\n    mx = sum(s for s, p in data) / len(data)\n    my = sum(p for s, p in data) / len(data)\n    w = sum((s - mx) * (p - my) for s, p in data) / sum((s - mx) ** 2 for s, p in data)\n    return w, my - w * mx\n\ndef mae(data, w, b):\n    return sum(abs(w * s + b - p) for s, p in data) / len(data)\n\nw, b = fit(train)\nprint(f\"Model: price = {w:.1f} * size + {b:.1f}\")\nprint(\"Train error:\", round(mae(train, w, b), 2))\nprint(\"Test error: \", round(mae(test, w, b), 2))", "explain": "<p>A model is only useful if it works on <b>new<\/b> data. So we train on one part and measure error on a part it has never seen.<\/p>\n<p>This lesson makes 40 realistic houses using the rule <code>price = 30 + 50 × size<\/code> plus random noise (<code>random.gauss<\/code>), then splits them 30/10.<\/p>\n<table class=\"tbl\"><tr><th>Result<\/th><th>What it means<\/th><\/tr>\n<tr><td>Train error ≈ test error<\/td><td>Good: the model <b>generalises<\/b><\/td><\/tr>\n<tr><td>Train error tiny, test error big<\/td><td><b>Overfitting<\/b>: memorised the training data, including its noise<\/td><\/tr>\n<tr><td>Both errors big<\/td><td><b>Underfitting<\/b>: the model is too simple for the pattern<\/td><\/tr><\/table>\n<p>Here both errors are around 5 lakh, close to the noise we added, so the line generalises well. It also recovered roughly the true rule (≈ 51 × size + 27).<\/p>", "walk": [["3-8", "Generate 40 houses from a known rule plus noise."], ["10-11", "Shuffle, then split 30 for training and 10 for testing."], ["13-17", "The least‑squares fit from the previous lesson, as a function."], ["19-20", "Mean absolute error on any dataset."], ["22-25", "Train on one set, report errors on both."]], "trace": null, "tip": "Judge a model on data it hasn't seen. A big gap between train and test error means overfitting.", "tryit": ["Increase the noise from 6 to 20. What happens to both errors?", "Train on only the first 5 houses. Does the test error get worse?"], "file": null, "expected": {"out": "Model: price = 50.9 * size + 27.0\nTrain error: 5.47\nTest error:  4.26", "err": null, "line": null}}, {"title": "Classification with k-nearest neighbours", "code": "import math\n\n# (size, bedrooms) -> label\nhomes = [((0.6, 1), \"affordable\"), ((0.8, 2), \"affordable\"),\n         ((1.0, 2), \"affordable\"), ((1.3, 2), \"affordable\"),\n         ((1.8, 3), \"premium\"), ((2.0, 3), \"premium\"),\n         ((2.4, 4), \"premium\"), ((2.2, 3), \"premium\")]\n\ndef distance(a, b):\n    return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)\n\ndef knn(point, k=3):\n    near = sorted(homes, key=lambda h: distance(h[0], point))[:k]\n    votes = [label for _, label in near]\n    return max(set(votes), key=votes.count)\n\nfor new in [(0.9, 2), (2.1, 3), (1.5, 3)]:\n    print(new, \"->\", knn(new))", "explain": "<p>Supervised learning can also predict a <b>category<\/b> instead of a number. That's called <b>classification<\/b>: spam / not spam, cat / dog, affordable / premium.<\/p>\n<p><b>k‑nearest neighbours (k‑NN)<\/b> is the simplest classifier: to label a new house, find the <code>k<\/code> most similar labelled houses and take a <b>vote<\/b>.<\/p>\n<ol><li>Measure the distance from the new house to every known house.<\/li><li>Keep the <code>k<\/code> closest (here 3).<\/li><li>The most common label among them wins.<\/li><\/ol>\n<table class=\"tbl\"><tr><th><\/th><th>Regression<\/th><th>Classification<\/th><\/tr>\n<tr><td>Predicts<\/td><td>A number (price)<\/td><td>A category (label)<\/td><\/tr>\n<tr><td>Example<\/td><td>Lessons 2.2–2.5<\/td><td>This lesson<\/td><\/tr><\/table>\n<div class=\"note\">Use an odd <code>k<\/code> with two classes so there's never a tied vote.<\/div>", "walk": [["4-7", "Labelled examples with two features: size and bedrooms."], ["9-10", "Straight‑line distance between two houses."], ["12-15", "Sort by distance, keep k, take a majority vote."], ["17-18", "Classify three new houses."]], "trace": null, "tip": "Regression predicts numbers; classification predicts categories. k-NN classifies by asking the nearest examples.", "tryit": ["Change <code>k<\/code> to 1 and then 5. Does <code>(1.5, 3)<\/code> change class?", "Add a third label, <code>\"luxury\"<\/code>, for houses above 2.3."], "file": null, "expected": {"out": "(0.9, 2) -> affordable\n(2.1, 3) -> premium\n(1.5, 3) -> premium", "err": null, "line": null}}]}, {"title": "Unsupervised: Customer Segments", "level": "Intermediate", "summary": "", "lessons": [{"title": "Unlabelled data & distance", "code": "customers = [(12, 2), (15, 3), (10, 1), (14, 2), (11, 3),\n             (40, 8), (45, 10), (38, 9), (42, 7),\n             (90, 4), (95, 5), (85, 3), (100, 4)]\n\ndef distance(a, b):\n    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5\n\nprint(\"Customers:\", len(customers), \"(spend in Rs 1000s, visits/month)\")\nprint(\"No labels - just numbers.\")\na, b, c = customers[0], customers[1], customers[9]\nprint(a, \"to\", b, \"=\", round(distance(a, b), 1))\nprint(a, \"to\", c, \"=\", round(distance(a, c), 1))", "explain": "<p><b>Task:<\/b> a shop wants to understand its customers. It knows how much each spends a year and how often they visit, but nobody has said what “types” of customers exist. There are <b>no labels<\/b>, so this is <b>unsupervised learning<\/b>.<\/p>\n<p>Grouping similar items together is called <b>clustering<\/b>. Grouping customers specifically is <b>customer segmentation<\/b>, used to plan offers, emails and loyalty schemes.<\/p>\n<h4>What does “similar” mean?<\/h4>\n<p>We treat each customer as a point on a graph and measure the straight‑line (<b>Euclidean<\/b>) distance:<\/p>\n<div class=\"order\"><span>distance<\/span>= √((spend₁ − spend₂)² + (visits₁ − visits₂)²)<\/div>\n<p>Customer (12, 2) is very close to (15, 3) but far from (90, 4), so the first two probably belong together.<\/p>\n<div class=\"warn\"><b>Scale matters.<\/b> Spend runs 10–100 but visits only 1–10, so spend dominates the distance. Real projects first <b>scale<\/b> features to similar ranges.<\/div>", "walk": [["1-3", "13 customers: (spend in Rs 1000s, visits per month). No labels."], ["5-6", "Euclidean distance between two points."], ["10-12", "Compare a close pair and a far pair."]], "trace": null, "tip": "Unsupervised learning finds structure in data with no answers. Distance is how we measure similarity.", "tryit": ["Find the distance between customers 5 and 6.", "Multiply every visit count by 10, then compare the distances again."], "file": null, "expected": {"out": "Customers: 13 (spend in Rs 1000s, visits/month)\nNo labels - just numbers.\n(12, 2) to (15, 3) = 3.2\n(12, 2) to (90, 4) = 78.0", "err": null, "line": null}}, {"title": "Assign each point to a centre", "code": "customers = [(12, 2), (40, 8), (90, 4), (15, 3), (45, 10)]\ncentres = [(10, 1), (50, 5)]\n\ndef distance(a, b):\n    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5\n\ngroups = [[], []]\nfor c in customers:\n    d = [distance(c, k) for k in centres]\n    nearest = d.index(min(d))\n    groups[nearest].append(c)\n\nfor i, g in enumerate(groups):\n    print(\"Group\", i, g)", "explain": "<p>The most popular clustering algorithm is <b>k‑means<\/b>. It describes each group by a <b>centre<\/b> (also called a centroid) and repeats two simple steps. This lesson does the first step once.<\/p>\n<div class=\"order\"><span>Step 1: Assign<\/span>each point joins its nearest centre → <span>Step 2: Update<\/span>move each centre to the middle of its group<\/div>\n<p>With two starting centres, (10, 1) and (50, 5), every customer goes to whichever is closer. <code>d.index(min(d))<\/code> finds the position of the smallest distance.<\/p>\n<p>Press <b>Step through<\/b> to watch each customer get sorted. Notice (90, 4) ends up in group 1 with the mid‑range customers — with only two centres, the big spenders have nowhere better to go.<\/p>", "walk": [["1-2", "Five customers and two starting centres."], ["4-5", "Distance, as before."], ["7", "One empty list per centre."], ["8-11", "For each customer, find the nearest centre and join its group."], ["13-14", "Show who ended up where."]], "trace": [[1, "Run <code>customers = [(12, 2), (40, 8), (90, 4), (15, 3), (45, 10)]<\/code>. Now <code>customers<\/code> = <code>[(12, 2), (40, 8), (90, 4), (15, 3), (45, 10)]<\/code>.", null], [2, "Run <code>centres = [(10, 1), (50, 5)]<\/code>. Now <code>centres<\/code> = <code>[(10, 1), (50, 5)]<\/code>.", null], [4, "Define the function <code>distance()<\/code>.", null], [7, "Run <code>groups = [[], []]<\/code>. Now <code>groups<\/code> = <code>[[], []]<\/code>.", null], [8, "Run <code>for c in customers:<\/code>. Now <code>c<\/code> = <code>(12, 2)<\/code>.", null], [9, "Measure the distance from this customer to each centre.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (12, 2)<\/code>, <code>b = (10, 1)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>2.2361<\/code>.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (12, 2)<\/code>, <code>b = (50, 5)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>38.1182<\/code>. Now <code>d<\/code> = <code>[2.2361, 38.1182]<\/code>.", null], [10, "Find which centre is nearest. Now <code>nearest<\/code> = <code>0<\/code>.", null], [11, "Put the customer in that centre's group. Now <code>groups<\/code> = <code>[[(12, 2)], []]<\/code>.", null], [8, "Run <code>for c in customers:<\/code>. Now <code>c<\/code> = <code>(40, 8)<\/code>.", null], [9, "Measure the distance from this customer to each centre.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (40, 8)<\/code>, <code>b = (10, 1)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>30.8058<\/code>.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (40, 8)<\/code>, <code>b = (50, 5)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>10.4403<\/code>. Now <code>d<\/code> = <code>[30.8058, 10.4403]<\/code>.", null], [10, "Find which centre is nearest. Now <code>nearest<\/code> = <code>1<\/code>.", null], [11, "Put the customer in that centre's group. Now <code>groups<\/code> = <code>[[(12, 2)], [(40, 8)]]<\/code>.", null], [8, "Run <code>for c in customers:<\/code>. Now <code>c<\/code> = <code>(90, 4)<\/code>.", null], [9, "Measure the distance from this customer to each centre.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (90, 4)<\/code>, <code>b = (10, 1)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>80.0562<\/code>.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (90, 4)<\/code>, <code>b = (50, 5)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>40.0125<\/code>. Now <code>d<\/code> = <code>[80.0562, 40.0125]<\/code>.", null], [10, "Find which centre is nearest.", null], [11, "Put the customer in that centre's group. Now <code>groups<\/code> = <code>[[(12, 2)], [(40, 8), (90, 4)]]<\/code>.", null], [8, "Run <code>for c in customers:<\/code>. Now <code>c<\/code> = <code>(15, 3)<\/code>.", null], [9, "Measure the distance from this customer to each centre.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (15, 3)<\/code>, <code>b = (10, 1)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>5.3852<\/code>.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (15, 3)<\/code>, <code>b = (50, 5)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>35.0571<\/code>. Now <code>d<\/code> = <code>[5.3852, 35.0571]<\/code>.", null], [10, "Find which centre is nearest. Now <code>nearest<\/code> = <code>0<\/code>.", null], [11, "Put the customer in that centre's group. Now <code>groups<\/code> = <code>[[(12, 2), (15, 3)], [(40, 8), (90, 4)]]<\/code>.", null], [8, "Run <code>for c in customers:<\/code>. Now <code>c<\/code> = <code>(45, 10)<\/code>.", null], [9, "Measure the distance from this customer to each centre.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (45, 10)<\/code>, <code>b = (10, 1)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>36.1386<\/code>.", null], [5, "Jump into <code>distance()<\/code> with <code>a = (45, 10)<\/code>, <code>b = (50, 5)<\/code>. Run <code>return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5<\/code>.", null], [9, "Back on line 9: <code>distance()<\/code> returned <code>7.0711<\/code>. Now <code>d<\/code> = <code>[36.1386, 7.0711]<\/code>.", null], [10, "Find which centre is nearest. Now <code>nearest<\/code> = <code>1<\/code>.", null], [11, "Put the customer in that centre's group. Now <code>groups<\/code> = <code>[[(12, 2), (15, 3)], [(40, 8), (90, 4), (45, 10)]]<\/code>.", null], [8, "Run <code>for c in customers:<\/code>.", null], [13, "Run <code>for i, g in enumerate(groups):<\/code>. Now <code>i<\/code> = <code>0<\/code>, <code>g<\/code> = <code>[(12, 2), (15, 3)]<\/code>.", null], [14, "Run <code>print(&quot;Group&quot;, i, g)<\/code>.", "Group 0 [(12, 2), (15, 3)]"], [13, "Run <code>for i, g in enumerate(groups):<\/code>. Now <code>i<\/code> = <code>1<\/code>, <code>g<\/code> = <code>[(40, 8), (90, 4), (45, 10)]<\/code>.", null], [14, "Run <code>print(&quot;Group&quot;, i, g)<\/code>.", "Group 1 [(40, 8), (90, 4), (45, 10)]"], [13, "Run <code>for i, g in enumerate(groups):<\/code>.", null]], "tip": "k-means step 1: put every point with its nearest centre.", "tryit": ["Add a third centre at <code>(90, 4)<\/code> (and a third empty group). How do the groups change?", "Move centre 0 to <code>(30, 5)<\/code>. Who switches group?"], "file": null, "expected": {"out": "Group 0 [(12, 2), (15, 3)]\nGroup 1 [(40, 8), (90, 4), (45, 10)]", "err": null, "line": null}}, {"title": "k-means: repeat until stable", "code": "customers = [(12, 2), (15, 3), (10, 1), (14, 2), (11, 3),\n             (40, 8), (45, 10), (38, 9), (42, 7),\n             (90, 4), (95, 5), (85, 3), (100, 4)]\n\ndef distance(a, b):\n    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5\n\ndef mean(points):\n    return (sum(p[0] for p in points) / len(points),\n            sum(p[1] for p in points) / len(points))\n\ncentres = [customers[0], customers[1], customers[2]]\n\nfor step in range(1, 10):\n    groups = [[] for _ in centres]\n    for c in customers:\n        d = [distance(c, k) for k in centres]\n        groups[d.index(min(d))].append(c)\n    new = [mean(g) for g in groups]\n    print(f\"step {step}:\", [(round(x), round(y)) for x, y in new])\n    if new == centres:\n        print(\"Centres stopped moving - done!\")\n        break\n    centres = new", "explain": "<p>Now the full algorithm. Repeat both steps until the centres <b>stop moving<\/b> — that's called <b>convergence<\/b>.<\/p>\n<ol><li><b>Initialise:<\/b> pick k starting centres (here the first 3 customers).<\/li><li><b>Assign<\/b> every customer to the nearest centre.<\/li><li><b>Update<\/b> each centre to the mean of its group.<\/li><li>If no centre moved, stop. Otherwise go to step 2.<\/li><\/ol>\n<p>Watch the output: we deliberately started with three <em>budget<\/em> customers as centres, which is a bad start. Even so, over a few steps the centres drift apart and settle on the three real groups: around (12, 2), (41, 8) and (92, 4).<\/p>\n<div class=\"note\">k‑means can get stuck with a poor start. Libraries run it several times from random starting points and keep the best result.<\/div>", "walk": [["5-10", "Helpers: distance, and the average point of a group."], ["12", "Start with the first three customers as centres."], ["15-18", "Assign step."], ["19-20", "Update step: new centres are group averages."], ["21-24", "Stop when nothing changes; otherwise keep the new centres."]], "trace": null, "tip": "k-means alternates assign and update until the centres stop moving.", "tryit": ["Start from <code>customers[0], customers[5], customers[9]<\/code>. How many steps does it take now?", "Try k = 2 by using only two starting centres."], "file": null, "expected": {"out": "step 1: [(12, 2), (56, 6), (10, 1)]\nstep 2: [(13, 2), (67, 6), (10, 1)]\nstep 3: [(18, 4), (71, 6), (10, 1)]\nstep 4: [(34, 7), (83, 5), (12, 2)]\nstep 5: [(41, 8), (92, 4), (12, 2)]\nstep 6: [(41, 8), (92, 4), (12, 2)]\nCentres stopped moving - done!", "err": null, "line": null}}, {"title": "Naming segments & choosing k", "code": "customers = [(12, 2), (15, 3), (10, 1), (14, 2), (11, 3),\n             (40, 8), (45, 10), (38, 9), (42, 7),\n             (90, 4), (95, 5), (85, 3), (100, 4)]\n\ndef distance(a, b):\n    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5\n\ndef mean(points):\n    return (sum(p[0] for p in points) / len(points),\n            sum(p[1] for p in points) / len(points))\n\ndef kmeans(k):\n    centres = customers[:k]\n    for _ in range(20):\n        groups = [[] for _ in range(k)]\n        for c in customers:\n            d = [distance(c, m) for m in centres]\n            groups[d.index(min(d))].append(c)\n        centres = [mean(g) if g else centres[i] for i, g in enumerate(groups)]\n    spread = sum(min(distance(c, m) ** 2 for m in centres) for c in customers)\n    return centres, groups, spread\n\nfor k in range(1, 5):\n    print(f\"k={k}: total spread {kmeans(k)[2]:8.0f}\")\n\ncentres, groups, _ = kmeans(3)\nfor (spend, visits), g in sorted(zip(centres, groups)):\n    name = \"Premium\" if spend > 70 else \"Regular\" if visits > 6 else \"Budget\"\n    print(f\"{name:8} {len(g)} customers, avg spend {spend:.0f}k, {visits:.1f} visits\")", "explain": "<h4>How many groups?<\/h4>\n<p>k‑means needs you to choose <code>k<\/code>. A common trick is the <b>elbow method<\/b>: measure the total <b>spread<\/b> (squared distance from each point to its centre) for several k values.<\/p>\n<table class=\"tbl\"><tr><th>k<\/th><th>Spread<\/th><th><\/th><\/tr>\n<tr><td>1<\/td><td>14654<\/td><td>everyone in one group<\/td><\/tr>\n<tr><td>2<\/td><td>2117<\/td><td>big drop<\/td><\/tr>\n<tr><td>3<\/td><td>179<\/td><td>big drop — <b>the elbow<\/b><\/td><\/tr>\n<tr><td>4<\/td><td>170<\/td><td>barely better<\/td><\/tr><\/table>\n<p>Spread always shrinks as k grows, so look for where the improvement <b>suddenly levels off<\/b>. Here that's k = 3.<\/p>\n<h4>Giving groups meaning<\/h4>\n<p>The algorithm only says “group 0, 1, 2”. <b>People<\/b> read the centres and name them: <b>Budget<\/b> (low spend, few visits), <b>Regular<\/b> (frequent visitors), <b>Premium<\/b> (big spenders). Now the shop can send each segment a different offer.<\/p>", "walk": [["12-21", "k‑means as a reusable function that also returns the spread."], ["23-24", "Elbow method: try k from 1 to 4."], ["26", "Run with the chosen k = 3."], ["27-29", "Name each segment from its centre and describe it."]], "trace": null, "tip": "Use the elbow to choose k, then interpret each cluster's centre to give it a real-world name.", "tryit": ["Add a new customer <code>(60, 12)<\/code>. Which segment does it join?", "Print k = 5 and k = 6 as well. Does the spread keep falling?"], "file": null, "expected": {"out": "k=1: total spread    14654\nk=2: total spread     2117\nk=3: total spread      179\nk=4: total spread      170\nBudget   5 customers, avg spend 12k, 2.2 visits\nRegular  4 customers, avg spend 41k, 8.5 visits\nPremium  4 customers, avg spend 92k, 4.0 visits", "err": null, "line": null}}]}, {"title": "Reinforcement: Game Agent", "level": "Intermediate", "summary": "", "lessons": [{"title": "Agent, environment & reward", "code": "import random\n\n# A corridor: positions 0..4. Start at 2. Reach 4 = win, 0 = fall.\ndef step(pos, action):\n    pos += 1 if action == \"R\" else -1\n    if pos == 4:\n        return pos, 10, True\n    if pos == 0:\n        return pos, -10, True\n    return pos, -1, False\n\nrandom.seed(3)\npos, total, done = 2, 0, False\nwhile not done:\n    action = random.choice([\"L\", \"R\"])\n    pos, reward, done = step(pos, action)\n    total += reward\n    print(f\"move {action} -> pos {pos}, reward {reward}\")\nprint(\"Episode total reward:\", total)", "explain": "<p>In <b>reinforcement learning (RL)<\/b> there is no dataset at all. An <b>agent<\/b> acts inside an <b>environment<\/b>, gets <b>rewards<\/b>, and gradually learns which actions pay off.<\/p>\n<div class=\"order\"><span>state<\/span>agent sees where it is → <span>action<\/span>agent chooses a move → <span>reward + new state<\/span>environment responds → repeat<\/div>\n<h4>Our game: the corridor<\/h4>\n<p>Five squares, 0 to 4. The agent starts on square 2.<\/p>\n<table class=\"tbl\"><tr><th>Event<\/th><th>Reward<\/th><\/tr>\n<tr><td>Reach square 4 (goal)<\/td><td>+10, game over<\/td><\/tr>\n<tr><td>Fall off at square 0<\/td><td>−10, game over<\/td><\/tr>\n<tr><td>Any other move<\/td><td>−1 (encourages finishing quickly)<\/td><\/tr><\/table>\n<p>One full game from start to finish is an <b>episode<\/b>. This agent acts <b>randomly<\/b> — it hasn't learned anything yet — and here it walks left into the pit.<\/p>", "walk": [["4-10", "The environment: apply a move, return the new state, the reward and whether the game ended."], ["12-13", "Fixed randomness; start on square 2."], ["14-18", "Random agent: pick L or R until the episode ends."], ["19", "Total reward for the episode."]], "trace": [[1, "Run <code>import random<\/code>.", null], [4, "Define the function <code>step()<\/code>.", null], [12, "Run <code>random.seed(3)<\/code>.", null], [13, "Run <code>pos, total, done = 2, 0, False<\/code>. Now <code>pos<\/code> = <code>2<\/code>, <code>total<\/code> = <code>0<\/code>, <code>done<\/code> = <code>False<\/code>.", null], [14, "Run <code>while not done:<\/code>.", null], [15, "Run <code>action = random.choice([&quot;L&quot;, &quot;R&quot;])<\/code>. Now <code>action<\/code> = <code>&#x27;L&#x27;<\/code>.", null], [16, "Run <code>pos, reward, done = step(pos, action)<\/code>.", null], [5, "Jump into <code>step()<\/code> with <code>pos = 2<\/code>, <code>action = &#x27;L&#x27;<\/code>. Run <code>pos += 1 if action == &quot;R&quot; else -1<\/code>. Now <code>pos<\/code> = <code>1<\/code>.", null], [6, "Run <code>if pos == 4:<\/code>.", null], [8, "Run <code>if pos == 0:<\/code>.", null], [10, "Run <code>return pos, -1, False<\/code>.", null], [16, "Back on line 16: <code>step()<\/code> returned <code>(1, -1, False)<\/code>. Now <code>pos<\/code> = <code>1<\/code>, <code>reward<\/code> = <code>-1<\/code>.", null], [17, "Run <code>total += reward<\/code>. Now <code>total<\/code> = <code>-1<\/code>.", null], [18, "Run <code>print(f&quot;move {action} -&gt; pos {pos}, reward {reward}&quot;)<\/code>.", "move L -> pos 1, reward -1"], [14, "Run <code>while not done:<\/code>.", null], [15, "Run <code>action = random.choice([&quot;L&quot;, &quot;R&quot;])<\/code>.", null], [16, "Run <code>pos, reward, done = step(pos, action)<\/code>.", null], [5, "Jump into <code>step()<\/code> with <code>pos = 1<\/code>, <code>action = &#x27;L&#x27;<\/code>. Run <code>pos += 1 if action == &quot;R&quot; else -1<\/code>. Now <code>pos<\/code> = <code>0<\/code>.", null], [6, "Run <code>if pos == 4:<\/code>.", null], [8, "Run <code>if pos == 0:<\/code>.", null], [9, "Run <code>return pos, -10, True<\/code>.", null], [16, "Back on line 16: <code>step()<\/code> returned <code>(0, -10, True)<\/code>. Now <code>pos<\/code> = <code>0<\/code>, <code>done<\/code> = <code>True<\/code>, <code>reward<\/code> = <code>-10<\/code>.", null], [17, "Run <code>total += reward<\/code>. Now <code>total<\/code> = <code>-11<\/code>.", null], [18, "Run <code>print(f&quot;move {action} -&gt; pos {pos}, reward {reward}&quot;)<\/code>.", "move L -> pos 0, reward -10"], [14, "Run <code>while not done:<\/code>.", null], [19, "Run <code>print(&quot;Episode total reward:&quot;, total)<\/code>.", "Episode total reward: -11"]], "tip": "RL loop: state → action → reward → new state. The agent's goal is the biggest total reward.", "tryit": ["Change the seed to 1 and 2. Does the random agent ever win?", "Make each step cost 0 instead of −1. Why might the agent then wander?"], "file": null, "expected": {"out": "move L -> pos 1, reward -1\nmove L -> pos 0, reward -10\nEpisode total reward: -11", "err": null, "line": null}}, {"title": "The Q-table & update rule", "code": "Q = {(2, \"L\"): 0.0, (2, \"R\"): 0.0,\n     (3, \"L\"): 0.0, (3, \"R\"): 5.0}\n\nalpha = 0.5    # learning rate\ngamma = 0.9    # how much future rewards matter\n\nstate, action = 2, \"R\"\nreward, next_state = -1, 3\n\nbest_next = max(Q[(next_state, \"L\")], Q[(next_state, \"R\")])\ntarget = reward + gamma * best_next\nQ[(state, action)] += alpha * (target - Q[(state, action)])\n\nprint(\"best future value:\", best_next)\nprint(\"target:\", target)\nprint(\"new Q(2, R):\", Q[(2, \"R\")])", "explain": "<p><b>Q‑learning<\/b> keeps a table of scores, <b>Q(state, action)<\/b> = “how good is this action in this state, counting future rewards?” After every move it nudges one entry toward a better estimate.<\/p>\n<div class=\"order\"><span>target<\/span>= reward + γ × (best Q of next state)<\/div>\n<div class=\"order\"><span>new Q<\/span>= old Q + α × (target − old Q)<\/div>\n<div class=\"def2\"><div><b>α (alpha) — learning rate<\/b><span>How far to move toward the target each time (0.5 = halfway).<\/span><\/div><div><b>γ (gamma) — discount<\/b><span>How much future rewards count. 0.9 means “a reward next turn is worth 90% of one now”.<\/span><\/div><\/div>\n<p>Worked example: the agent moved right from 2 to 3 and got −1. The best it can expect from square 3 is 5. So the target is −1 + 0.9 × 5 = 3.5. Q(2, R) moves halfway from 0 toward 3.5, giving <b>1.75<\/b>.<\/p>\n<p>Step through to see each number appear.<\/p>", "walk": [["1-2", "A tiny Q‑table. Q(3, R) is already known to be good."], ["4-5", "The two settings of Q‑learning."], ["7-8", "What just happened: move R from 2, reward −1, landed on 3."], ["10-12", "The update rule, written out in three lines."], ["14-16", "Show the working."]], "trace": [[1, "Create a tiny Q‑table with four entries. Now <code>Q<\/code> = <code>{(2, &#x27;L&#x27;): 0.0, (2, &#x27;R&#x27;): 0.0, (3, &#x27;L&#x27;): 0.0, (3, &#x27;R&#x27;): 5.0}<\/code>.", null], [4, "Run <code>alpha = 0.5    # learning rate<\/code>. Now <code>alpha<\/code> = <code>0.5<\/code>.", null], [5, "Run <code>gamma = 0.9    # how much future rewards matter<\/code>. Now <code>gamma<\/code> = <code>0.9<\/code>.", null], [7, "Run <code>state, action = 2, &quot;R&quot;<\/code>. Now <code>state<\/code> = <code>2<\/code>, <code>action<\/code> = <code>&#x27;R&#x27;<\/code>.", null], [8, "Run <code>reward, next_state = -1, 3<\/code>. Now <code>reward<\/code> = <code>-1<\/code>, <code>next_state<\/code> = <code>3<\/code>.", null], [10, "Look ahead: the best Q value available from the next state. Now <code>best_next<\/code> = <code>5.0<\/code>.", null], [11, "Target = reward now + discounted future: −1 + 0.9 × 5. Now <code>target<\/code> = <code>3.5<\/code>.", null], [12, "Move Q(2, R) halfway (α = 0.5) from its old value toward the target. Now <code>Q<\/code> = <code>{(2, &#x27;L&#x27;): 0.0, (2, &#x27;R&#x27;): 1.75, (3, &#x27;L&#x27;): 0.0, (3, &#x27;R&#x27;): …<\/code>.", null], [14, "Run <code>print(&quot;best future value:&quot;, best_next)<\/code>.", "best future value: 5.0"], [15, "Run <code>print(&quot;target:&quot;, target)<\/code>.", "target: 3.5"], [16, "Run <code>print(&quot;new Q(2, R):&quot;, Q[(2, &quot;R&quot;)])<\/code>.", "new Q(2, R): 1.75"]], "tip": "Q-learning: new Q = old Q + α × (reward + γ × best future Q − old Q).", "tryit": ["Set <code>alpha = 1<\/code>. What is the new Q now?", "Set <code>gamma = 0<\/code>. Why does the future stop mattering?"], "file": null, "expected": {"out": "best future value: 5.0\ntarget: 3.5\nnew Q(2, R): 1.75", "err": null, "line": null}}, {"title": "Training the agent", "code": "import random\n\ndef step(pos, action):\n    pos += 1 if action == \"R\" else -1\n    if pos == 4: return pos, 10, True\n    if pos == 0: return pos, -10, True\n    return pos, -1, False\n\nQ = {(s, a): 0.0 for s in range(5) for a in \"LR\"}\nalpha, gamma, epsilon = 0.5, 0.9, 0.3\nrandom.seed(0)\n\nfor episode in range(1, 201):\n    pos, done, total = 2, False, 0\n    while not done:\n        if random.random() < epsilon:\n            a = random.choice(\"LR\")\n        else:\n            a = max(\"LR\", key=lambda x: Q[(pos, x)])\n        nxt, r, done = step(pos, a)\n        best = 0 if done else max(Q[(nxt, \"L\")], Q[(nxt, \"R\")])\n        Q[(pos, a)] += alpha * (r + gamma * best - Q[(pos, a)])\n        pos, total = nxt, total + r\n    if episode in (1, 5, 20, 200):\n        print(f\"episode {episode:3}: total reward {total}\")\n\nfor s in (1, 2, 3):\n    print(f\"pos {s}: Q(L)={Q[(s,'L')]:6.2f}  Q(R)={Q[(s,'R')]:6.2f}\")", "explain": "<p>Now we put it all together and play 200 episodes, updating the Q‑table after every move.<\/p>\n<h4>Explore vs exploit<\/h4>\n<p>If the agent always picks the action it currently thinks is best, it may never discover something better. So it uses an <b>ε‑greedy<\/b> strategy:<\/p>\n<div class=\"cmp\"><div><h5>Explore (30% of the time)<\/h5><ul><li>Pick a random action<\/li><li>Discovers new possibilities<\/li><\/ul><\/div><div><h5>Exploit (70% of the time)<\/h5><ul><li>Pick the action with the highest Q<\/li><li>Uses what it has learned<\/li><\/ul><\/div><\/div>\n<p>Episode 1 ends in the pit (−11). By episode 20 it heads straight for the goal (+9 = two −1 steps then +10). Episode 200 shows +7 because a random exploring move cost it two extra steps — that's exploration at work, not a mistake in learning.<\/p>\n<p>The final Q‑table says <b>R beats L in every square<\/b>. The agent has learned the policy “always go right”.<\/p>", "walk": [["3-7", "The corridor environment, compacted."], ["9-11", "Empty Q‑table and the three settings."], ["15-19", "ε‑greedy: sometimes random, usually the best known action."], ["20-23", "Take the action, then apply the Q‑learning update."], ["24-25", "Report how a few episodes went."], ["27-28", "The learned Q values: R is always higher."]], "trace": null, "tip": "Explore sometimes, exploit usually. Over many episodes the Q-table points the agent to the best action.", "tryit": ["Set <code>epsilon = 0<\/code>. Does the agent still learn to go right?", "Make square 0 worth +20 instead of −10. What does the agent learn now?"], "file": null, "expected": {"out": "episode   1: total reward -11\nepisode   5: total reward 5\nepisode  20: total reward 9\nepisode 200: total reward 7\npos 1: Q(L)= -9.92  Q(R)=  6.20\npos 2: Q(L)=  4.58  Q(R)=  8.00\npos 3: Q(L)=  6.20  Q(R)= 10.00", "err": null, "line": null}}, {"title": "Project: a Nim-playing agent", "code": "import random\n\n# Nim: 10 sticks, take 1-3 per turn. Whoever takes the LAST stick wins.\nQ = {}\ndef q(s, a): return Q.get((s, a), 0.0)\ndef moves(s): return [a for a in (1, 2, 3) if a <= s]\n\ndef choose(s, eps):\n    if random.random() < eps:\n        return random.choice(moves(s))\n    return max(moves(s), key=lambda a: q(s, a))\n\ndef play(eps, learn):\n    s, history = 10, []\n    while True:\n        a = choose(s, eps)                     # agent moves\n        history.append((s, a)); s -= a\n        if s == 0: reward = 1; break\n        s -= random.choice(moves(s))           # random opponent\n        if s == 0: reward = -1; break\n    if learn:\n        for st, a in history:\n            Q[(st, a)] = q(st, a) + 0.05 * (reward - q(st, a))\n    return reward == 1\n\ndef win_rate(games=1000):\n    return sum(play(0, False) for _ in range(games)) / games\n\nrandom.seed(42)\nprint(\"Before training: wins\", f\"{win_rate():.0%}\")\nfor _ in range(20000):\n    play(0.3, True)\nprint(\"After training:  wins\", f\"{win_rate():.0%}\")\nfor s in (10, 9, 7, 6, 5):\n    print(f\"{s} sticks left -> take\", max(moves(s), key=lambda a: q(s, a)))", "explain": "<p><b>Problem.<\/b> Teach an agent to play <b>Nim<\/b>: 10 sticks, players take 1, 2 or 3 in turn, and whoever takes the <b>last<\/b> stick wins. Nobody tells the agent the strategy — it only learns whether each game was a win (+1) or a loss (−1).<\/p>\n<h4>How it learns<\/h4>\n<ol><li>Play a full game against a random opponent, remembering every (sticks, move) it made.<\/li><li>At the end, nudge the Q of every move toward the result: up after a win, down after a loss.<\/li><li>Repeat 20,000 times, exploring 30% of the time.<\/li><\/ol>\n<p>Its win rate jumps from <b>37%<\/b> to <b>100%<\/b> against the random player.<\/p>\n<div class=\"note\"><b>The hidden trick.<\/b> Nim has a known winning strategy: always leave your opponent a <b>multiple of 4<\/b>. Look at the output — from 10 it takes 2 (leaving 8), from 7 it takes 3 (leaving 4), from 6 it takes 2, from 5 it takes 1. The agent worked this out purely from wins and losses.<\/div>\n<p>This is the same idea, on a much bigger scale, behind agents that learned chess, Go and video games.<\/p>", "walk": [["4-6", "Q‑table (as a dict) and the legal moves for any number of sticks."], ["8-11", "ε‑greedy move choice."], ["13-20", "One game: agent moves, then a random opponent moves, until someone takes the last stick."], ["21-23", "Learn from the result: every move in the game shares the reward."], ["26-27", "Win rate over 1000 games with no exploring and no learning."], ["29-35", "Measure, train, measure again, then show the learned moves."]], "trace": null, "tip": "An RL agent can discover a winning strategy from nothing but wins and losses.", "tryit": ["Train for only 500 games. How good is the agent now?", "Start the game with 15 sticks. Does it still find the multiple‑of‑4 rule?"], "file": null, "expected": {"out": "Before training: wins 37%\nAfter training:  wins 100%\n10 sticks left -> take 2\n9 sticks left -> take 1\n7 sticks left -> take 3\n6 sticks left -> take 2\n5 sticks left -> take 1", "err": null, "line": null}}]}, {"title": "Putting It Together", "level": "Project", "summary": "", "lessons": [{"title": "Choosing the right type", "code": "tasks = {\n    \"Predict tomorrow's temperature\":   (\"history\", \"has answers\"),\n    \"Group news articles by topic\":     (\"articles\", \"no answers\"),\n    \"Teach a robot to walk\":            (\"trial & error\", \"rewards\"),\n    \"Spam or not spam?\":                (\"emails\", \"has answers\"),\n    \"Find unusual bank transactions\":   (\"transactions\", \"no answers\"),\n}\n\ndef which_type(feedback):\n    if feedback == \"has answers\":\n        return \"Supervised\"\n    if feedback == \"no answers\":\n        return \"Unsupervised\"\n    return \"Reinforcement\"\n\nfor task, (data, feedback) in tasks.items():\n    print(f\"{task:34} -> {which_type(feedback)}\")", "explain": "<p>The fastest way to pick a type is to ask: <b>what feedback is available?<\/b><\/p>\n<table class=\"tbl\"><tr><th><\/th><th>Supervised<\/th><th>Unsupervised<\/th><th>Reinforcement<\/th><\/tr>\n<tr><td>Data<\/td><td>Inputs + correct answers<\/td><td>Inputs only<\/td><td>None up front — generated by acting<\/td><\/tr>\n<tr><td>Feedback<\/td><td>Right / wrong for each example<\/td><td>None<\/td><td>Rewards, often delayed<\/td><\/tr>\n<tr><td>Main tasks<\/td><td>Regression, classification<\/td><td>Clustering, finding anomalies<\/td><td>Decision‑making, control, games<\/td><\/tr>\n<tr><td>In this lab<\/td><td>House prices, k‑NN<\/td><td>Customer segments, k‑means<\/td><td>Corridor, Nim<\/td><\/tr>\n<tr><td>Real world<\/td><td>Spam filters, medical diagnosis<\/td><td>Market segments, recommendations<\/td><td>Robotics, game AI<\/td><\/tr><\/table>\n<p>The code turns this decision into a tiny function and applies it to five real tasks.<\/p>", "walk": [["1-7", "Five problems and the kind of feedback each has."], ["9-14", "The decision rule: answers → supervised, none → unsupervised, rewards → reinforcement."], ["16-17", "Classify each task."]], "trace": null, "tip": "Ask what feedback you have: answers, nothing, or rewards. That tells you the type.", "tryit": ["Add “Recommend movies from viewing history”. Which type fits best?", "Add “A self‑driving car learning to park”."], "file": null, "expected": {"out": "Predict tomorrow's temperature     -> Supervised\nGroup news articles by topic       -> Unsupervised\nTeach a robot to walk              -> Reinforcement\nSpam or not spam?                  -> Supervised\nFind unusual bank transactions     -> Unsupervised", "err": null, "line": null}}, {"title": "Same data, three questions", "code": "houses = [(0.6, 62), (0.8, 68), (1.0, 82), (1.2, 88),\n          (1.5, 104), (1.8, 118), (2.0, 132), (2.4, 150)]\n\n# Supervised question: \"What will a 1.6 house cost?\"\nxs = [s for s, p in houses]; ys = [p for s, p in houses]\nmx, my = sum(xs) / len(xs), sum(ys) / len(ys)\nw = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sum((x - mx) ** 2 for x in xs)\nprint(\"Supervised   -> 1.6 costs about\", round(w * 1.6 + my - w * mx, 1))\n\n# Unsupervised question: \"Are there natural groups of houses?\"\nc1, c2 = min(xs), max(xs)\nfor _ in range(5):\n    g1 = [x for x in xs if abs(x - c1) <= abs(x - c2)]\n    g2 = [x for x in xs if abs(x - c1) > abs(x - c2)]\n    c1, c2 = sum(g1) / len(g1), sum(g2) / len(g2)\nprint(\"Unsupervised ->\", len(g1), \"homes around\", round(c1, 2), \"|\", len(g2), \"homes around\", round(c2, 2))\n\n# Reinforcement question: \"What price should I list at to sell fastest?\"\nprint(\"Reinforcement-> try prices, get reward = sold quickly, adjust\")", "explain": "<p>The type of ML isn't decided by the data alone — it's decided by the <b>question<\/b> you ask of it. Here's the same house data used three ways.<\/p>\n<table class=\"tbl\"><tr><th>Question<\/th><th>Type<\/th><th>Method<\/th><\/tr>\n<tr><td>What will a 1.6 house cost?<\/td><td>Supervised<\/td><td>Least‑squares line (Module 2)<\/td><\/tr>\n<tr><td>Are there natural groups of houses?<\/td><td>Unsupervised<\/td><td>k‑means on size, k = 2 (Module 3)<\/td><\/tr>\n<tr><td>What listing price sells fastest?<\/td><td>Reinforcement<\/td><td>Try prices, reward quick sales (Module 4)<\/td><\/tr><\/table>\n<p>Lines 11–15 are a compact one‑feature k‑means: start the two centres at the smallest and largest house, then repeat assign + update.<\/p>\n<div class=\"note\"><b>Where next?<\/b> Python's <b>scikit‑learn<\/b> library has ready‑made <code>LinearRegression<\/code>, <code>KNeighborsClassifier<\/code> and <code>KMeans<\/code> that do exactly what you built here, and <b>Gymnasium<\/b> provides RL environments. You now know what happens inside them.<\/div>", "walk": [["4-8", "Supervised: fit a line and predict a price."], ["10-16", "Unsupervised: two clusters of house sizes with mini k‑means."], ["18-19", "Reinforcement: described, since it needs an environment to act in."]], "trace": null, "tip": "The question decides the type: predict an answer, find groups, or learn actions from rewards.", "tryit": ["Change the supervised question to predict a 2.2 house.", "Run the clustering with three centres instead of two."], "file": null, "expected": {"out": "Supervised   -> 1.6 costs about 109.8\nUnsupervised -> 4 homes around 0.9 | 4 homes around 1.93\nReinforcement-> try prices, get reward = sold quickly, adjust", "err": null, "line": null}}]}];
+const $ = id => document.getElementById(id);
+const LH = 22, PAD = 14;
+let mi = 0, li = 0, step = -1, walkSel = -1, errLine = null;
+const edits = {};
+let seen = new Set();
+try { seen = new Set(JSON.parse(localStorage.getItem("pyml-seen") || "[]")); } catch (e) {}
+const total = DATA.reduce((n, m) => n + m.lessons.length, 0);
+const key = (m, l) => `m${m + 1}-l${l + 1}`;
+const L = () => DATA[mi].lessons[li];
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+/* ---------- highlighter ---------- */
+const KW = new Set("def return global nonlocal for in if elif else pass import from while and or not is True False None lambda class try except finally with as break continue raise yield".split(" "));
+const BI = new Set("print len sum round range type str int float list dict tuple set isinstance min max sorted enumerate zip input abs divmod pow hash bool".split(" "));
+function highlight(src) {
+  const re = /(#[^\n]*)|([fFrRbB]?(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(\b\d+(?:\.\d+)?\b)|(\*\*?)(?=[A-Za-z_])|([A-Za-z_]\w*)/g;
+  let out = "", last = 0, m, afterDef = false;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index)); last = re.lastIndex;
+    const t = esc(m[0]);
+    if (m[1]) out += `<span class="tk-c">${t}</span>`;
+    else if (m[2]) out += `<span class="tk-s">${t}</span>`;
+    else if (m[3]) out += `<span class="tk-n">${t}</span>`;
+    else if (m[4]) out += `<span class="tk-o">${t}</span>`;
+    else {
+      const w = m[5];
+      if (afterDef) { out += `<span class="tk-f">${t}</span>`; afterDef = false; continue; }
+      if (KW.has(w)) { out += `<span class="tk-k">${t}</span>`; afterDef = w === "def"; }
+      else if (BI.has(w)) out += `<span class="tk-b">${t}</span>`;
+      else out += t;
+    }
+  }
+  return out + esc(src.slice(last)) + "\n";
+}
+
+/* ---------- editor ---------- */
+const ta = $("code");
+function paintEditor() {
+  const src = ta.value;
+  $("hl").innerHTML = highlight(src);
+  const n = src.split("\n").length;
+  const hlLines = new Set(), wl = [];
+  const tr = activeTrace();
+  if (tr && step >= 0) hlLines.add(tr[step][0]);
+  if (walkSel >= 0) {
+    const r = L().walk[walkSel][0].split("-").map(Number);
+    for (let i = r[0]; i <= (r[1] || r[0]); i++) wl.push(i);
+  }
+  let g = "";
+  for (let i = 1; i <= n; i++) g += `<div class="${hlLines.has(i) ? "hl" : i === errLine ? "er" : ""}">${i}</div>`;
+  $("gutter").innerHTML = g;
+  let mk = "";
+  const at = i => `top:${PAD + (i - 1) * LH}px`;
+  wl.forEach(i => mk += `<div class="mark walk" style="${at(i)}"></div>`);
+  if (errLine) mk += `<div class="mark err" style="${at(errLine)}"></div>`;
+  hlLines.forEach(i => mk += `<div class="mark run" style="${at(i)}"></div>`);
+  $("marks").innerHTML = mk;
+  $("modFlag").hidden = !isEdited();
+  syncScroll();
+}
+function syncScroll() {
+  $("layer").style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  $("gutter").style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+function scrollToLine(i) {
+  const y = PAD + (i - 1) * LH;
+  if (y < ta.scrollTop + 10 || y > ta.scrollTop + ta.clientHeight - 40) ta.scrollTop = Math.max(0, y - ta.clientHeight / 3);
+}
+ta.addEventListener("scroll", syncScroll);
+ta.addEventListener("input", () => {
+  edits[key(mi, li)] = ta.value; errLine = null;
+  if (step >= 0) step = -1;
+  renderStepper(); paintEditor();
+});
+ta.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+  const s = ta.selectionStart, en = ta.selectionEnd, v = ta.value;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (e.shiftKey) {
+      const ls = v.lastIndexOf("\n", s - 1) + 1;
+      const rm = v.slice(ls, ls + 4).match(/^ {1,4}/);
+      if (rm) { ta.setRangeText("", ls, ls + rm[0].length, "end"); ta.selectionStart = ta.selectionEnd = Math.max(ls, s - rm[0].length); }
+    } else ta.setRangeText("    ", s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  } else if (e.key === "Enter" && !e.shiftKey) {
+    const ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
+    let ind = line.match(/^ */)[0];
+    if (/:\s*(#.*)?$/.test(line)) ind += "    ";
+    e.preventDefault(); ta.setRangeText("\n" + ind, s, en, "end");
+    ta.dispatchEvent(new Event("input"));
+  }
+});
+const isEdited = () => ta.value !== L().code;
+const activeTrace = () => (L().trace && !isEdited()) ? L().trace : null;
+
+/* ---------- output console ---------- */
+function showOutput(out, err, line, pill, meta, pillCls) {
+  const o = $("out");
+  let h = out ? esc(out) : "";
+  if (!out && !err) h = `<span class="empty">No output — nothing was printed.</span>`;
+  if (err) h += `<span class="errl">${esc(err)}<small>${line ? "Raised on line " + line + " (highlighted in red)" : ""}</small></span>`;
+  o.innerHTML = h;
+  $("opill").textContent = pill; $("opill").className = "pill " + (pillCls || "");
+  $("ometa").textContent = meta || "";
+  errLine = line || null; paintEditor();
+}
+function showExpected() {
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", "Press Run to execute it live");
+}
+
+/* ---------- stepper ---------- */
+function renderStepper() {
+  const s = $("stepper"), tr = L().trace;
+  if (!tr) { s.hidden = true; return; }
+  s.hidden = false;
+  if (isEdited()) { s.className = "stepper off"; s.innerHTML = `Step‑through follows the original code. <button class="sbtn" id="stReset">Reset code</button> to use it again.`; $("stReset").onclick = resetCode; return; }
+  s.className = "stepper";
+  const cur = step >= 0 ? tr[step] : null;
+  s.innerHTML = `<div class="srow"><button class="sbtn" id="stPrev" ${step < 0 ? "disabled" : ""}>◀ Back</button><button class="sbtn pri" id="stNext" ${step >= tr.length - 1 ? "disabled" : ""}>${step < 0 ? "Step through ▶" : "Next step ▶"}</button><button class="sbtn" id="stEnd" ${step < 0 ? "disabled" : ""}>Exit</button><span class="scount">${step < 0 ? tr.length + " steps" : "Step " + (step + 1) + " of " + tr.length}</span></div>
+  <div class="snote">${cur ? `<span class="ln">line ${cur[0]}</span>${cur[1]}` : "Watch Python move through the code one line at a time. The yellow bar shows the line running now."}</div>`;
+  $("stPrev").onclick = () => setStep(step - 1);
+  $("stNext").onclick = () => setStep(step + 1);
+  $("stEnd").onclick = () => { step = -1; renderStepper(); showExpected(); };
+}
+function setStep(k) {
+  const tr = L().trace; step = Math.max(-1, Math.min(tr.length - 1, k));
+  if (step < 0) { renderStepper(); showExpected(); return; }
+  const lines = tr.slice(0, step + 1).filter(t => t[2] !== null).map(t => t[2]);
+  const isNew = tr[step][2] !== null;
+  errLine = null;
+  $("out").innerHTML = lines.length ? lines.map((t, i) => `<span class="${isNew && i === lines.length - 1 ? "new" : ""}">${esc(t)}</span>`).join("\n") : `<span class="empty">Nothing printed yet…</span>`;
+  $("opill").textContent = "Step‑through"; $("opill").className = "pill step";
+  $("ometa").textContent = isNew ? "New output on this step" : "";
+  renderStepper(); paintEditor(); scrollToLine(tr[step][0]);
+}
+
+/* ---------- Python runtime (Pyodide in a worker, so a runaway loop can be stopped) ---------- */
+const PYO = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+const RUNNER = `
+import sys, traceback, json
+def __run(src):
+    g = {"__name__": "__main__"}
+    try:
+        exec(compile(src, "<exec>", "exec"), g)
+        return ""
+    except BaseException as e:
+        line = None
+        for fr in traceback.extract_tb(e.__traceback__):
+            if fr.filename == "<exec>": line = fr.lineno
+        if isinstance(e, SyntaxError):
+            line, msg = e.lineno, e.msg
+        else:
+            msg = str(e)
+        return json.dumps({"err": type(e).__name__ + ": " + msg, "line": line})
+`;
+const WORKER = `
+importScripts("${PYO}pyodide.js");
+let py;
+const ready = loadPyodide({indexURL:"${PYO}"}).then(p => { py = p; py.runPython(${JSON.stringify(RUNNER)}); postMessage({type:"ready"}); })
+  .catch(e => postMessage({type:"fail", msg:String(e)}));
+onmessage = async e => {
+  await ready; if (!py) return;
+  const out = [];
+  py.setStdout({batched: s => out.push(s)}); py.setStderr({batched: s => out.push(s)});
+  py.setStdin({stdin: () => "5"});
+  const t = performance.now(); let r;
+  try { r = py.globals.get("__run")(e.data.code); } catch (x) { r = JSON.stringify({err:String(x), line:null}); }
+  postMessage({type:"result", id:e.data.id, out:out.join("\\n"), res:r, ms:performance.now()-t});
+};`;
+let worker = null, wReady = false, runId = 0, pending = null, timer = null;
+function startWorker() {
+  wReady = false;
+  try { worker = new Worker(URL.createObjectURL(new Blob([WORKER], { type: "text/javascript" }))); }
+  catch (e) { worker = null; return; }
+  worker.onmessage = e => {
+    const d = e.data;
+    if (d.type === "ready") { wReady = true; if (pending) { worker.postMessage(pending); } }
+    else if (d.type === "fail") { failRun("Python couldn't load in this browser (" + d.msg + ")."); }
+    else if (d.type === "result" && pending && d.id === pending.id) {
+      clearTimeout(timer); pending = null; setBusy(false);
+      let err = null, line = null;
+      if (d.res) { const j = JSON.parse(d.res); err = j.err; line = j.line; }
+      showOutput(d.out, err, line, "Live", `Ran in ${Math.max(1, Math.round(d.ms))} ms`, "live");
+    }
+  };
+  worker.onerror = () => failRun("Python couldn't load in this browser.");
+}
+function failRun(msg) {
+  clearTimeout(timer); pending = null; setBusy(false);
+  if (worker) worker.terminate(); worker = null;
+  const x = L().expected;
+  showOutput(x.out, x.err, x.err ? x.line : null, "Expected", msg + " Showing the expected output instead.");
+}
+function setBusy(b, label) {
+  $("runBtn").disabled = b;
+  $("runBtn").innerHTML = b ? (label || "Running…") : `▶ Run <span class="kbd">Ctrl+↵</span>`;
+}
+function run() {
+  if (step >= 0) { step = -1; renderStepper(); }
+  if (!worker) startWorker();
+  if (!worker) { failRun("Your browser blocked the Python runtime."); return; }
+  pending = { id: ++runId, code: ta.value };
+  if (wReady) { setBusy(true); worker.postMessage(pending); }
+  else { setBusy(true, "Loading Python…"); $("opill").textContent = "Loading"; $("opill").className = "pill wait"; $("ometa").textContent = "First run downloads Python (a few seconds)"; }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!pending) return;
+    if (wReady) {
+      worker.terminate(); worker = null; pending = null; setBusy(false);
+      showOutput("", "TimeoutError: the code ran for more than 8 seconds and was stopped. Check for a loop that never ends.", null, "Stopped", "", "");
+    } else failRun("Python is taking too long to load.");
+  }, wReady ? 8000 : 60000);
+}
+$("runBtn").onclick = run;
+
+/* ---------- actions ---------- */
+function resetCode() { delete edits[key(mi, li)]; ta.value = L().code; step = -1; errLine = null; renderStepper(); showExpected(); }
+$("resetBtn").onclick = resetCode;
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(ta.value); $("copyBtn").textContent = "Copied"; }
+  catch (e) { ta.select(); $("copyBtn").textContent = "Press Ctrl+C"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy", 1400);
+};
+function flat() { const a = []; DATA.forEach((m, i) => m.lessons.forEach((_, j) => a.push([i, j]))); return a; }
+const FLAT = flat();
+function go(m, l) { location.hash = key(m, l); }
+function neighbour(d) { const i = FLAT.findIndex(p => p[0] === mi && p[1] === li) + d; return FLAT[i] || null; }
+$("prevBtn").onclick = () => { const p = neighbour(-1); if (p) go(...p); };
+$("nextBtn").onclick = () => { const p = neighbour(1); if (p) go(...p); };
+document.addEventListener("keydown", e => {
+  if (e.target === ta || e.altKey || e.ctrlKey || e.metaKey) return;
+  const tr = activeTrace();
+  if (tr && e.key === "ArrowRight") setStep(step + 1);
+  if (tr && e.key === "ArrowLeft") setStep(step - 1);
+});
+
+/* ---------- render ---------- */
+function render() {
+  const m = DATA[mi], l = L();
+  seen.add(key(mi, li)); try { localStorage.setItem("pyml-seen", JSON.stringify([...seen])); } catch (e) {}
+  $("progTxt").textContent = `${seen.size} / ${total} lessons opened`;
+  $("progBar").style.width = (100 * seen.size / total) + "%";
+
+  $("mods").innerHTML = DATA.map((md, i) => {
+    const done = md.lessons.every((_, j) => seen.has(key(i, j)));
+    return `<button class="mod ${i === mi ? "on" : ""} ${done && i !== mi ? "done" : ""}" data-m="${i}"><span class="n">${i + 1}</span>${md.title}</button>`;
+  }).join("");
+  $("mods").querySelectorAll(".mod").forEach(b => b.onclick = () => go(+b.dataset.m, 0));
+  $("mods").querySelector(".on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("lessons").innerHTML = `<span class="lvl">${m.level}</span>` + m.lessons.map((x, j) =>
+    `<button role="tab" aria-selected="${j === li}" class="les ${j === li ? "on" : ""} ${seen.has(key(mi, j)) ? "seen" : ""}" data-l="${j}"><span class="k">${mi + 1}.${j + 1}</span>${x.title}</button>`).join("");
+  $("lessons").querySelectorAll(".les").forEach(b => b.onclick = () => go(mi, +b.dataset.l));
+  $("lessons").querySelector(".les.on").scrollIntoView({ block: "nearest", inline: "nearest" });
+
+  $("fname").textContent = l.file || `module${mi + 1}_lesson${li + 1}.py`;
+  $("eyebrow").textContent = `Module ${mi + 1} · ${m.title} · Lesson ${li + 1} of ${m.lessons.length}`;
+  $("ltitle").textContent = l.title;
+  step = -1; walkSel = -1; errLine = null;
+  ta.value = edits[key(mi, li)] ?? l.code; ta.scrollTop = 0; ta.scrollLeft = 0;
+  $("explain").innerHTML = l.explain;
+
+  $("walkCard").hidden = !l.walk.length;
+  $("walk").innerHTML = l.walk.map((w, i) => `<li><button data-w="${i}"><span class="ln">${w[0].includes("-") ? "lines " : "line "}${w[0]}</span><span>${w[1]}</span></button></li>`).join("");
+  $("walk").querySelectorAll("button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.w; walkSel = walkSel === i ? -1 : i;
+    $("walk").querySelectorAll("button").forEach(x => x.classList.toggle("on", +x.dataset.w === walkSel));
+    paintEditor(); if (walkSel >= 0) scrollToLine(+l.walk[i][0].split("-")[0]);
+  });
+
+  $("tip").hidden = !l.tip; $("tipTxt").textContent = l.tip || "";
+  $("tryCard").hidden = !l.tryit.length;
+  $("tryit").innerHTML = l.tryit.map(t => `<li>${t}</li>`).join("");
+
+  const p = neighbour(-1), n = neighbour(1);
+  $("prevBtn").disabled = !p; $("nextBtn").disabled = !n;
+  $("prevT").textContent = p ? DATA[p[0]].lessons[p[1]].title : "Start of course";
+  $("nextT").textContent = n ? DATA[n[0]].lessons[n[1]].title : "End of course";
+
+  if (pending) { pending = null; clearTimeout(timer); setBusy(false); }
+  renderStepper(); showExpected();
+  $("right").scrollTop = 0;
+}
+function fromHash() {
+  const m = /^#m(\d+)-l(\d+)$/.exec(location.hash);
+  if (m && DATA[m[1] - 1] && DATA[m[1] - 1].lessons[m[2] - 1]) { mi = m[1] - 1; li = m[2] - 1; }
+  else { mi = 0; li = 0; }
+  render();
+}
+window.addEventListener("hashchange", fromHash);
+fromHash();
+</script>
+</body>
+</html>
