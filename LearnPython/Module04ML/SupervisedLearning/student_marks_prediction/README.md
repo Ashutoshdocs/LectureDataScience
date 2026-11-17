@@ -117,24 +117,24 @@ Regression predicts a quantity. Classification predicts a category, such as pass
 
 **Simple Linear Regression** uses one input feature:
 
-\[
+$$
 \hat{y} = b_0 + b_1x
-\]
+$$
 
 **Multiple Linear Regression** uses two or more input features:
 
-\[
+$$
 \hat{y} = b_0 + b_1x_1 + b_2x_2 + \cdots + b_nx_n
-\]
+$$
 
 This project uses two inputs, so its equation is:
 
-\[
+$$
 \widehat{marks} =
 b_0 +
 b_1(study\_hours) +
 b_2(attendance)
-\]
+$$
 
 Where:
 
@@ -149,9 +149,9 @@ The values of the intercept and coefficients are **learned from the training dat
 
 Suppose a model learned an illustrative equation:
 
-\[
+$$
 \widehat{marks} = 10 + 5(study\_hours) + 0.4(attendance)
-\]
+$$
 
 This is only an example to explain the terms; it is not a promised output from the supplied CSV.
 
@@ -356,10 +356,10 @@ This is the most important learning step.
 
 The model learns a relationship with this general form:
 
-\[
+$$
 \widehat{marks} =
 b_0 + b_1(study\_hours) + b_2(attendance)
-\]
+$$
 
 ### Step 8 — Make predictions for test records
 
