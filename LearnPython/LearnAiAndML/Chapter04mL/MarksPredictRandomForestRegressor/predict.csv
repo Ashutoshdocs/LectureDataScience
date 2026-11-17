@@ -1,0 +1,13 @@
+student_id,study_hours,coaching,live_sessions_attended,recorded_course_completion
+N001,7.9,No,17,28
+N002,2.1,No,9,41
+N003,7.3,No,0,33
+N004,7.6,Yes,14,75
+N005,2.1,Yes,16,99
+N006,9.1,Yes,6,95
+N007,1.8,Yes,7,60
+N008,6.3,No,7,13
+N009,9.2,No,20,34
+N010,2.3,Yes,11,57
+N011,5.8,No,11,54
+N012,6.3,No,1,63
