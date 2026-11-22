@@ -1,4 +1,4 @@
-# 🎓 Student Marks Prediction — Linear Regression Demo
+# 🎓 Student Marks Prediction — Multiple Regression Demo
 
 This demo predicts a student's **final exam marks (out of 100)** from five simple habits, using **Multiple Regression**.
 
