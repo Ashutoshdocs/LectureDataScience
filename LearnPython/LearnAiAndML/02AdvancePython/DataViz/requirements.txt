@@ -1,0 +1,5 @@
+numpy
+pandas
+matplotlib>=3.7
+seaborn>=0.13
+statsmodels      # optional: enables lowess=True / robust=True in Lecture 13
