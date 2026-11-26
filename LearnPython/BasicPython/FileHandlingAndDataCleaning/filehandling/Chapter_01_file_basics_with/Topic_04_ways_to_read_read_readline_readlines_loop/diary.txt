@@ -1,0 +1,3 @@
+Today I learned Python file handling.
+I practised reading and writing files.
+Tomorrow: CSV and JSON!

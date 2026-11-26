@@ -1,0 +1,6 @@
+{
+  "delivery": ["delivery", "late", "delayed", "courier"],
+  "battery": ["battery", "charge", "charging"],
+  "quality": ["quality", "broke", "poor", "fabric"],
+  "price": ["price", "money", "cheap", "expensive"]
+}

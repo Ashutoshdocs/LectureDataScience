@@ -1,0 +1,4 @@
+Data is the new oil. Clean data is valuable data.
+The data team cleans the data and stores it in files.
+Files can be CSV files, JSON files or text files.
+Good files make good data, and good data makes good decisions.

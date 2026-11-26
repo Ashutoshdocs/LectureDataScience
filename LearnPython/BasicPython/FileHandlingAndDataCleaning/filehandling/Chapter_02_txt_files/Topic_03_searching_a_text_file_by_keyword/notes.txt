@@ -1,0 +1,6 @@
+Python is a popular language.
+I wrote my first python script today.
+Java and C++ are also popular.
+Pythonic code is clean and readable.
+PYTHON, python, Python - same word!
+The end.

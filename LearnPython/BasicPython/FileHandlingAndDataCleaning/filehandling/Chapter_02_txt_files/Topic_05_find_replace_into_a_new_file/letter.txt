@@ -1,0 +1,7 @@
+Dear {name},
+
+Congratulations on completing {course}!
+Your final score: {score}/100.
+
+Regards,
+The Python Lab

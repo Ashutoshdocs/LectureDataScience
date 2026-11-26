@@ -1,0 +1,7 @@
+[
+  {"id": 101, "customer": {"name": "Asha", "city": "Pune"},
+   "items": [{"product": "pen", "qty": 10, "price": 5},
+             {"product": "bag", "qty": 1, "price": 799}]},
+  {"id": 102, "customer": {"name": "Ravi"},
+   "items": [{"product": "notebook", "qty": 3, "price": 45}]}
+]

@@ -1,0 +1,13 @@
+id,product,category,rating,price,city,review
+1,Phone X,Electronics,5,14999,Pune,Amazing battery life and fast delivery
+2,Phone X,Electronics,2,14999,Delhi,Battery drains fast and delivery was late
+3,Earbuds Pro,Electronics,4,1999,Mumbai,Great sound quality for the price
+4,Cotton Shirt,Fashion,3,799,Pune,Fabric is good but size runs small
+5,Running Shoes,Fashion,5,2499,Bengaluru,Very comfortable and great quality
+6,Earbuds Pro,Electronics,1,1999,Pune,Stopped working after a week. Poor quality
+7,Steel Bottle,Home,4,499,Delhi,Keeps water cold. Delivery was quick
+8,Cotton Shirt,Fashion,2,799,Mumbai,Colour faded after first wash. Poor quality
+9,Desk Lamp,Home,5,1299,Pune,Bright light and good price
+10,Running Shoes,Fashion,3,2499,Delhi,Good shoes but late delivery
+11,Phone X,Electronics,4,14999,Bengaluru,Camera is great but battery is average
+12,Steel Bottle,Home,1,499,Pune,Leaks from the cap. The latest model is a waste of money
