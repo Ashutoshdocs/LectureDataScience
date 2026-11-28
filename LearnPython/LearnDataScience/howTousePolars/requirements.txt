@@ -1,0 +1,3 @@
+polars>=1.0
+# Optional: useful for some pandas interoperability and Arrow workflows
+pyarrow>=14.0

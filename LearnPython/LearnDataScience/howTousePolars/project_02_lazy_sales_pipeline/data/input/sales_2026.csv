@@ -1,0 +1,5 @@
+order_id,order_date,product_id,region,quantity,unit_price
+6001,2026-01-04,P200,East,4,800
+6002,2026-01-10,P300,South,2,450
+6003,2026-02-12,P100,West,3,1200
+6004,2026-02-20,P400,North,1,2500

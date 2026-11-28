@@ -1,0 +1,8 @@
+employee_id,name,department_id,location,salary,joining_date
+101,Asha,10,Pune,65000,2022-04-12
+102,Ravi,20,Mumbai,58000,2021-08-03
+103,Meera,30,Pune,72000,2020-01-20
+104,Arjun,10,Bengaluru,81000,2019-11-15
+105,Neha,20,Mumbai,,2023-06-01
+106,Karan,30,Pune,69000,2022-09-10
+107,Isha,10,Hyderabad,76000,2021-02-18

@@ -1,0 +1,5 @@
+order_id,order_date,product_id,region,quantity,unit_price
+5001,2025-01-05,P100,West,2,1200
+5002,2025-01-08,P200,South,3,800
+5003,2025-02-11,P100,North,1,1200
+5004,2025-02-18,P300,West,5,450
