@@ -656,9 +656,9 @@ elements and add all the products.
 
 Given:
 
-\[A=[2,3,4], \quad B=[5,6,7]\]
+\A=[2,3,4], \quad B=[5,6,7]\
 
-\[A \cdot B = (2 \times 5) + (3 \times 6) + (4 \times 7) = 56\]
+\A \cdot B = (2 \times 5) + (3 \times 6) + (4 \times 7) = 56\
 
 Python implementation:
 
