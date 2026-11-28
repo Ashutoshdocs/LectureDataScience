@@ -1,0 +1,10 @@
+{
+  "report_filename": "system_report.json",
+  "include_selected_environment": true,
+  "environment_keys": [
+    "APP_ENV",
+    "HOME",
+    "USERPROFILE",
+    "TEMP"
+  ]
+}

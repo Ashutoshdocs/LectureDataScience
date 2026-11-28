@@ -1,0 +1,3 @@
+Python's os module helps applications work with files, directories, and environment variables.
+The platform module describes the operating system and Python runtime.
+This file is sample input for the File and Environment Manager project.
