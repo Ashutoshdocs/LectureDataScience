@@ -1,0 +1,8 @@
+feature,meaning
+area_sqft,Property area in square feet
+bedrooms,Number of bedrooms
+bathrooms,Number of bathrooms
+property_age_years,Property age in years
+distance_to_city_km,Distance from city center in kilometers
+location_type,"Central, Suburb, or Outer category"
+sale_price,Target: synthetic sale price in currency units

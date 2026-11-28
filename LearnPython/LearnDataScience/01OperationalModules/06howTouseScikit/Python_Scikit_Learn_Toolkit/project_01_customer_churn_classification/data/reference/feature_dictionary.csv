@@ -1,0 +1,10 @@
+feature,meaning
+age,Customer age in years
+tenure_months,Months as a customer
+monthly_charges,Monthly service charge
+contract_type,Contract category
+internet_service,Internet service category
+payment_method,Payment method
+support_calls,Support calls in observation period
+satisfaction_score,Synthetic satisfaction score from 1 to 5
+churn,Target: 1 means churned; 0 means retained
