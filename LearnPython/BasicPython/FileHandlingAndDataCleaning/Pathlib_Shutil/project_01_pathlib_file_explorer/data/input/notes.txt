@@ -1,0 +1,3 @@
+Pathlib represents paths as objects.
+A Path object can be inspected, joined, searched, and used to read or write files.
+This is sample input for the Pathlib File Explorer project.

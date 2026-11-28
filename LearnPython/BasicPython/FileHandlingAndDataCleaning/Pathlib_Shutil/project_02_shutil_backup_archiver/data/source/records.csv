@@ -1,0 +1,4 @@
+record_id,service,status
+1,web-api,healthy
+2,worker,healthy
+3,reporting,maintenance
