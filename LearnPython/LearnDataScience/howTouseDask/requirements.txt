@@ -1,0 +1,3 @@
+dask[dataframe,distributed]>=2024.1
+# Dask Array is included in the core Dask package in typical installs.
+# Optional dependencies may be installed for additional data formats.
