@@ -157,8 +157,7 @@ student.
 
 A vector can be written as:
 
-\[ A = \[10, 20, 30\] \]
-
+ A = [10, 20, 30] 
 It contains three values. We can refer to these values by their
 positions:
 
