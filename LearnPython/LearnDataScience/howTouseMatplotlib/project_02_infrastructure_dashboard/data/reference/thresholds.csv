@@ -1,0 +1,5 @@
+metric,warning_threshold,unit
+cpu_percent,80,percent
+memory_percent,85,percent
+disk_percent,85,percent
+latency_ms,250,milliseconds
