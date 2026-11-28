@@ -1,0 +1,3 @@
+Python applications often create intermediate data while processing files.
+Temporary workspaces keep intermediate files separate from permanent project data.
+A context manager can clean up a temporary directory automatically.

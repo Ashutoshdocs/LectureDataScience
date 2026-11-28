@@ -1,0 +1,2 @@
+These files are sample data for learning glob patterns.
+Search for files by extension, prefix, and wildcard characters.

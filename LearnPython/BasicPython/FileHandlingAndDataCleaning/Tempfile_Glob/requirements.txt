@@ -1,0 +1,2 @@
+# No third-party dependencies are required.
+# tempfile and glob are part of Python's standard library.
